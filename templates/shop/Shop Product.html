@@ -1,0 +1,295 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#006b3c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <title>Shop Products - Dairy Store</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="{% static 'css/Shop Product.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bottom_nav.css' %}">
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- ================= HEADER ================= -->
+        <header class="header">
+
+            <div class="header-left">
+                <h1>Shop Products</h1>
+            </div>
+
+            <div class="header-actions">
+
+                <button class="icon-btn cart-top" onclick="location.href='{% url 'cart' %}'">
+                    🛒
+                    <span class="badge cart-count" {% if not cart_count or cart_count == 0 %}style="display:none;"{% endif %}>{{ cart_count|default:"" }}</span>
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- ================= SEARCH ================= -->
+        <section class="search-section">
+
+            <div class="search-box">
+                <span class="search-icon">⌕</span>
+
+                <input type="text" id="searchInput" placeholder="Search for Milk, Paneer, Curd, etc...">
+            </div>
+
+            <button class="filter-btn" id="filterBtn" type="button" aria-label="Open filter options">
+                <span class="filter-btn-icon">☷</span>
+                <span class="filter-btn-text">Filter</span>
+                <span class="filter-active-indicator" id="filterActiveBadge" style="display: none;">0</span>
+            </button>
+
+        </section>
+
+        <!-- ================= ACTIVE FILTER CHIPS ================= -->
+        <div class="active-filters-bar" id="activeFiltersBar" style="display: none;">
+            <div class="active-filters-list" id="activeFiltersList"></div>
+            <button type="button" class="clear-all-chip" id="clearAllFiltersChip">Clear All</button>
+        </div>
+
+
+        <!-- ================= MAIN ================= -->
+        <main class="main-container">
+
+            <!-- ================= SIDEBAR ================= -->
+            <aside class="sidebar">
+
+                <div class="category active-category" data-category="all">
+                    <span class="category-icon">▦</span>
+                    <span>All Products</span>
+                </div>
+
+                {% for cat in categories %}
+                <div class="category" data-category="{{ cat.name }}">
+                    {% if cat.image %}
+                    <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="cat-thumb">
+                    {% else %}
+                    <span class="category-icon">🥛</span>
+                    {% endif %}
+                    <span>{{ cat.name }}</span>
+                </div>
+                {% endfor %}
+
+            </aside>
+
+
+            <!-- ================= PRODUCTS ================= -->
+            <section class="products-section">
+
+                <div class="section-heading">
+
+                    <h2 id="categoryTitle">All Products</h2>
+
+                    <p id="categoryDescription">
+                        Fresh dairy products delivered directly to your doorstep.
+                    </p>
+
+                </div>
+
+                <div id="productList"></div>
+
+            </section>
+
+        </main>
+
+
+        <!-- ================= BOTTOM NAV ================= -->
+        <nav class="bottom-nav">
+
+            <!-- HOME -->
+            <a href="{% url 'home' %}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>Home</span>
+            </a>
+
+            <!-- SHOP -->
+            <a href="{% url 'shop_product' %}" class="nav-item active">
+                <span class="nav-icon">🛍️</span>
+                <span>Shop</span>
+            </a>
+
+            <!-- ORDERS -->
+            <a href="{% url 'orders' %}" class="nav-item">
+                <span class="nav-icon">📦</span>
+                <span>Orders</span>
+            </a>
+
+            <!-- CART -->
+            <a href="{% url 'cart' %}" class="nav-item cart-nav-item">
+                <span class="nav-icon-box">
+                    <span class="nav-icon">🛒</span>
+                    <span class="cart-count" id="bottomCartCount" {% if not cart_count or cart_count == 0 %}style="display:none;"{% endif %}>{{ cart_count|default:"" }}</span>
+                </span>
+                <span>Cart</span>
+            </a>
+
+            <!-- FAVORITES -->
+            <a href="{% url 'favourite' %}" class="nav-item">
+                <span class="nav-icon">🩷</span>
+                <span>Favorites</span>
+            </a>
+
+            <!-- CONTACT -->
+            <a href="{% url 'contact' %}" class="nav-item">
+                <span class="nav-icon">📞</span>
+                <span>Contact</span>
+            </a>
+
+        </nav>
+
+        <!-- ================= FILTER MODAL ================= -->
+        <div class="filter-modal-backdrop" id="filterModalBackdrop" style="display: none;">
+            <div class="filter-modal" id="filterModal" role="dialog" aria-modal="true" aria-labelledby="filterModalTitle">
+                <div class="filter-modal-header">
+                    <div class="filter-modal-header-left">
+                        <span class="filter-header-icon">☷</span>
+                        <h3 id="filterModalTitle">Filter & Sort</h3>
+                    </div>
+                    <div class="filter-modal-header-actions">
+                        <button type="button" class="filter-reset-link" id="modalResetBtn">Reset All</button>
+                        <button type="button" class="filter-close-btn" id="filterCloseBtn" aria-label="Close Filter">✕</button>
+                    </div>
+                </div>
+
+                <div class="filter-modal-body">
+                    <!-- Sort By -->
+                    <div class="filter-group">
+                        <label class="filter-group-title">Sort By</label>
+                        <div class="filter-options-grid sort-options">
+                            <label class="filter-option-card">
+                                <input type="radio" name="sortOption" value="default" checked>
+                                <span class="option-content">
+                                    <span class="opt-icon">✨</span>
+                                    <span class="opt-label">Recommended</span>
+                                </span>
+                            </label>
+                            <label class="filter-option-card">
+                                <input type="radio" name="sortOption" value="price-asc">
+                                <span class="option-content">
+                                    <span class="opt-icon">↑</span>
+                                    <span class="opt-label">Price: Low to High</span>
+                                </span>
+                            </label>
+                            <label class="filter-option-card">
+                                <input type="radio" name="sortOption" value="price-desc">
+                                <span class="option-content">
+                                    <span class="opt-icon">↓</span>
+                                    <span class="opt-label">Price: High to Low</span>
+                                </span>
+                            </label>
+                            <label class="filter-option-card">
+                                <input type="radio" name="sortOption" value="name-asc">
+                                <span class="option-content">
+                                    <span class="opt-icon">🔤</span>
+                                    <span class="opt-label">Name: A to Z</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="filter-group">
+                        <label class="filter-group-title">Price Range</label>
+                        <div class="price-quick-chips" id="priceQuickChips">
+                            <button type="button" class="price-chip active" data-min="" data-max="">All</button>
+                            <button type="button" class="price-chip" data-min="0" data-max="50">Under ₹50</button>
+                            <button type="button" class="price-chip" data-min="50" data-max="100">₹50 - ₹100</button>
+                            <button type="button" class="price-chip" data-min="100" data-max="250">₹100 - ₹250</button>
+                            <button type="button" class="price-chip" data-min="250" data-max="">₹250+</button>
+                        </div>
+                        <div class="price-inputs-row">
+                            <div class="price-input-box">
+                                <span class="currency">₹</span>
+                                <input type="number" id="minPriceInput" placeholder="Min" min="0">
+                            </div>
+                            <span class="price-separator">to</span>
+                            <div class="price-input-box">
+                                <span class="currency">₹</span>
+                                <input type="number" id="maxPriceInput" placeholder="Max" min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Quick Filter in modal -->
+                    <div class="filter-group">
+                        <label class="filter-group-title">Category</label>
+                        <div class="category-pills-list" id="modalCategoryList">
+                            <button type="button" class="cat-pill active" data-cat="all">All Products</button>
+                            {% for cat in categories %}
+                            <button type="button" class="cat-pill" data-cat="{{ cat.name }}">{{ cat.name }}</button>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Preferences / Toggles -->
+                    <div class="filter-group">
+                        <label class="filter-group-title">Product Options</label>
+                        <div class="toggle-filter-item">
+                            <div class="toggle-info">
+                                <strong>In Stock Only</strong>
+                                <small>Hide out of stock items</small>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="inStockToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-filter-item">
+                            <div class="toggle-info">
+                                <strong>Farm Fresh Only 🌿</strong>
+                                <small>Show freshly collected dairy items</small>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="freshToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-filter-item">
+                            <div class="toggle-info">
+                                <strong>Favorites Only ❤️</strong>
+                                <small>Show items in your wishlist</small>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="favoritesToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-modal-footer">
+                    <button type="button" class="filter-apply-btn" id="filterApplyBtn">
+                        Apply Filters <span id="filterCountBadge" class="filter-count-badge"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ================= JAVASCRIPT ================= -->
+    <script>
+        window.DB_PRODUCTS = {{ products_json | safe }};
+    </script>
+    <script src="{% static 'js/Shop Product.js' %}"></script>
+</body>
+
+</html>

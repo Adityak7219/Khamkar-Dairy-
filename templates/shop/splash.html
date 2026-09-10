@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#1a4d2e">
+    <title>Khamkar Dairy - Loading</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/splash.css' %}">
+</head>
+<body class="splash-page">
+
+    <!-- ===== SPLASH CONTAINER ===== -->
+    <div class="splash-wrapper" id="splashWrapper">
+        <div class="splash-card">
+            <!-- Full Original Poster Image -->
+            <img src="{% static 'images/splash.jpg' %}" alt="Khamkar Dairy" class="splash-poster-img" id="splashImg">
+            
+            <!-- Exact overlay positioned right on the image's loading bar -->
+            <div class="in-image-loader-container">
+                <!-- Track directly over the image progress bar -->
+                <div class="in-image-track">
+                    <div class="in-image-fill" id="progressBarFill">
+                        <div class="in-image-shimmer"></div>
+                    </div>
+                </div>
+                
+                <!-- Dynamic text directly over the "Loading..." area -->
+                <div class="in-image-text-box">
+                    <span class="in-image-status" id="loadingStatusText">Loading...</span>
+                    <span class="in-image-percent" id="loadingPercentText">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const REDIRECT_URL = "{% url 'home' %}";
+        const TOTAL_DURATION = 2600; // 2.6 seconds
+
+        const fill = document.getElementById('progressBarFill');
+        const statusText = document.getElementById('loadingStatusText');
+        const percentText = document.getElementById('loadingPercentText');
+        const wrapper = document.getElementById('splashWrapper');
+
+        let startTime = null;
+
+        function updateProgress(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+            const progress = Math.min(elapsed / TOTAL_DURATION, 1.0);
+            const percent = Math.min(Math.round(progress * 100), 100);
+            
+            if (fill) fill.style.width = percent + '%';
+            if (percentText) percentText.textContent = percent + '%';
+
+            if (percent < 35) {
+                statusText.textContent = 'Loading...';
+            } else if (percent < 75) {
+                statusText.textContent = 'Preparing Fresh Dairy...';
+            } else if (percent < 98) {
+                statusText.textContent = 'Almost Ready...';
+            } else {
+                statusText.textContent = 'Welcome!';
+            }
+
+            if (progress < 1.0) {
+                requestAnimationFrame(updateProgress);
+            } else {
+                sessionStorage.setItem('khamkar_splash_shown', 'true');
+                setTimeout(() => {
+                    wrapper.classList.add('splash-exit');
+                    setTimeout(() => {
+                        window.location.href = REDIRECT_URL;
+                    }, 400);
+                }, 300);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            requestAnimationFrame(updateProgress);
+        });
+
+        // Tap to skip
+        wrapper.addEventListener('click', () => {
+            sessionStorage.setItem('khamkar_splash_shown', 'true');
+            wrapper.classList.add('splash-exit');
+            setTimeout(() => {
+                window.location.href = REDIRECT_URL;
+            }, 300);
+        });
+    </script>
+</body>
+</html>

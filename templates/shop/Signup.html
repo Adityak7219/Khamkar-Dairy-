@@ -1,0 +1,596 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#078d4d">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <title>Khamkar Dairy - Create Account</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/Signup.css' %}"
+    >
+
+</head>
+
+
+<body>
+
+<div class="signup-page">
+
+
+    <!-- =====================================================
+         LEFT BRANDING SECTION
+    ====================================================== -->
+
+    <section class="brand-section">
+
+
+        <!-- LOGO -->
+
+        <div class="brand-logo">
+
+            <div class="logo-cow">
+                🐄
+            </div>
+
+            <div class="logo-text">
+
+                <h1>
+                    Khamkar Dairy
+                </h1>
+
+                <p>
+                    Freshness You Can Trust
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- MAIN BRAND CONTENT -->
+
+        <div class="brand-content">
+
+            <h2>
+                Pure, Fresh & Healthy
+            </h2>
+
+            <h3>
+                Dairy Products
+            </h3>
+
+            <p class="brand-description">
+                Bringing natural goodness<br>
+                to your home every day.
+            </p>
+
+
+            <!-- FEATURES -->
+
+            <div class="brand-features">
+
+
+                <div class="brand-feature">
+
+                    <div class="feature-icon">
+                        🥛
+                    </div>
+
+                    <span>
+                        100% Pure & Fresh
+                    </span>
+
+                </div>
+
+
+                <div class="brand-feature">
+
+                    <div class="feature-icon">
+                        🌿
+                    </div>
+
+                    <span>
+                        No Added Preservatives
+                    </span>
+
+                </div>
+
+
+                <div class="brand-feature">
+
+                    <div class="feature-icon">
+                        🚚
+                    </div>
+
+                    <span>
+                        Fast Home Delivery
+                    </span>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+        <!-- DAIRY PRODUCTS -->
+
+        <div class="dairy-scene">
+
+
+            <div class="milk-glass">
+                🥛
+            </div>
+
+
+            <div class="milk-bottle">
+                🥛
+            </div>
+
+
+            <div class="curd-bowl">
+                🥣
+            </div>
+
+
+            <div class="butter-piece">
+                🧈
+            </div>
+
+
+        </div>
+
+
+        <!-- BOTTOM SLOGAN -->
+
+        <div class="health-slogan">
+
+            <span>
+                Health
+            </span>
+
+            <br>
+
+            <span>
+                Every Drop
+            </span>
+
+            <br>
+
+            <small>
+                in
+            </small>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         SIGNUP SECTION
+    ====================================================== -->
+
+    <section class="signup-section">
+
+
+        <div class="signup-card">
+
+
+            <!-- USER ICON -->
+
+            <div class="signup-icon">
+
+                <span>
+                    ♙
+                </span>
+
+            </div>
+
+
+            <!-- TITLE -->
+
+            <h1 class="signup-title">
+                Create Your Account
+            </h1>
+
+
+            <p class="signup-subtitle">
+                Sign up to get started with Khamkar Dairy
+            </p>
+
+
+            <!-- MESSAGES -->
+
+            {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" id="signup-alert-{{ forloop.counter }}">
+                    <span class="alert-icon">
+                        {% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}❌{% else %}ℹ️{% endif %}
+                    </span>
+                    <span>{{ message }}</span>
+                    <button type="button" class="alert-close" onclick="this.parentElement.remove()">✕</button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+
+
+            <form
+                id="signupForm"
+                method="POST"
+                action="{% url 'register' %}"
+            >
+
+                {% csrf_token %}
+
+
+
+                <!-- NAME + MOBILE -->
+
+                <div class="two-column">
+
+
+                    <!-- FULL NAME -->
+
+                    <div class="form-group">
+
+                        <label for="full_name">
+                            Full Name
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <span class="input-icon">
+                                ♙
+                            </span>
+
+                            <input
+                                type="text"
+                                id="full_name"
+                                name="full_name"
+                                placeholder="Enter your full name"
+                                autocomplete="name"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- MOBILE -->
+
+                    <div class="form-group">
+
+                        <label for="mobile">
+                            Mobile Number
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <span class="input-icon">
+                                ☎
+                            </span>
+
+                            <input
+                                type="tel"
+                                id="mobile"
+                                name="mobile"
+                                placeholder="Enter your mobile number"
+                                maxlength="10"
+                                autocomplete="tel"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- EMAIL -->
+
+                <div class="form-group">
+
+                    <label for="email">
+                        Email Address
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">
+                            ✉
+                        </span>
+
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="Enter your email address"
+                            autocomplete="email"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- PASSWORD + CONFIRM -->
+
+                <div class="two-column">
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="form-group">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <span class="input-icon">
+                                🔒
+                            </span>
+
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Create a password"
+                                autocomplete="new-password"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                class="eye-button"
+                                id="showPassword"
+                            >
+                                👁
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- CONFIRM PASSWORD -->
+
+                    <div class="form-group">
+
+                        <label for="confirm_password">
+                            Confirm Password
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <span class="input-icon">
+                                🔒
+                            </span>
+
+                            <input
+                                type="password"
+                                id="confirm_password"
+                                name="confirm_password"
+                                placeholder="Confirm your password"
+                                autocomplete="new-password"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                class="eye-button"
+                                id="showConfirmPassword"
+                            >
+                                👁
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- PASSWORD REQUIREMENTS -->
+
+                <div class="password-rules">
+
+
+                    <div
+                        class="rule"
+                        id="lengthRule"
+                    >
+
+                        <span class="rule-icon">
+                            ✓
+                        </span>
+
+                        <span>
+                            At least 8 characters
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="rule"
+                        id="letterRule"
+                    >
+
+                        <span class="rule-icon">
+                            ✓
+                        </span>
+
+                        <span>
+                            Contains letters and numbers
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="rule"
+                        id="specialRule"
+                    >
+
+                        <span class="rule-icon">
+                            ✓
+                        </span>
+
+                        <span>
+                            Contains special character
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- TERMS -->
+
+                <div class="terms">
+
+                    <label>
+
+                        <input
+                            type="checkbox"
+                            id="terms"
+                            name="terms"
+                            required
+                        >
+
+                        <span>
+                            I agree to the
+                            <a href="#">
+                                Terms & Conditions
+                            </a>
+
+                            and
+
+                            <a href="#">
+                                Privacy Policy
+                            </a>
+                        </span>
+
+                    </label>
+
+                </div>
+
+
+
+                <!-- SIGNUP BUTTON -->
+
+                <button
+                    type="submit"
+                    class="signup-button"
+                >
+
+                    <span>
+                        ♙
+                    </span>
+
+                    <span>
+                        Sign Up
+                    </span>
+
+                    <span>
+                        →
+                    </span>
+
+                </button>
+
+
+
+                <!-- OR -->
+
+                <div class="or-section">
+
+                    <span></span>
+
+                    <b>
+                        OR
+                    </b>
+
+                    <span></span>
+
+                </div>
+
+
+
+                <!-- GOOGLE -->
+
+                <button
+                    type="button"
+                    class="google-button"
+                    id="googleSignup"
+                >
+
+                    <span class="google-g">
+                        G
+                    </span>
+
+                    <span>
+                        Sign up with Google
+                    </span>
+
+                </button>
+
+
+
+                <!-- LOGIN -->
+
+                <p class="login-text">
+
+                    Already have an account?
+
+                    <a href="{% url 'login' %}">
+                        Login
+                    </a>
+
+                </p>
+
+
+            </form>
+
+        </div>
+
+    </section>
+
+
+</div>
+
+
+<script src="{% static 'js/Signup.js' %}"></script>
+
+</body>
+
+</html>

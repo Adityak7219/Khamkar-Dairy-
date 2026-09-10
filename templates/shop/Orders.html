@@ -1,0 +1,488 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Orders - Khamkar Dairy</title>
+
+    <link rel="stylesheet" href="{% static 'css/Orders.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bottom_nav.css' %}">
+</head>
+
+<body>
+
+    <div class="orders-page">
+
+        <!-- =================================================
+         HEADER
+        ================================================= -->
+        <header class="top-header">
+            <div class="header-left">
+                <button class="back-btn" onclick="location.href='{% url 'home' %}'" aria-label="Go to Home">←</button>
+                <h1 class="page-title">My Orders</h1>
+            </div>
+
+            <div class="header-actions">
+                <div class="header-icon" onclick="location.href='{% url 'cart' %}'" title="View Cart">
+                    🛒
+                    <span class="cart-badge" id="topCartBadge" {% if not cart_count or cart_count == 0 %}style="display:none;"{% endif %}>{{ cart_count|default:"" }}</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- =================================================
+         SEARCH & FILTER
+        ================================================= -->
+        <div class="search-area">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="orderSearch" placeholder="Search by Order ID, date, or product name...">
+                <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearch()" style="display:none;">✕</button>
+            </div>
+
+            <div class="filter-wrapper">
+                <button class="filter-btn" id="filterDropdownBtn" onclick="toggleFilterMenu()">
+                    <span>⚙ Filter</span>
+                    <span class="filter-caret">▾</span>
+                </button>
+                <div class="filter-dropdown-menu" id="filterDropdownMenu">
+                    <div class="filter-menu-header">Sort & Filter</div>
+                    <div class="filter-menu-item active" onclick="applySort('newest', this)">🕒 Newest First</div>
+                    <div class="filter-menu-item" onclick="applySort('oldest', this)">📅 Oldest First</div>
+                    <div class="filter-menu-item" onclick="applySort('amount-high', this)">💰 Amount: High to Low</div>
+                    <div class="filter-menu-item" onclick="applySort('amount-low', this)">💵 Amount: Low to High</div>
+                    <div class="filter-menu-divider"></div>
+                    <div class="filter-menu-item" onclick="applyPaymentFilter('all', this)">💳 All Payments</div>
+                    <div class="filter-menu-item" onclick="applyPaymentFilter('online', this)">🟢 Online Paid</div>
+                    <div class="filter-menu-item" onclick="applyPaymentFilter('cod', this)">📦 Cash on Delivery</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================
+         TABS
+        ================================================= -->
+        <div class="order-tabs">
+            <button class="order-tab active" data-status="all">
+                All Orders <span class="tab-badge" id="allOrdersCount">{{ orders|length }}</span>
+            </button>
+            <button class="order-tab" data-status="pending">
+                Pending
+            </button>
+            <button class="order-tab" data-status="delivered">
+                Delivered
+            </button>
+            <button class="order-tab" data-status="cancelled">
+                Cancelled
+            </button>
+        </div>
+
+        <!-- =================================================
+         ORDERS LIST
+        ================================================= -->
+        <main class="orders-list" id="ordersList">
+
+            {% for order in orders %}
+            <div class="order-card" id="order-card-{{ order.order_id }}" 
+                 data-order-id="{{ order.order_id }}"
+                 data-status="{{ order.status }}"
+                 data-payment="{{ order.payment_method }}"
+                 data-amount="{{ order.total_amount }}"
+                 data-date="{{ order.created_at|date:'U' }}"
+                 data-search="{{ order.order_id }} {{ order.created_at|date:'d M Y' }} {% for it in order.items.all %}{{ it.product.name }} {% endfor %}">
+
+                <!-- CARD HEADER (CLICKABLE ROW) -->
+                <div class="order-card-header" onclick="toggleOrderDetails('{{ order.order_id }}')" role="button" tabindex="0" aria-expanded="false" title="Click to view ordered items">
+                    <div class="order-meta-col">
+                        <div class="info-label">Order ID</div>
+                        <div class="order-id">#{{ order.order_id }}</div>
+                        <div class="info-label">Placed On</div>
+                        <div class="info-value">{{ order.created_at|date:"d M Y, h:i A" }}</div>
+                    </div>
+
+                    <div class="order-meta-col">
+                        <div class="info-label">Total Amount</div>
+                        <div class="amount">₹{{ order.total_amount }}</div>
+                        <div class="info-label">Payment Method</div>
+                        <div class="payment-badge payment-{{ order.payment_method }}">
+                            {{ order.get_payment_method_display }}
+                        </div>
+                    </div>
+
+                    <div class="order-meta-col">
+                        <div class="info-label">Status</div>
+                        <div class="status-badge status-{{ order.status }}">
+                            <span class="status-dot"></span>
+                            {{ order.get_status_display }}
+                        </div>
+
+                        {% if order.status == 'delivered' %}
+                        <div class="info-label">Delivered on</div>
+                        <div class="info-value">
+                            {% if order.delivered_at %}{{ order.delivered_at|date:"d M Y, h:i A" }}{% else %}{{ order.created_at|date:"d M Y, h:i A" }}{% endif %}
+                        </div>
+                        {% elif order.status == 'cancelled' %}
+                        <div class="info-label">Status Info</div>
+                        <div class="info-value text-muted">Order was cancelled</div>
+                        {% else %}
+                        <div class="info-label">Estimated Delivery</div>
+                        <div class="info-value text-success">Within 24 Hours</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- THUMBNAILS PREVIEW -->
+                    <div class="products-preview">
+                        {% for item in order.items.all|slice:":3" %}
+                        <div class="product-thumb" title="{{ item.product.name|default:'Dairy Item' }}">
+                            {% if item.product and item.product.image %}
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                            {% else %}
+                            <div class="thumb-placeholder">🥛</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        {% if order.items.count > 3 %}
+                        <div class="more-items">+{{ order.items.count|add:"-3" }}</div>
+                        {% endif %}
+
+                        <div class="item-count">
+                            {{ order.items.count }} item{% if order.items.count != 1 %}s{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- EXPAND ARROW INDICATOR -->
+                    <div class="order-arrow" title="View details">
+                        <span class="arrow-icon">›</span>
+                    </div>
+                </div>
+
+                <!-- EXPANDABLE ORDER DETAILS DRAWER -->
+                <div class="order-details-drawer" id="details-{{ order.order_id }}">
+                    <div class="drawer-inner">
+
+                        <!-- STATUS TRACKER TIMELINE -->
+                        <div class="order-timeline-card">
+                            <div class="timeline-title">Order Status Tracker</div>
+                            <div class="timeline-steps">
+                                <div class="timeline-step {% if order.status != 'cancelled' %}completed{% endif %}">
+                                    <div class="step-icon">✓</div>
+                                    <div class="step-label">Order Placed</div>
+                                    <div class="step-time">{{ order.created_at|date:"d M, h:i A" }}</div>
+                                </div>
+                                <div class="timeline-line {% if order.status == 'delivered' or order.status == 'pending' %}active{% endif %}"></div>
+                                <div class="timeline-step {% if order.status == 'pending' or order.status == 'delivered' %}active{% endif %}">
+                                    <div class="step-icon">📦</div>
+                                    <div class="step-label">Processing</div>
+                                    <div class="step-time">{% if order.status == 'cancelled' %}Cancelled{% else %}Fresh packing{% endif %}</div>
+                                </div>
+                                <div class="timeline-line {% if order.status == 'delivered' %}active{% endif %}"></div>
+                                <div class="timeline-step {% if order.status == 'delivered' %}completed{% elif order.status == 'cancelled' %}cancelled{% endif %}">
+                                    <div class="step-icon">{% if order.status == 'cancelled' %}✕{% else %}🚚{% endif %}</div>
+                                    <div class="step-label">{% if order.status == 'cancelled' %}Order Cancelled{% else %}Delivered{% endif %}</div>
+                                    <div class="step-time">{% if order.status == 'delivered' %}{% if order.delivered_at %}{{ order.delivered_at|date:"d M, h:i A" }}{% else %}Delivered{% endif %}{% elif order.status == 'cancelled' %}Cancelled{% else %}Within 24h{% endif %}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ORDERED ITEMS LIST (KAY KAY ORDER KELA) -->
+                        <div class="ordered-items-section">
+                            <div class="section-heading">
+                                <span>🥛 Ordered Items ({{ order.items.count }} item{% if order.items.count != 1 %}s{% endif %})</span>
+                                <span class="badge-pill">{{ order.items.count }} products</span>
+                            </div>
+
+                            <div class="items-grid">
+                                {% for item in order.items.all %}
+                                <div class="item-detail-row">
+                                    <div class="item-image-box">
+                                        {% if item.product and item.product.image %}
+                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                        {% else %}
+                                        <div class="thumb-placeholder-large">🥛</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="item-info">
+                                        <h4 class="item-name">{{ item.product.name|default:"Product Item" }}</h4>
+                                        {% if item.product and item.product.quantity_label %}
+                                        <div class="item-quantity-label">Pack size: <strong>{{ item.product.quantity_label }}</strong></div>
+                                        {% endif %}
+                                        <div class="item-rate-calc">
+                                            ₹{{ item.price }} × {{ item.quantity }} unit{% if item.quantity > 1 %}s{% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="item-pricing">
+                                        <div class="item-qty-badge">Qty: {{ item.quantity }}</div>
+                                        <div class="item-total-price">₹{{ item.total_price }}</div>
+                                        
+                                        {% if item.product and item.product.is_active and item.product.stock > 0 %}
+                                        <button class="buy-again-btn" onclick="buyAgainItem(event, {{ item.product.id }}, '{{ item.product.name|escapejs }}')" title="Add 1 to Cart">
+                                            + Buy Again
+                                        </button>
+                                        {% endif %}
+
+                                        {% if order.status == 'delivered' and item.product %}
+                                            {% if item.user_review %}
+                                            <button class="review-btn has-review" onclick="openReviewModal(event, {{ item.product.id }}, '{{ item.product.name|escapejs }}', {{ item.user_review.rating }}, '{{ item.user_review.comment|escapejs }}')" title="Edit your review">
+                                                ⭐ Edit Review ({{ item.user_review.rating }}★)
+                                            </button>
+                                            {% else %}
+                                            <button class="review-btn" onclick="openReviewModal(event, {{ item.product.id }}, '{{ item.product.name|escapejs }}', 0, '')" title="Write a review">
+                                                ⭐ Write Review
+                                            </button>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- BILL BREAKDOWN & DELIVERY INFO -->
+                        <div class="order-summary-grid">
+                            <!-- BILL BREAKDOWN -->
+                            <div class="summary-box">
+                                <div class="summary-box-header">🧾 Bill Breakdown</div>
+                                <div class="summary-row">
+                                    <span>Items Subtotal</span>
+                                    <span>₹{{ order.items_subtotal }}</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Packaging Charges</span>
+                                    <span>₹{{ order.packaging_charge }}.00</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Delivery Charges</span>
+                                    <span>
+                                        {% if order.delivery_charge == 0 %}
+                                        <strong class="free-delivery-text">FREE</strong>
+                                        {% else %}
+                                        ₹{{ order.delivery_charge }}.00
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="summary-divider"></div>
+                                <div class="summary-row total-row">
+                                    <span>Grand Total</span>
+                                    <span class="grand-total-amount">₹{{ order.total_amount }}</span>
+                                </div>
+                            </div>
+
+                            <!-- DELIVERY & PAYMENT DETAILS -->
+                            <div class="summary-box">
+                                <div class="summary-box-header">📍 Delivery & Payment Details</div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Customer Name:</span>
+                                    <span class="detail-val">{{ user.get_full_name|default:user.username }}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Mobile Number:</span>
+                                    <span class="detail-val">{{ user_profile.phone|default:"Not provided" }}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Delivery Address:</span>
+                                    <span class="detail-val address-val">
+                                        {% if user_profile.address %}
+                                            {{ user_profile.address }}
+                                        {% else %}
+                                            Standard Home Delivery (Khamkar Dairy)
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Payment Method:</span>
+                                    <span class="detail-val">
+                                        <strong>{{ order.get_payment_method_display }}</strong>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ACTIONS FOOTER -->
+                        <div class="drawer-actions">
+                            <button class="btn-reorder-all" onclick="reorderAllItems(event, '{{ order.order_id }}')">
+                                <span>🔁 Reorder All Items</span>
+                            </button>
+                            <button class="btn-view-invoice" onclick="openInvoiceModal('{{ order.order_id }}')">
+                                <span>📄 View & Print Bill</span>
+                            </button>
+                            {% if order.status != 'delivered' %}
+                            <button class="btn-delete-order" onclick="openDeleteModal(event, '{{ order.order_id }}')" title="Delete this order">
+                                <span>🗑 Delete Order</span>
+                            </button>
+                            {% endif %}
+                            <button class="btn-collapse" onclick="toggleOrderDetails('{{ order.order_id }}')">
+                                <span>▲ Close Details</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+            {% empty %}
+            <div class="no-orders" id="noOrders">
+                <div class="no-orders-icon">📦</div>
+                <h3>No Orders Placed Yet</h3>
+                <p>Looks like you haven't ordered any fresh dairy products yet.</p>
+                <button class="explore-shop-btn" onclick="location.href='{% url 'shop_product' %}'">
+                    Browse Fresh Dairy Products
+                </button>
+            </div>
+            {% endfor %}
+
+            <!-- EMPTY SEARCH FILTER PLACEHOLDER -->
+            <div class="no-orders" id="emptySearchPlaceholder" style="display: none;">
+                <div class="no-orders-icon">🔍</div>
+                <h3>No Matching Orders Found</h3>
+                <p>Try searching with a different order ID, date, or product keyword.</p>
+                <button class="clear-search-btn" onclick="clearSearch()">Clear Filters</button>
+            </div>
+
+        </main>
+
+        <!-- =================================================
+         BOTTOM NAVIGATION
+        ================================================= -->
+        <nav class="bottom-nav">
+            <!-- HOME -->
+            <a href="{% url 'home' %}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>Home</span>
+            </a>
+
+            <!-- SHOP -->
+            <a href="{% url 'shop_product' %}" class="nav-item">
+                <span class="nav-icon">🛍️</span>
+                <span>Shop</span>
+            </a>
+
+            <!-- ORDERS -->
+            <a href="{% url 'orders' %}" class="nav-item active">
+                <span class="nav-icon">📦</span>
+                <span>Orders</span>
+            </a>
+
+            <!-- CART -->
+            <a href="{% url 'cart' %}" class="nav-item cart-nav-item">
+                <span class="nav-icon-box">
+                    <span class="nav-icon">🛒</span>
+                    <span class="cart-count" id="bottomCartCount" {% if not cart_count or cart_count == 0 %}style="display:none;"{% endif %}>{{ cart_count|default:"" }}</span>
+                </span>
+                <span>Cart</span>
+            </a>
+
+            <!-- FAVORITES -->
+            <a href="{% url 'favourite' %}" class="nav-item">
+                <span class="nav-icon">🩷</span>
+                <span>Favorites</span>
+            </a>
+
+            <!-- CONTACT -->
+            <a href="{% url 'contact' %}" class="nav-item">
+                <span class="nav-icon">📞</span>
+                <span>Contact</span>
+            </a>
+        </nav>
+
+    </div>
+
+    <!-- =================================================
+     DELETE CONFIRMATION MODAL
+    ================================================= -->
+    <div class="delete-modal-backdrop" id="deleteModalBackdrop" onclick="closeDeleteModalOnBackdrop(event)">
+        <div class="delete-modal">
+            <div class="delete-modal-icon">🗑️</div>
+            <h3>Delete Order?</h3>
+            <p>Are you sure you want to delete <strong id="deleteOrderNumberText">#ORD...</strong> from your order history? This action cannot be undone.</p>
+            <div class="delete-modal-actions">
+                <button class="btn-cancel-delete" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn-confirm-delete" id="confirmDeleteBtn" onclick="confirmDeleteOrderAction()">Yes, Delete Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================
+     INVOICE / BILL MODAL
+    ================================================= -->
+    <div class="invoice-modal-backdrop" id="invoiceModalBackdrop" onclick="closeInvoiceModalOnBackdrop(event)">
+        <div class="invoice-modal" id="invoiceModalContent">
+            <div class="invoice-modal-header">
+                <div class="modal-title">
+                    <span class="brand-badge">🥛 KHAMKAR DAIRY</span>
+                    <h2>Order Tax Invoice / Bill</h2>
+                </div>
+                <button class="invoice-close-btn" onclick="closeInvoiceModal()" aria-label="Close">✕</button>
+            </div>
+
+            <div class="invoice-body" id="invoicePrintArea">
+                <!-- Dynamically populated by JS from the order card -->
+            </div>
+
+            <div class="invoice-modal-footer">
+                <button class="btn-print" onclick="printInvoice()">
+                    <span>🖨 Print Invoice</span>
+                </button>
+                <button class="btn-modal-close" onclick="closeInvoiceModal()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================
+     PRODUCT REVIEW MODAL
+    ================================================= -->
+    <div class="review-modal-backdrop" id="reviewModalBackdrop" onclick="closeReviewModalOnBackdrop(event)">
+        <div class="review-modal">
+            <div class="review-modal-header">
+                <h3>⭐ Rate & Review Product</h3>
+                <button class="review-close-btn" onclick="closeReviewModal()">✕</button>
+            </div>
+            <div class="review-modal-body">
+                <h4 id="reviewProductName">Product Name</h4>
+                <p class="review-subtext">How was your experience with this product?</p>
+                <form id="reviewForm" onsubmit="submitProductReview(event)">
+                    <input type="hidden" id="reviewProductId" value="">
+                    
+                    <div class="star-rating-picker" id="starRatingPicker">
+                        <span class="star" data-rating="1" onclick="setReviewRating(1)">★</span>
+                        <span class="star" data-rating="2" onclick="setReviewRating(2)">★</span>
+                        <span class="star" data-rating="3" onclick="setReviewRating(3)">★</span>
+                        <span class="star" data-rating="4" onclick="setReviewRating(4)">★</span>
+                        <span class="star" data-rating="5" onclick="setReviewRating(5)">★</span>
+                    </div>
+                    <input type="hidden" id="reviewRatingInput" value="0">
+                    <div class="rating-label-text" id="ratingLabelText">Tap a star to rate</div>
+
+                    <div class="form-group" style="margin-top:15px; text-align:left;">
+                        <label for="reviewComment" style="font-weight:600; font-size:13px; color:#444; display:block; margin-bottom:6px;">Your Review / Comment (Optional)</label>
+                        <textarea id="reviewComment" placeholder="Write your review here... e.g. Fresh quality and great taste!" rows="3" style="width:100%; border:1px solid #ccc; border-radius:8px; padding:10px; font-family:inherit; font-size:14px; box-sizing:border-box; resize:vertical;"></textarea>
+                    </div>
+
+                    <div class="review-modal-actions" style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
+                        <button type="button" class="btn-cancel-review" onclick="closeReviewModal()" style="padding:10px 18px; border-radius:8px; border:1px solid #ccc; background:#f5f5f5; cursor:pointer; font-weight:600;">Cancel</button>
+                        <button type="submit" class="btn-submit-review" id="btnSubmitReview" style="padding:10px 20px; border-radius:8px; border:none; background:#078046; color:#fff; cursor:pointer; font-weight:600;">Submit Review</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================
+     TOAST NOTIFICATION
+    ================================================= -->
+    <div class="toast-notification" id="toastNotification"></div>
+
+    <!-- CSRF TOKEN FOR JS FETCH -->
+    {% csrf_token %}
+
+    <script src="{% static 'js/Orders.js' %}"></script>
+</body>
+</html>

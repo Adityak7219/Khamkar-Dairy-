@@ -1,0 +1,979 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #ffffff;
+    color: #17202a;
+    padding-bottom: 100px;
+}
+
+
+.contact-page {
+    width: 100%;
+    min-height: 100vh;
+}
+
+
+
+/* ================= HEADER ================= */
+
+.top-header {
+
+    height: 125px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 20px 40px;
+
+    background: #ffffff;
+
+    border-bottom: 1px solid #e5eee8;
+}
+
+
+.brand {
+
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+
+.brand-logo {
+
+    width: 75px;
+    height: 75px;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #e8f7ed;
+
+    border: 3px solid #07833e;
+
+    font-size: 38px;
+}
+
+
+.brand-text h1 {
+
+    color: #056b36;
+
+    font-size: 32px;
+
+    margin-bottom: 4px;
+}
+
+
+.brand-text p {
+
+    color: #08743e;
+
+    font-size: 18px;
+}
+
+
+.header-actions {
+
+    display: flex;
+    gap: 30px;
+}
+
+
+.header-icon {
+
+    position: relative;
+
+    font-size: 30px;
+
+    cursor: pointer;
+}
+
+
+.header-icon span {
+
+    position: absolute;
+
+    top: -8px;
+    right: -10px;
+
+    width: 23px;
+    height: 23px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #e72d2d;
+
+    color: white;
+
+    font-size: 12px;
+
+    font-weight: bold;
+}
+
+
+
+/* ================= HERO ================= */
+
+.contact-hero {
+
+    height: 315px;
+
+    position: relative;
+
+    overflow: hidden;
+
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    background:
+        linear-gradient(
+            135deg,
+            #005c2d,
+            #00823d,
+            #00652f
+        );
+
+    color: white;
+}
+
+
+.hero-content {
+
+    text-align: center;
+
+    position: relative;
+
+    z-index: 5;
+
+    padding-top: 55px;
+}
+
+
+.hero-content h2 {
+
+    font-size: 58px;
+
+    font-weight: 700;
+
+    margin-bottom: 15px;
+}
+
+
+.hero-content p {
+
+    font-size: 22px;
+
+    color: #f2fff6;
+}
+
+
+.hero-cows {
+
+    position: absolute;
+
+    left: 25px;
+    top: 40px;
+
+    opacity: 0.18;
+
+    font-size: 70px;
+}
+
+
+.milk-decoration {
+
+    position: absolute;
+
+    right: 25px;
+    bottom: 65px;
+
+    display: flex;
+
+    align-items: flex-end;
+
+    gap: 15px;
+
+    z-index: 2;
+}
+
+
+.milk-bottle {
+
+    background: white;
+
+    color: #eeeeee;
+
+    width: 65px;
+    height: 130px;
+
+    border-radius: 20px 20px 12px 12px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 50px;
+
+    box-shadow: 0 5px 15px rgba(0,0,0,.2);
+}
+
+
+.bottle-two {
+
+    height: 160px;
+}
+
+
+.milk-can {
+
+    width: 80px;
+    height: 120px;
+
+    border-radius: 15px;
+
+    background: #d1d1d1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 50px;
+}
+
+
+.milk-wave {
+
+    position: absolute;
+
+    bottom: -100px;
+    left: -5%;
+
+    width: 110%;
+
+    height: 180px;
+
+    background: white;
+
+    border-radius: 50% 50% 0 0;
+
+    z-index: 3;
+}
+
+
+
+/* ================= MAIN ================= */
+
+.contact-container {
+
+    width: 96%;
+
+    max-width: 1500px;
+
+    margin: 35px auto;
+
+    display: grid;
+
+    grid-template-columns: 350px 1fr;
+
+    gap: 25px;
+}
+
+
+.card {
+
+    background: white;
+
+    border: 1px solid #dbe8df;
+
+    border-radius: 20px;
+
+    box-shadow: 0 4px 18px rgba(0,0,0,.04);
+}
+
+
+.contact-info {
+
+    padding: 30px;
+}
+
+
+.contact-info h2,
+.message-card h2 {
+
+    color: #076c38;
+
+    font-size: 27px;
+}
+
+
+.heading-line {
+
+    width: 42px;
+
+    height: 4px;
+
+    background: #079747;
+
+    border-radius: 5px;
+
+    margin: 12px 0 20px;
+}
+
+
+.intro,
+.message-intro {
+
+    color: #56616c;
+
+    line-height: 1.7;
+
+    font-size: 16px;
+
+    margin-bottom: 25px;
+}
+
+
+
+/* ================= CONTACT DETAILS ================= */
+
+.contact-detail {
+
+    display: flex;
+
+    gap: 16px;
+
+    padding: 18px 0;
+
+    border-bottom: 1px solid #e4e9e6;
+}
+
+
+.detail-icon {
+
+    flex-shrink: 0;
+
+    width: 55px;
+    height: 55px;
+
+    border-radius: 50%;
+
+    background: #e2f7e9;
+
+    color: #007b3d;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 25px;
+}
+
+
+.contact-detail h3 {
+
+    font-size: 18px;
+
+    margin-bottom: 6px;
+}
+
+
+.contact-detail p {
+
+    color: #52606d;
+
+    line-height: 1.5;
+
+    font-size: 15px;
+}
+
+
+
+/* ================= MAP ================= */
+
+.find-us {
+
+    margin-top: 25px;
+}
+
+
+.map-box {
+
+    width: 100%;
+
+    height: 190px;
+
+    overflow: hidden;
+
+    border-radius: 15px;
+
+    background: #edf0ed;
+}
+
+
+.map-background {
+
+    height: 100%;
+
+    position: relative;
+
+    background:
+        linear-gradient(30deg, transparent 48%, #ffffff 49%, #ffffff 53%, transparent 54%),
+        linear-gradient(-25deg, transparent 48%, #ffffff 49%, #ffffff 53%, transparent 54%),
+        #e7ebe7;
+}
+
+
+.road {
+
+    position: absolute;
+
+    background: #ffffff;
+}
+
+
+.road-one {
+
+    width: 130%;
+
+    height: 20px;
+
+    top: 80px;
+
+    left: -15%;
+
+    transform: rotate(-15deg);
+}
+
+
+.road-two {
+
+    width: 100%;
+
+    height: 15px;
+
+    top: 130px;
+
+    transform: rotate(25deg);
+}
+
+
+.map-location {
+
+    position: absolute;
+
+    left: 48%;
+
+    top: 55px;
+
+    font-size: 42px;
+
+    z-index: 3;
+}
+
+
+.location-name {
+
+    position: absolute;
+
+    left: 54%;
+
+    top: 75px;
+
+    color: #e52b25;
+
+    font-weight: bold;
+
+    z-index: 4;
+}
+
+
+.karad {
+
+    position: absolute;
+
+    bottom: 15px;
+
+    left: 45%;
+
+    font-weight: bold;
+
+    font-size: 18px;
+}
+
+
+
+/* ================= MESSAGE ================= */
+
+.message-section {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 20px;
+}
+
+
+.message-card {
+
+    padding: 35px 40px;
+}
+
+
+.form-row {
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 25px;
+}
+
+
+.input-group {
+
+    margin-bottom: 22px;
+}
+
+
+.input-group label {
+
+    display: block;
+
+    font-weight: 600;
+
+    margin-bottom: 9px;
+}
+
+
+.input-box,
+.textarea-box {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    border: 1px solid #d5dfda;
+
+    border-radius: 12px;
+
+    padding: 0 17px;
+
+    background: white;
+
+    transition: .2s;
+}
+
+
+.input-box {
+
+    height: 62px;
+}
+
+
+.textarea-box {
+
+    align-items: flex-start;
+
+    padding-top: 17px;
+}
+
+
+.input-box:focus-within,
+.textarea-box:focus-within {
+
+    border-color: #078943;
+
+    box-shadow: 0 0 0 3px rgba(7,137,67,.08);
+}
+
+
+.input-box span,
+.textarea-box span {
+
+    color: #087e3d;
+
+    font-size: 24px;
+}
+
+
+.input-box input {
+
+    border: none;
+
+    outline: none;
+
+    width: 100%;
+
+    font-size: 17px;
+
+    color: #333;
+}
+
+
+.textarea-box textarea {
+
+    border: none;
+
+    outline: none;
+
+    width: 100%;
+
+    height: 190px;
+
+    resize: vertical;
+
+    font-size: 17px;
+
+    font-family: inherit;
+}
+
+
+.send-btn {
+
+    width: 100%;
+
+    height: 65px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #087d42;
+
+    color: white;
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+
+.send-btn:hover {
+
+    background: #056a37;
+
+    transform: translateY(-1px);
+}
+
+
+.send-btn span {
+
+    margin-right: 12px;
+
+    font-size: 22px;
+}
+
+
+
+/* ================= TRUST ================= */
+
+.trust-section {
+
+    display: grid;
+
+    grid-template-columns: repeat(3,1fr);
+
+    background: #f2faf5;
+
+    border: 1px solid #e0eee4;
+
+    border-radius: 20px;
+
+    padding: 25px;
+}
+
+
+.trust-card {
+
+    text-align: center;
+
+    padding: 10px 25px;
+
+    border-right: 1px solid #d5e5db;
+}
+
+
+.trust-card:last-child {
+
+    border-right: none;
+}
+
+
+.trust-icon {
+
+    font-size: 38px;
+
+    margin-bottom: 8px;
+}
+
+
+.trust-card h3 {
+
+    color: #087b3e;
+
+    margin-bottom: 8px;
+
+    font-size: 18px;
+}
+
+
+.trust-card p {
+
+    color: #59636d;
+
+    line-height: 1.5;
+}
+
+
+
+/* ================= BOTTOM NAV ================= */
+/* Bottom Navigation */
+.bottom-nav{
+    position:fixed;
+    bottom:0;
+    left:50%;
+    transform:translateX(-50%);
+    width:100%;
+    
+    height:88px;
+    background:#fff;
+    border-top:1px solid #d8dfdc;
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    z-index:10;
+}
+
+.nav-item{
+    text-align:center;
+    color:#71818a;
+    font-size:15px;
+    position:relative;
+}
+
+.nav-icon{
+    display:block;
+    font-size:31px;
+    margin-bottom:4px;
+}
+
+.nav-item.active{
+    color:#078046;
+    font-weight:bold;
+}
+
+.cart-count{
+    position:absolute;
+    top:-7px;
+    right:5px;
+    width:25px;
+    height:25px;
+    border-radius:50%;
+    background:#f23535;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+}
+.find-us {
+    width: 100%;
+    margin-top: 25px;
+}
+
+.map-box {
+    width: 100%;
+    height: 350px;
+    overflow: hidden;
+    border-radius: 15px;
+    border: 1px solid #dce7e1;
+    background: #eeeeee;
+}
+
+.map-box iframe {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border: 0;
+}
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 900px) {
+
+    .contact-container {
+
+        grid-template-columns: 1fr;
+    }
+
+    .contact-info {
+
+        order: 1;
+    }
+
+    .message-section {
+
+        order: 2;
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .top-header {
+
+        height: 90px;
+
+        padding: 12px 15px;
+    }
+
+
+    .brand-logo {
+
+        width: 55px;
+        height: 55px;
+
+        font-size: 28px;
+    }
+
+
+    .brand-text h1 {
+
+        font-size: 21px;
+    }
+
+
+    .brand-text p {
+
+        font-size: 13px;
+    }
+
+
+    .header-actions {
+
+        gap: 15px;
+    }
+
+
+    .contact-hero {
+
+        height: 250px;
+    }
+
+
+    .hero-content {
+
+        padding-top: 45px;
+    }
+
+
+    .hero-content h2 {
+
+        font-size: 40px;
+    }
+
+
+    .hero-content p {
+
+        font-size: 16px;
+
+        padding: 0 20px;
+    }
+
+
+    .milk-decoration {
+
+        right: 5px;
+
+        transform: scale(.65);
+
+        transform-origin: bottom right;
+    }
+
+
+    .contact-container {
+
+        width: 94%;
+
+        margin-top: 20px;
+    }
+
+
+    .message-card {
+
+        padding: 25px 18px;
+    }
+
+
+    .form-row {
+
+        grid-template-columns: 1fr;
+
+        gap: 0;
+    }
+
+
+    .trust-section {
+
+        grid-template-columns: 1fr;
+
+        gap: 20px;
+    }
+
+
+    .trust-card {
+
+        border-right: none;
+
+        border-bottom: 1px solid #d5e5db;
+
+        padding-bottom: 20px;
+    }
+
+
+    .trust-card:last-child {
+
+        border-bottom: none;
+    }
+
+
+    .bottom-nav {
+        height: 64px;
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+
+    .nav-icon {
+        font-size: 20px;
+    }
+
+
+    .nav-item span {
+        font-size: 10px;
+    }
+
+}

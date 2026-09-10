@@ -1,0 +1,323 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <title>Khamkar Dairy</title>
+
+    <link rel="stylesheet" href="{% static 'css/Home.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bottom_nav.css' %}">
+    <link rel="stylesheet" href="{% static 'css/splash.css' %}">
+</head>
+
+<body>
+
+    <!-- ===== APP OPENING SPLASH SCREEN ===== -->
+    <div class="splash-wrapper" id="homeSplashWrapper">
+        <div class="splash-card">
+            <img src="{% static 'images/splash.jpg' %}" alt="Khamkar Dairy" class="splash-poster-img" id="homeSplashImg">
+            <div class="in-image-loader-container">
+                <div class="in-image-track">
+                    <div class="in-image-fill" id="homeSplashProgressBar">
+                        <div class="in-image-shimmer"></div>
+                    </div>
+                </div>
+                <div class="in-image-text-box">
+                    <span class="in-image-status" id="homeSplashStatusText">Loading...</span>
+                    <span class="in-image-percent" id="homeSplashPercentText">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app">
+
+        <!-- Header -->
+        <header class="header">
+            <div class="brand">
+                <div class="logo">🐄</div>
+                <div>
+                    <h1>Khamkar Dairy</h1>
+                    <p>Pure. Fresh. Healthy.</p>
+                </div>
+            </div>
+
+            <div class="header-icons">
+                {% if request.user.is_staff %}
+                <a href="{% url 'admin_panel' %}"
+                    style="text-decoration: none; display: flex; align-items: center; gap: 6px; background: #087443; color: white; padding: 7px 14px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">
+                    <span>🛡️</span>
+                    <span>Admin</span>
+                </a>
+                {% endif %}
+                <a href="{% url 'profile' %}" class="profile" title="My Profile" style="text-decoration: none; cursor: pointer;">
+                    {% if request.user.is_authenticated and user_profile %}
+                    <img src="{{ user_profile.avatar_url }}" alt="Profile Photo" class="profile-header-avatar">
+                    {% else %}
+                    <span>👤</span>
+                    {% endif %}
+                </a>
+            </div>
+        </header>
+
+        <!-- Hero Carousel Banner -->
+        <section class="hero-carousel-section" id="heroCarousel">
+            <div class="hero-slides-wrapper" id="heroSlidesWrapper">
+                
+                <!-- Slide 1 -->
+                <div class="hero-slide active" style="--bg-image: url('{% static 'images/banner_1.jpg' %}');">
+                    <div class="hero-overlay"></div>
+                    <div class="hero-content">
+                        <div class="script">Fresh &amp; Natural</div>
+                        <h2>Dairy Products</h2>
+                        <p>From Our Farm to Your Home</p>
+                        <div class="features">
+                            <span>🌿 Pure</span>
+                            <span>🛡 Hygienic</span>
+                            <span>♡ Healthy</span>
+                        </div>
+                        <a href="{% url 'shop_product' %}" class="shop-btn">Shop Now →</a>
+                    </div>
+                </div>
+
+                <!-- Slide 2 -->
+                <div class="hero-slide" style="--bg-image: url('{% static 'images/banner_2.jpg' %}');">
+                    <div class="hero-overlay"></div>
+                    <div class="hero-content">
+                        <div class="script">100% Traditional</div>
+                        <h2>Desi Cow Ghee &amp; Shrikhand</h2>
+                        <p>Rich Aroma, Authentic Taste &amp; Pure Goodness</p>
+                        <div class="features">
+                            <span>✨ Pure Bilona</span>
+                            <span>🏺 Traditional</span>
+                            <span>💛 100% Pure</span>
+                        </div>
+                        <a href="{% url 'shop_product' %}?category=Ghee" class="shop-btn">Explore Desi Range →</a>
+                    </div>
+                </div>
+
+                <!-- Slide 3 -->
+                <div class="hero-slide" style="--bg-image: url('{% static 'images/banner_3.jpg' %}');">
+                    <div class="hero-overlay"></div>
+                    <div class="hero-content">
+                        <div class="script">Farm Fresh Every Day</div>
+                        <h2>Pure Milk, Curd &amp; Paneer</h2>
+                        <p>Soft, Protein-Rich &amp; Farm Collected Daily</p>
+                        <div class="features">
+                            <span>🥛 Pure Milk</span>
+                            <span>🥣 Thick Curd</span>
+                            <span>🧀 Soft Paneer</span>
+                        </div>
+                        <a href="{% url 'shop_product' %}?category=Paneer" class="shop-btn">Order Fresh Dairy →</a>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Slide Indicators (Dots) -->
+            <div class="carousel-dots" id="carouselDots">
+                <button type="button" class="dot active" data-slide="0" aria-label="Slide 1"></button>
+                <button type="button" class="dot" data-slide="1" aria-label="Slide 2"></button>
+                <button type="button" class="dot" data-slide="2" aria-label="Slide 3"></button>
+            </div>
+
+            <!-- Prev / Next Arrows -->
+            <button type="button" class="carousel-nav-btn prev-btn" id="carouselPrevBtn" aria-label="Previous Slide">‹</button>
+            <button type="button" class="carousel-nav-btn next-btn" id="carouselNextBtn" aria-label="Next Slide">›</button>
+        </section>
+
+        <!-- Categories -->
+        <section class="categories">
+
+            {% for cat in categories %}
+            <a href="{% url 'shop_product' %}?category={{ cat.name|urlencode }}" class="category" style="text-decoration: none; color: inherit;">
+                <div class="category-img">
+                    {% if cat.image %}
+                    <img src="{{ cat.image.url }}" alt="{{ cat.name }}">
+                    {% else %}
+                    <div
+                        style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #eee; border-radius: 50%; color: #888;">
+                        N/A</div>
+                    {% endif %}
+                </div>
+                <div class="category-name">{{ cat.name }}</div>
+            </a>
+            {% endfor %}
+
+            <a href="{% url 'shop_product' %}" class="category" style="text-decoration: none; color: inherit;">
+                <div class="more-circle">••<br>••</div>
+                <div class="category-name">More</div>
+            </a>
+
+        </section>
+
+        <!-- Popular Products -->
+        <section>
+            <div class="section-title">
+                <h2>Popular Products</h2>
+                <a href="{% url 'shop_product' %}">View All →</a>
+            </div>
+
+            <div class="products">
+
+                {% for product in popular_products %}
+                <div class="product">
+                    <div class="product-image">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                        <div
+                            style="width: 100%; height: 100%; min-height: 150px; background: #eee; display: flex; align-items: center; justify-content: center; color: #888;">
+                            No Image</div>
+                        {% endif %}
+                        {% if product.stock > 0 and product.is_active %}
+                        <span class="availability-badge available">● Available</span>
+                        {% else %}
+                        <span class="availability-badge unavailable">● Out of Stock</span>
+                        {% endif %}
+                        {% if product.is_fresh %}
+                        <span class="badge">Fresh</span>
+                        {% endif %}
+                        <button type="button" class="fav-heart-btn {% if product.id in user_favorite_ids %}active{% endif %}" onclick="toggleHomeFavorite({{ product.id }}, this, event)" title="Add to Favorites">
+                            {% if product.id in user_favorite_ids %}❤️{% else %}♡{% endif %}
+                        </button>
+                    </div>
+
+                    <div class="product-info">
+                        <h3>{{ product.name }}</h3>
+                        <div class="weight">{{ product.quantity_label }}</div>
+                        <div class="price">₹{{ product.price }}</div>
+
+                        <div class="quantity">
+                            <button onclick="changeQty(this,-1)">−</button>
+                            <span>1</span>
+                            <button onclick="changeQty(this,1)">+</button>
+                        </div>
+
+                        <button class="add-cart" onclick="addCart({{ product.id }}, this)">🛒 Add to Cart</button>
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+
+        <!-- HOME -->
+        <a href="{% url 'home' %}" class="nav-item active">
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+        </a>
+
+        <!-- SHOP -->
+        <a href="{% url 'shop_product' %}" class="nav-item">
+            <span class="nav-icon">🛍️</span>
+            <span>Shop</span>
+        </a>
+
+        <!-- ORDERS -->
+        <a href="{% url 'orders' %}" class="nav-item">
+            <span class="nav-icon">📦</span>
+            <span>Orders</span>
+        </a>
+
+        <!-- CART -->
+        <a href="{% url 'cart' %}" class="nav-item cart-nav-item">
+            <span class="nav-icon-box">
+                <span class="nav-icon">🛒</span>
+                <span class="cart-count" id="bottomCartCount" {% if not cart_count or cart_count == 0 %}style="display:none;"{% endif %}>{{ cart_count|default:"" }}</span>
+            </span>
+            <span>Cart</span>
+        </a>
+
+        <!-- FAVORITES -->
+        <a href="{% url 'favourite' %}" class="nav-item">
+            <span class="nav-icon">🩷</span>
+            <span>Favorites</span>
+        </a>
+
+        <!-- CONTACT -->
+        <a href="{% url 'contact' %}" class="nav-item">
+            <span class="nav-icon">📞</span>
+            <span>Contact</span>
+        </a>
+
+    </nav>
+
+    <script>
+        // Khamkar Dairy App Opening Splash Screen Controller
+        (function() {
+            const splashEl = document.getElementById('homeSplashWrapper');
+            if (!splashEl) return;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const forceSplash = urlParams.has('splash');
+            const hasSeen = sessionStorage.getItem('khamkar_splash_shown');
+
+            // If already shown in current browsing session and not forced via ?splash=1
+            if (hasSeen && !forceSplash) {
+                splashEl.style.display = 'none';
+                return;
+            }
+
+            const fill = document.getElementById('homeSplashProgressBar');
+            const statusText = document.getElementById('homeSplashStatusText');
+            const percentText = document.getElementById('homeSplashPercentText');
+            const TOTAL_TIME = 2600; // 2.6 seconds animation
+
+            let startTime = null;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                const progress = Math.min(elapsed / TOTAL_TIME, 1.0);
+                const percent = Math.min(Math.round(progress * 100), 100);
+
+                if (fill) fill.style.width = percent + '%';
+                if (percentText) percentText.textContent = percent + '%';
+
+                if (statusText) {
+                    if (percent < 28) statusText.textContent = 'Loading fresh dairy...';
+                    else if (percent < 60) statusText.textContent = 'Pure Milk, Healthier Tomorrow...';
+                    else if (percent < 90) statusText.textContent = 'Freshness You Can Trust...';
+                    else statusText.textContent = 'Welcome to Khamkar Dairy!';
+                }
+
+                if (progress < 1.0) {
+                    requestAnimationFrame(step);
+                } else {
+                    sessionStorage.setItem('khamkar_splash_shown', 'true');
+                    setTimeout(() => {
+                        splashEl.classList.add('splash-exit');
+                        setTimeout(() => {
+                            splashEl.style.display = 'none';
+                        }, 500);
+                    }, 250);
+                }
+            }
+
+            requestAnimationFrame(step);
+
+            // Tap anywhere to skip instantly
+            splashEl.addEventListener('click', () => {
+                sessionStorage.setItem('khamkar_splash_shown', 'true');
+                splashEl.classList.add('splash-exit');
+                setTimeout(() => {
+                    splashEl.style.display = 'none';
+                }, 300);
+            });
+        })();
+    </script>
+</body>
+<script src="{% static 'js/Home.js' %}"></script>
+
+</html>

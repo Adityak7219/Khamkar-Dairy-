@@ -1,0 +1,1126 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+body {
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    min-height: 100vh;
+
+    background:
+        linear-gradient(
+            135deg,
+            #edf8f0,
+            #ffffff
+        );
+
+    color: #14251d;
+}
+
+
+/* =========================================
+   MAIN PAGE
+========================================= */
+
+.login-page {
+
+    min-height: 100vh;
+
+    display: flex;
+
+    padding: 16px;
+
+    gap: 0;
+}
+
+
+/* =========================================
+   LEFT BRAND SECTION
+========================================= */
+
+.brand-section {
+
+    width: 45%;
+
+    min-height: calc(100vh - 32px);
+
+    position: relative;
+
+    overflow: hidden;
+
+    border-radius:
+        18px 0 0 18px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #006b32 0%,
+            #008b45 55%,
+            #005f2c 100%
+        );
+
+    color: white;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: space-between;
+
+    padding:
+        45px 55px 25px;
+}
+
+
+/* Background glow */
+
+.brand-section::before {
+
+    content: "";
+
+    position: absolute;
+
+    width: 500px;
+    height: 500px;
+
+    right: -180px;
+    top: 100px;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(104, 255, 154, 0.22),
+            transparent 70%
+        );
+
+    pointer-events: none;
+}
+
+
+/* =========================================
+   BRAND CONTENT
+========================================= */
+
+.brand-content {
+
+    position: relative;
+
+    z-index: 2;
+
+    max-width: 580px;
+
+    margin: 0 auto;
+
+    width: 100%;
+}
+
+
+/* =========================================
+   LOGO
+========================================= */
+
+.logo-area {
+
+    text-align: center;
+}
+
+
+.cow-logo {
+
+    width: 155px;
+    height: 155px;
+
+    margin: 0 auto 10px;
+
+    border:
+        7px solid white;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    font-size: 75px;
+
+    background:
+        rgba(255, 255, 255, 0.08);
+
+    box-shadow:
+        0 5px 25px
+        rgba(0, 0, 0, 0.15);
+}
+
+
+.logo-area h1 {
+
+    font-family: Georgia, serif;
+
+    font-size: clamp(
+        38px,
+        4vw,
+        60px
+    );
+
+    margin-top: 5px;
+
+    letter-spacing: -1px;
+}
+
+
+.tagline {
+
+    color: #e8d75d;
+
+    font-size: 25px;
+
+    font-weight: 600;
+
+    margin-top: 8px;
+}
+
+
+/* =========================================
+   DIVIDER
+========================================= */
+
+.divider {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 15px;
+
+    margin:
+        25px auto 30px;
+
+    max-width: 400px;
+}
+
+
+.divider span {
+
+    height: 1px;
+
+    flex: 1;
+
+    background:
+        rgba(255,255,255,0.45);
+}
+
+
+.divider b {
+
+    color: white;
+
+    font-size: 18px;
+}
+
+
+/* =========================================
+   FEATURES
+========================================= */
+
+.features {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 18px;
+}
+
+
+.feature {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 20px;
+}
+
+
+.feature-icon {
+
+    min-width: 68px;
+    height: 68px;
+
+    border-radius: 50%;
+
+    background: white;
+
+    color: #008344;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 32px;
+
+    box-shadow:
+        0 4px 15px
+        rgba(0,0,0,0.12);
+}
+
+
+.feature h3 {
+
+    font-size: 22px;
+
+    margin-bottom: 5px;
+}
+
+
+.feature p {
+
+    font-size: 16px;
+
+    opacity: 0.95;
+
+    line-height: 1.4;
+}
+
+
+/* =========================================
+   DAIRY PRODUCTS
+========================================= */
+
+.dairy-products {
+
+    height: 150px;
+
+    display: flex;
+
+    align-items: flex-end;
+
+    gap: 30px;
+
+    position: relative;
+
+    z-index: 2;
+
+    justify-content: flex-start;
+}
+
+
+.milk-bottle {
+
+    font-size: 130px;
+
+    line-height: 1;
+}
+
+
+.milk-can {
+
+    font-size: 100px;
+
+    line-height: 1;
+}
+
+
+.paneer {
+
+    font-size: 90px;
+
+    line-height: 1;
+}
+
+
+/* =========================================
+   RIGHT LOGIN SECTION
+========================================= */
+
+.login-section {
+
+    width: 55%;
+
+    min-height: calc(100vh - 32px);
+
+    background:
+        #f5f8f5;
+
+    border-radius:
+        0 18px 18px 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 45px;
+}
+
+
+/* =========================================
+   LOGIN CARD
+========================================= */
+
+.login-card {
+
+    width: 100%;
+
+    max-width: 690px;
+
+    background: white;
+
+    border-radius: 28px;
+
+    padding:
+        45px 45px 38px;
+
+    box-shadow:
+        0 12px 40px
+        rgba(0, 0, 0, 0.08);
+}
+
+
+/* =========================================
+   USER ICON
+========================================= */
+
+.user-icon {
+
+    width: 90px;
+    height: 90px;
+
+    margin: 0 auto 15px;
+
+    border:
+        4px solid #078744;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    color: #078744;
+
+    font-size: 50px;
+}
+
+
+.user-icon span {
+
+    transform:
+        translateY(-2px);
+}
+
+
+/* =========================================
+   HEADING
+========================================= */
+
+.login-card h2 {
+
+    text-align: center;
+
+    font-size:
+        clamp(34px, 4vw, 48px);
+
+    margin-bottom: 8px;
+
+    color: #111820;
+}
+
+
+.login-subtitle {
+
+    text-align: center;
+
+    color: #66717d;
+
+    font-size: 20px;
+
+    margin-bottom: 38px;
+}
+
+
+/* =========================================
+   FORM
+========================================= */
+
+.form-group {
+
+    margin-bottom: 26px;
+}
+
+
+.form-group label {
+
+    display: block;
+
+    font-size: 20px;
+
+    font-weight: 600;
+
+    margin-bottom: 10px;
+}
+
+
+.password-heading {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+}
+
+
+.password-heading a {
+
+    color: #006d35;
+
+    font-size: 16px;
+
+    text-decoration: none;
+
+    font-weight: 500;
+}
+
+
+.password-heading a:hover {
+
+    text-decoration: underline;
+}
+
+
+/* =========================================
+   INPUT
+========================================= */
+
+.input-wrapper {
+
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+}
+
+
+.input-wrapper input {
+
+    width: 100%;
+
+    height: 68px;
+
+    border:
+        1.5px solid #d1d7dc;
+
+    border-radius: 14px;
+
+    padding:
+        0 55px;
+
+    font-size: 19px;
+
+    color: #172019;
+
+    outline: none;
+
+    transition:
+        0.2s ease;
+}
+
+
+.input-wrapper input::placeholder {
+
+    color: #7a8188;
+}
+
+
+.input-wrapper input:focus {
+
+    border-color: #078744;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(8, 135, 68, 0.1);
+}
+
+
+.input-icon {
+
+    position: absolute;
+
+    left: 20px;
+
+    z-index: 2;
+
+    color: #078744;
+
+    font-size: 26px;
+}
+
+
+.show-password {
+
+    position: absolute;
+
+    right: 18px;
+
+    border: none;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    font-size: 23px;
+
+    color: #66717d;
+}
+
+
+/* =========================================
+   ERROR
+========================================= */
+
+.error-message {
+
+    display: block;
+
+    color: #d93025;
+
+    font-size: 14px;
+
+    margin-top: 6px;
+
+    min-height: 16px;
+}
+
+
+/* =========================================
+   REMEMBER
+========================================= */
+
+.remember-row {
+
+    margin:
+        2px 0 28px;
+}
+
+
+.remember-label {
+
+    display: flex !important;
+
+    align-items: center;
+
+    gap: 10px;
+
+    cursor: pointer;
+
+    font-size: 17px !important;
+
+    font-weight: 400 !important;
+
+    margin: 0 !important;
+}
+
+
+.remember-label input {
+
+    width: 22px;
+
+    height: 22px;
+
+    accent-color: #078744;
+
+    cursor: pointer;
+}
+
+
+/* =========================================
+   LOGIN BUTTON
+========================================= */
+
+.login-btn {
+
+    width: 100%;
+
+    height: 70px;
+
+    border: none;
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #078744,
+            #00994f
+        );
+
+    color: white;
+
+    font-size: 25px;
+
+    font-weight: 600;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 18px;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
+}
+
+
+.login-btn:hover {
+
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 8px 20px
+        rgba(0, 130, 65, 0.25);
+}
+
+
+.login-btn:active {
+
+    transform:
+        translateY(0);
+}
+
+
+.login-icon {
+
+    font-size: 25px;
+}
+
+
+.arrow {
+
+    font-size: 30px;
+}
+
+
+/* Loading */
+
+.login-btn.loading {
+
+    opacity: 0.7;
+
+    pointer-events: none;
+}
+
+
+/* =========================================
+   OR DIVIDER
+========================================= */
+
+.or-divider {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    margin:
+        25px 0;
+}
+
+
+.or-divider span {
+
+    height: 1px;
+
+    background: #d8dce0;
+
+    flex: 1;
+}
+
+
+.or-divider div {
+
+    width: 48px;
+    height: 48px;
+
+    border:
+        1px solid #d8dce0;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-weight: 600;
+
+    color: #68727b;
+
+    background: white;
+}
+
+
+/* =========================================
+   SIGNUP
+========================================= */
+
+.signup-text {
+
+    text-align: center;
+
+    font-size: 18px;
+
+    color: #424b53;
+
+    margin-bottom: 28px;
+}
+
+
+.signup-text a {
+
+    color: #007b3d;
+
+    font-weight: 600;
+
+    text-decoration: none;
+}
+
+
+.signup-text a:hover {
+
+    text-decoration: underline;
+}
+
+
+/* =========================================
+   SECURITY
+========================================= */
+
+.security-box {
+
+    min-height: 62px;
+
+    border-radius: 12px;
+
+    background:
+        #eef9ef;
+
+    border:
+        1px solid #d6efd9;
+
+    color: #08733a;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    font-size: 16px;
+
+    text-align: center;
+
+    padding: 10px;
+}
+
+
+.security-icon {
+
+    font-size: 24px;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1100px) {
+
+    .login-page {
+        padding: 0;
+    }
+
+    .brand-section {
+
+        width: 42%;
+
+        padding:
+            35px 30px 20px;
+    }
+
+    .login-section {
+
+        width: 58%;
+
+        padding: 25px;
+    }
+
+    .login-card {
+
+        padding:
+            35px 30px;
+    }
+
+    .logo-area h1 {
+        font-size: 38px;
+    }
+
+    .tagline {
+        font-size: 19px;
+    }
+
+    .feature h3 {
+        font-size: 18px;
+    }
+
+    .feature p {
+        font-size: 14px;
+    }
+
+}
+
+
+/* Tablet */
+
+@media (max-width: 800px) {
+
+    .login-page {
+
+        display: block;
+
+        padding: 0;
+    }
+
+    .brand-section {
+
+        width: 100%;
+
+        min-height: auto;
+
+        border-radius: 0;
+
+        padding:
+            35px 25px;
+    }
+
+    .login-section {
+
+        width: 100%;
+
+        min-height: auto;
+
+        border-radius: 0;
+
+        padding: 30px 20px;
+    }
+
+    .dairy-products {
+        display: none;
+    }
+
+}
+
+
+/* Mobile */
+
+@media (max-width: 520px) {
+
+    .brand-section {
+
+        padding:
+            30px 20px;
+    }
+
+    .cow-logo {
+
+        width: 100px;
+        height: 100px;
+
+        font-size: 50px;
+    }
+
+    .logo-area h1 {
+
+        font-size: 32px;
+    }
+
+    .tagline {
+
+        font-size: 17px;
+    }
+
+    .features {
+
+        gap: 15px;
+    }
+
+    .feature-icon {
+
+        min-width: 52px;
+
+        width: 52px;
+        height: 52px;
+
+        font-size: 23px;
+    }
+
+    .feature h3 {
+
+        font-size: 16px;
+    }
+
+    .feature p {
+
+        font-size: 13px;
+    }
+
+    .login-section {
+
+        padding: 20px 12px;
+    }
+
+    .login-card {
+
+        padding:
+            30px 20px;
+
+        border-radius: 20px;
+    }
+
+    .user-icon {
+
+        width: 70px;
+        height: 70px;
+
+        font-size: 38px;
+    }
+
+    .login-card h2 {
+
+        font-size: 32px;
+    }
+
+    .login-subtitle {
+
+        font-size: 16px;
+
+        margin-bottom: 28px;
+    }
+
+    .form-group label {
+
+        font-size: 16px;
+    }
+
+    .input-wrapper input {
+
+        height: 58px;
+
+        font-size: 16px;
+    }
+
+    .login-btn {
+
+        height: 60px;
+
+        font-size: 20px;
+    }
+
+    .security-box {
+
+        font-size: 13px;
+    }
+
+}
+
+
+/* =============================================
+   DJANGO MESSAGES / ALERTS
+============================================= */
+
+.messages-container {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    animation: slideDown 0.35s ease-out;
+}
+
+.alert-error {
+    background: rgba(217, 48, 37, 0.1);
+    border: 1px solid rgba(217, 48, 37, 0.3);
+    color: #d93025;
+}
+
+.alert-success {
+    background: rgba(52, 168, 83, 0.1);
+    border: 1px solid rgba(52, 168, 83, 0.3);
+    color: #34a853;
+}
+
+.alert-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.alert-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    padding: 0 4px;
+}
+
+.alert-close:hover {
+    opacity: 1;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

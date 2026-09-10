@@ -1,0 +1,1765 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dairy Store - Admin Panel</title>
+
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <style>
+        .filter-chip {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .filter-chip:hover {
+            background: #e2e8f0;
+        }
+        .filter-chip.active {
+            background: #078046;
+            color: #ffffff;
+            border-color: #078046;
+            font-weight: 600;
+        }
+
+        /* Switch Slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 26px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 26px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #078046;
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- CSRF Token for AJAX requests -->
+    {% csrf_token %}
+
+    <div class="admin-layout">
+
+        <!-- ================= SIDEBAR ================= -->
+
+        <aside class="sidebar">
+
+            <div class="brand" style="justify-content: center; padding: 5px;">
+                <img src="{% static 'images/logo.png' %}" alt="Khamkar Dairy Logo"
+                    style="height: 90px; max-width: 100%; object-fit: contain;">
+            </div>
+
+
+            <nav class="sidebar-menu">
+
+                <button class="menu-item active" onclick="showPage('dashboard', this)">
+                    <span class="menu-icon">⌂</span>
+                    <span>Dashboard</span>
+                </button>
+
+                <button class="menu-item" onclick="showPage('products', this)">
+                    <span class="menu-icon">▣</span>
+                    <span>Products</span>
+                </button>
+
+
+                <button class="menu-item" onclick="showPage('orders', this)">
+                    <span class="menu-icon">🛒</span>
+                    <span>Orders</span>
+                </button>
+
+                <button class="menu-item" onclick="showPage('customers', this)">
+                    <span class="menu-icon">♙</span>
+                    <span>Customers</span>
+                </button>
+
+                <button class="menu-item" onclick="showPage('categories', this)">
+                    <span class="menu-icon">▦</span>
+                    <span>Categories</span>
+                </button>
+
+                <button class="menu-item" onclick="showPage('reviews', this)">
+                    <span class="menu-icon">☆</span>
+                    <span>Reviews</span>
+                </button>
+
+                <button class="menu-item" onclick="showPage('coupons', this)">
+                    <span class="menu-icon">◇</span>
+                    <span>Coupons</span>
+                </button>
+
+                <button class="menu-item" onclick="showPage('reports', this)">
+                    <span class="menu-icon">▥</span>
+                    <span>Reports</span>
+                </button>
+
+                <button class="menu-item" onclick="showPage('settings', this)">
+                    <span class="menu-icon">⚙</span>
+                    <span>Settings</span>
+                </button>
+
+                <button class="menu-item" id="sidebarProfileBtn" onclick="showPage('profile', this)">
+                    <span class="menu-icon">👤</span>
+                    <span>My Profile</span>
+                </button>
+
+            </nav>
+
+
+            <button class="logout-menu" onclick="window.location.href='{% url 'home' %}'">
+                <span>↪</span>
+                Back to Home
+            </button>
+
+        </aside>
+
+
+        <!-- ================= MAIN ================= -->
+
+        <main class="main-content">
+
+            <!-- TOP HEADER -->
+
+            <header class="top-header">
+
+                <button class="mobile-menu" onclick="toggleSidebar()">
+                    ☰
+                </button>
+
+                <div class="search-box">
+
+                    <span>⌕</span>
+
+                    <input type="text" id="globalSearch" placeholder="Search here...">
+
+                </div>
+
+
+                <div class="header-right">
+
+                    <button class="notification-btn" onclick="showNotification()">
+                        🔔
+                        <span class="notification-badge">3</span>
+                    </button>
+
+
+                    <div class="admin-profile" id="adminProfileBtn" onclick="toggleAdminProfileMenu(event)">
+
+                        <div class="admin-avatar">
+                            {% if admin_profile and admin_profile.avatar %}
+                            <img src="{{ admin_profile.avatar.url }}" alt="Admin Avatar" id="headerAdminAvatarImg"
+                                style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
+                            {% else %}
+                            <span id="headerAdminAvatarInitial">{{ request.user.first_name|first|default:request.user.username|first|upper }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="admin-info">
+                            <strong id="headerAdminName">{{ request.user.get_full_name|default:request.user.username }}</strong>
+                            <span>🛡️ Administrator</span>
+                        </div>
+
+                        <span class="profile-arrow">⌄</span>
+
+                        <!-- Admin Profile Dropdown Menu -->
+                        <div class="admin-profile-dropdown" id="adminProfileDropdown">
+                            <div class="dropdown-header">
+                                <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+                                <small>{{ request.user.email|default:"admin@khamkardairy.com" }}</small>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="javascript:void(0)"
+                                onclick="showPage('profile', document.getElementById('sidebarProfileBtn'))"
+                                class="dropdown-item">
+                                <span>👤</span> My Profile
+                            </a>
+                            <a href="{% url 'home' %}" class="dropdown-item">
+                                <span>🏠</span> Store Homepage
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'logout' %}" class="dropdown-item logout-link">
+                                <span>🚪</span> Logout
+                            </a>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- ================= DASHBOARD ================= -->
+
+            <section id="dashboard" class="page active-page">
+
+                <div class="page-header">
+
+                    <div>
+                        <h1>Dashboard</h1>
+                        <p>Welcome back, {{ request.user.first_name|default:"Admin" }}!</p>
+                    </div>
+
+                    <div class="date-box">
+                        📅
+                        <span id="currentDate"></span>
+                    </div>
+
+                </div>
+
+
+                <!-- STAT CARDS -->
+
+                <div class="stats-grid">
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon blue">
+                            🛍️
+                        </div>
+
+                        <div>
+                            <p>Total Orders</p>
+                            <h2 id="totalOrders">{{ total_orders }}</h2>
+                            <span class="{% if orders_change >= 0 %}increase{% else %}decrease{% endif %}">
+                                {% if orders_change >= 0 %}↑{% else %}↓{% endif %} {{ orders_change }}%
+                            </span>
+                            <small> from last month</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon green">
+                            ₹
+                        </div>
+
+                        <div>
+                            <p>Total Sales</p>
+                            <h2>₹{{ total_sales }}</h2>
+                            <span class="{% if sales_change >= 0 %}increase{% else %}decrease{% endif %}">
+                                {% if sales_change >= 0 %}↑{% else %}↓{% endif %} {{ sales_change }}%
+                            </span>
+                            <small> from last month</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon purple">
+                            👥
+                        </div>
+
+                        <div>
+                            <p>Total Customers</p>
+                            <h2>{{ total_customers }}</h2>
+                            <span class="{% if customers_change >= 0 %}increase{% else %}decrease{% endif %}">
+                                {% if customers_change >= 0 %}↑{% else %}↓{% endif %} {{ customers_change }}%
+                            </span>
+                            <small> from last month</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon orange">
+                            📦
+                        </div>
+
+                        <div>
+                            <p>Total Products</p>
+                            <h2 id="totalProducts">{{ total_products }}</h2>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- DASHBOARD CONTENT -->
+
+                <div class="dashboard-grid">
+
+                    <!-- ORDERS CHART -->
+
+                    <div class="panel chart-panel">
+
+                        <div class="panel-header">
+
+                            <div>
+                                <h2>Orders Overview</h2>
+                                <p>Orders received in the last 7 days</p>
+                            </div>
+
+                            <select>
+                                <option>Last 7 Days</option>
+                                <option>Last 30 Days</option>
+                                <option>This Year</option>
+                            </select>
+
+                        </div>
+
+
+                        <div class="chart">
+
+                            <div class="chart-y">
+                                <span>200</span>
+                                <span>150</span>
+                                <span>100</span>
+                                <span>50</span>
+                                <span>0</span>
+                            </div>
+
+                            <div class="chart-area">
+
+                                <div class="grid-line"></div>
+                                <div class="grid-line"></div>
+                                <div class="grid-line"></div>
+                                <div class="grid-line"></div>
+                                <div class="grid-line"></div>
+
+                                <svg viewBox="0 0 700 250" preserveAspectRatio="none" class="sales-svg">
+
+                                    <polygon
+                                        points="0,210 100,150 200,180 300,130 400,150 500,90 600,120 700,30 700,250 0,250"
+                                        class="chart-fill" />
+
+                                    <polyline points="0,210 100,150 200,180 300,130 400,150 500,90 600,120 700,30"
+                                        class="chart-line" />
+
+                                    <circle cx="0" cy="210" r="5" />
+                                    <circle cx="100" cy="150" r="5" />
+                                    <circle cx="200" cy="180" r="5" />
+                                    <circle cx="300" cy="130" r="5" />
+                                    <circle cx="400" cy="150" r="5" />
+                                    <circle cx="500" cy="90" r="5" />
+                                    <circle cx="600" cy="120" r="5" />
+                                    <circle cx="700" cy="30" r="5" />
+
+                                </svg>
+
+                                <div class="chart-labels">
+                                    <span>21 Aug</span>
+                                    <span>22 Aug</span>
+                                    <span>23 Aug</span>
+                                    <span>24 Aug</span>
+                                    <span>25 Aug</span>
+                                    <span>26 Aug</span>
+                                    <span>27 Aug</span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- RECENT ORDERS -->
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+                            <h2>Recent Orders</h2>
+
+                            <button class="view-all"
+                                onclick="showPage('orders', document.querySelectorAll('.menu-item')[3])">
+                                View All
+                            </button>
+                        </div>
+
+                        {% if recent_orders %}
+                        {% for order in recent_orders %}
+                        <div class="recent-order">
+
+                            <div class="product-small">🛍️</div>
+
+                            <div class="order-info">
+                                <strong>
+                                    {% for item in order.items.all %}
+                                    {{ item.product.name }}{% if not forloop.last %}, {% endif %}
+                                    {% empty %}
+                                    Order
+                                    {% endfor %}
+                                </strong>
+                                <span>Order #{{ order.order_id }}</span>
+                            </div>
+
+                            <span class="status {{ order.status }}">
+                                {{ order.get_status_display }}
+                            </span>
+
+                            <strong>₹{{ order.total_amount }}</strong>
+
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="empty-state">
+                            <p>No orders yet.</p>
+                        </div>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= PRODUCTS ================= -->
+
+            <section id="products" class="page">
+
+                <div class="page-header">
+
+                    <div>
+                        <h1>Products</h1>
+                        <p>Manage your dairy products</p>
+                    </div>
+
+                    <button class="primary-btn" onclick="openAddProduct()">
+                        + Add Product
+                    </button>
+
+                </div>
+
+
+                <div class="product-panel">
+
+                    <div class="product-toolbar">
+
+                        <h2>All Products</h2>
+
+                        <div class="product-search">
+
+                            <span>⌕</span>
+
+                            <input type="text" id="productSearch" placeholder="Search products...">
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="table-container">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Product Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Availability</th>
+                                    <th>Action</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="productTable">
+
+                                {% for product in products %}
+                                <tr data-product-id="{{ product.id }}"
+                                    data-quantity-label="{{ product.quantity_label|default:'' }}">
+                                    <td>
+                                        <div class="product-image">
+                                            {% if product.image %}
+                                            <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                                                style="width:40px;height:40px;object-fit:cover;border-radius:8px;">
+                                            {% else %}
+                                            📦
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong>{{ product.name }}</strong>
+                                        {% if product.quantity_label %}
+                                        <div style="font-size: 12px; color: #078046; font-weight: 500;">{{ product.quantity_label }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ product.category.name }}</td>
+                                    <td>₹{{ product.price }}</td>
+                                    <td>{{ product.stock }}</td>
+                                    <td>
+                                        <button type="button"
+                                            class="status-toggle-btn {% if product.is_active %}btn-available{% else %}btn-unavailable{% endif %}"
+                                            onclick="toggleProductAvailability(this)"
+                                            title="Click to change Availability">
+                                            {% if product.is_active %}● Available{% else %}● Unavailable{% endif %}
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button class="edit-btn" onclick="editProduct(this)">
+                                            ✎ Edit
+                                        </button>
+
+                                        <button class="delete-btn" onclick="deleteProduct(this)">
+                                            🗑 Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" style="text-align:center;padding:2rem;color:#888;">
+                                        No products found. Add your first product!
+                                    </td>
+                                </tr>
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= ORDERS ================= -->
+
+            <section id="orders" class="page">
+
+                <div class="page-header">
+                    <div>
+                        <h1>Orders</h1>
+                        <p>Manage customer orders</p>
+                    </div>
+                </div>
+
+                <div class="product-panel">
+
+                    <div class="product-toolbar">
+                        <h2>All Orders</h2>
+
+                        <div class="product-search">
+                            <span>⌕</span>
+                            <input type="text" id="orderSearch" placeholder="Search orders...">
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Payment</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderTable">
+                                {% for order in all_orders %}
+                                <tr data-order-id="{{ order.id }}">
+                                    <td><strong>#{{ order.order_id }}</strong></td>
+                                    <td>{{ order.user.get_full_name|default:order.user.username }}</td>
+                                    <td>
+                                        {% for item in order.items.all %}
+                                        {{ item.product.name|default:"(Deleted Product)" }} × {{ item.quantity }}{% if not forloop.last %}<br>{% endif %}
+                                        {% empty %}
+                                        <span style="color: #888;">No items</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td>₹{{ order.total_amount }}</td>
+                                    <td>{{ order.get_payment_method_display }}</td>
+                                    <td>
+                                        <span class="status {{ order.status }}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ order.created_at|date:"d M Y" }}</td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                            <select class="status-select"
+                                                onchange="updateOrderStatus({{ order.id }}, this.value)">
+                                                <option value="pending" {% if order.status == "pending" %}selected{% endif %}>Pending</option>
+                                                <option value="delivered" {% if order.status == "delivered" %}selected{% endif %}>Delivered</option>
+                                                <option value="cancelled" {% if order.status == "cancelled" %}selected{% endif %}>Cancelled</option>
+                                            </select>
+                                            <button type="button" class="delete-btn"
+                                                onclick="deleteOrder({{ order.id }}, this)" title="Delete Order">
+                                                🗑 Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" style="text-align:center;padding:2rem;color:#888;">
+                                        No orders yet.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= CUSTOMERS ================= -->
+
+            <section id="customers" class="page">
+
+                <div class="page-header">
+                    <div>
+                        <h1>Customers</h1>
+                        <p>View and manage your customers</p>
+                    </div>
+                </div>
+
+                <div class="product-panel">
+
+                    <div class="product-toolbar">
+                        <h2>All Customers ({{ total_customers }})</h2>
+
+                        <div class="product-search">
+                            <span>⌕</span>
+                            <input type="text" id="customerSearch" placeholder="Search customers...">
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Joined</th>
+                                    <th>Orders</th>
+                                    <th>Total Spent</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customerTable">
+                                {% for customer in customers %}
+                                <tr data-customer-id="{{ customer.id }}">
+                                    <td><strong>{{ customer.get_full_name|default:customer.username }}</strong></td>
+                                    <td>{{ customer.email }}</td>
+                                    <td>{{ customer.profile.phone|default:"—" }}</td>
+                                    <td>{{ customer.date_joined|date:"d M Y" }}</td>
+                                    <td>{{ customer.order_count }}</td>
+                                    <td>₹{{ customer.total_spent|default:"0" }}</td>
+                                    <td>
+                                        <select class="role-select" onchange="changeCustomerRole(this)"
+                                            style="padding:5px 10px;border-radius:6px;font-weight:600;font-size:0.85rem;cursor:pointer;outline:none;{% if customer.is_staff %}background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;{% else %}background:#f3f4f6;color:#374151;border:1px solid #d1d5db;{% endif %}">
+                                            <option value="Customer" {% if not customer.is_staff %}selected{% endif %}>
+                                                👤 Customer</option>
+                                            <option value="Admin" {% if customer.is_staff %}selected{% endif %}>🛡️
+                                                Admin</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        {% if customer.is_active %}
+                                        <span class="active-status">Active</span>
+                                        {% else %}
+                                        <span class="inactive-status">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="edit-btn" onclick="editCustomer(this)">✏️ Edit</button>
+                                        <button class="edit-btn" style="background:#4b5563;"
+                                            onclick="toggleCustomerStatus(this)">
+                                            {% if customer.is_active %}⛔ Deactivate{% else %}✅ Activate{% endif %}
+                                        </button>
+                                        <button class="delete-btn" onclick="deleteCustomer(this)">🗑 Delete</button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" style="text-align:center;padding:2rem;color:#888;">
+                                        No customers registered yet.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= CATEGORIES ================= -->
+
+            <section id="categories" class="page">
+
+                <div class="page-header">
+                    <div>
+                        <h1>Categories</h1>
+                        <p>Manage product categories</p>
+                    </div>
+
+                    <button class="primary-btn" onclick="openAddCategory()">
+                        + Add Category
+                    </button>
+                </div>
+
+                <div class="product-panel">
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Photo</th>
+                                    <th>Category Name</th>
+                                    <th>Description</th>
+                                    <th>Products</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoryTable">
+                                {% for cat in categories %}
+                                <tr data-category-id="{{ cat.id }}">
+                                    <td>
+                                        <div class="product-image">
+                                            {% if cat.image %}
+                                            <img src="{{ cat.image.url }}" alt="{{ cat.name }}"
+                                                style="width:40px;height:40px;object-fit:cover;border-radius:8px;">
+                                            {% else %}
+                                            📁
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td><strong>{{ cat.name }}</strong></td>
+                                    <td>{{ cat.description|default:"—" }}</td>
+                                    <td>{{ cat.product_count }}</td>
+                                    <td>
+                                        <button class="edit-btn" onclick="editCategory(this)">✏️ Edit</button>
+                                        <button class="delete-btn"
+                                            onclick="deleteCategory({{ cat.id }}, '{{ cat.name }}')">
+                                            🗑 Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" style="text-align:center;padding:2rem;color:#888;">
+                                        No categories yet. Add your first category!
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= OTHER PAGES ================= -->
+
+            <section id="reviews" class="page">
+                <div class="page-header">
+                    <div>
+                        <h1>Customer Reviews</h1>
+                        <p>View product ratings & feedback submitted by customers</p>
+                    </div>
+                </div>
+
+                <div class="product-panel">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Product</th>
+                                    <th>Rating</th>
+                                    <th>Review Comment</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rev in reviews %}
+                                <tr>
+                                    <td><strong>{{ rev.user.get_full_name|default:rev.user.username }}</strong></td>
+                                    <td>{{ rev.product.name|default:"Deleted Product" }}</td>
+                                    <td style="color:#f59e0b; font-weight:700;">{{ rev.rating }} ★</td>
+                                    <td>{{ rev.comment|default:"No comment written." }}</td>
+                                    <td>{{ rev.created_at|date:"M d, Y h:i A" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" style="text-align:center;padding:2rem;color:#888;">
+                                        No reviews received yet.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <section id="coupons" class="page">
+                <div class="page-header">
+                    <div>
+                        <h1>Discount Coupons</h1>
+                        <p>Create and manage discount codes for customers</p>
+                    </div>
+                    <button class="add-btn" onclick="openAddCouponModal()">
+                        <span>➕ Create New Coupon</span>
+                    </button>
+                </div>
+
+                <div class="product-panel">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Coupon Code</th>
+                                    <th>Discount</th>
+                                    <th>Min Order Amount</th>
+                                    <th>Valid Until</th>
+                                    <th>Times Used</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="couponTable">
+                                {% for c in coupons %}
+                                <tr data-coupon-id="{{ c.id }}">
+                                    <td>
+                                        <span class="badge-pill" style="background:#e8f5e9; color:#078046; font-size:14px; font-weight:700; padding:6px 12px; font-family:monospace; border:1px dashed #078046;">
+                                            🎟️ {{ c.code }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong style="color:#0f172a;">
+                                            {% if c.discount_type == 'percentage' %}
+                                            {{ c.discount_value|floatformat:0 }}% OFF
+                                            {% else %}
+                                            ₹{{ c.discount_value }} OFF
+                                            {% endif %}
+                                        </strong>
+                                    </td>
+                                    <td>₹{{ c.min_order_amount }}</td>
+                                    <td>
+                                        {% if c.valid_until %}
+                                        {{ c.valid_until|date:"M d, Y" }}
+                                        {% else %}
+                                        <span style="color:#64748b;">Never Expires</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ c.used_count }} times</td>
+                                    <td>
+                                        <button type="button"
+                                            class="status-toggle-btn {% if c.is_active %}btn-available{% else %}btn-unavailable{% endif %}"
+                                            onclick="toggleCouponStatus(this, {{ c.id }})"
+                                            title="Click to toggle status">
+                                            {% if c.is_active %}● Active{% else %}● Inactive{% endif %}
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button class="delete-btn" onclick="deleteCoupon(this, {{ c.id }})">
+                                            🗑 Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" style="text-align:center;padding:2rem;color:#888;">
+                                        No coupons created yet. Click "Create New Coupon" to add one!
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <section id="reports" class="page">
+                <div class="page-header">
+                    <div>
+                        <h1>Sales & Performance Reports</h1>
+                        <p>Comprehensive store performance metrics, top sellers, and revenue distribution</p>
+                    </div>
+                </div>
+
+                <!-- DATE FILTER BAR -->
+                <div class="product-panel" style="margin-bottom: 24px; padding: 16px 20px;">
+                    <form method="GET" action="/admin-panel/#reports" id="reportDateFilterForm" style="display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                            <span style="font-weight:600; font-size:14px; color:#1e293b; margin-right:4px;">📅 Filter Period:</span>
+                            
+                            <button type="button" class="filter-chip {% if date_preset == 'all' or not date_preset %}active{% endif %}" onclick="setReportPreset('all')">All Time</button>
+                            <button type="button" class="filter-chip {% if date_preset == 'today' %}active{% endif %}" onclick="setReportPreset('today')">Today</button>
+                            <button type="button" class="filter-chip {% if date_preset == 'yesterday' %}active{% endif %}" onclick="setReportPreset('yesterday')">Yesterday</button>
+                            <button type="button" class="filter-chip {% if date_preset == '7days' %}active{% endif %}" onclick="setReportPreset('7days')">Last 7 Days</button>
+                            <button type="button" class="filter-chip {% if date_preset == '30days' %}active{% endif %}" onclick="setReportPreset('30days')">Last 30 Days</button>
+                            <button type="button" class="filter-chip {% if date_preset == 'this_month' %}active{% endif %}" onclick="setReportPreset('this_month')">This Month</button>
+                            
+                            <input type="hidden" name="date_preset" id="reportDatePresetInput" value="{{ date_preset|default:'all' }}">
+                        </div>
+
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <label style="font-size:13px; font-weight:500; color:#64748b;">From:</label>
+                                <input type="date" name="start_date" id="reportStartDate" value="{{ start_date }}" style="padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;" onchange="document.getElementById('reportDatePresetInput').value='custom'">
+                            </div>
+
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <label style="font-size:13px; font-weight:500; color:#64748b;">To:</label>
+                                <input type="date" name="end_date" id="reportEndDate" value="{{ end_date }}" style="padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;" onchange="document.getElementById('reportDatePresetInput').value='custom'">
+                            </div>
+
+                            <button type="submit" style="padding:7px 16px; background:#078046; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Apply Filter</button>
+                            {% if date_preset != 'all' or start_date or end_date %}
+                            <a href="/admin-panel/#reports" style="padding:7px 14px; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px;">Reset (All)</a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+
+                <!-- STAT CARDS ROW -->
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#e8f5e9; color:#078046;">💰</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Store Revenue</span>
+                            <h3 class="stat-value">₹{{ rep_total_sales }}</h3>
+                            <span class="stat-subtext" style="color:#078046; font-size:12px; font-weight:600;">
+                                {% if date_preset == 'today' %}Today's Sales
+                                {% elif date_preset == 'yesterday' %}Yesterday's Sales
+                                {% elif date_preset == '7days' %}Last 7 Days Sales
+                                {% elif date_preset == '30days' %}Last 30 Days Sales
+                                {% elif date_preset == 'this_month' %}This Month Sales
+                                {% elif date_preset == 'custom' %}Custom Period Sales
+                                {% else %}All Time Sales{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#e0f2fe; color:#0284c7;">📊</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Avg Order Value (AOV)</span>
+                            <h3 class="stat-value">₹{{ avg_order_value }}</h3>
+                            <span class="stat-subtext" style="color:#64748b; font-size:12px;">Per order</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#fef3c7; color:#d97706;">📦</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Delivered Orders</span>
+                            <h3 class="stat-value">{{ delivered_orders_count }} / {{ rep_total_orders }}</h3>
+                            <span class="stat-subtext" style="color:#078046; font-size:12px; font-weight:600;">Completed in period</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#f3e8ff; color:#9333ea;">💳</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Payment Modes</span>
+                            <h3 class="stat-value">{{ cod_orders_count }} COD | {{ online_orders_count }} Online</h3>
+                            <span class="stat-subtext" style="color:#64748b; font-size:12px;">Cash vs Online</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TOP SELLING PRODUCTS & CATEGORY PERFORMANCE -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                    <!-- TOP PRODUCTS TABLE -->
+                    <div class="product-panel" style="margin: 0;">
+                        <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+                            <h3 style="margin:0; font-size:16px; color:#1e293b;">🔥 Top Selling Products</h3>
+                            <span style="font-size:12px; color:#64748b; font-weight:600;">By Units Sold</span>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Category</th>
+                                        <th>Units Sold</th>
+                                        <th>Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in top_selling_products %}
+                                    <tr>
+                                        <td><strong>{{ p.name }}</strong></td>
+                                        <td>{{ p.category.name }}</td>
+                                        <td><span class="badge-pill" style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:12px; font-weight:700;">{{ p.units_sold }} units</span></td>
+                                        <td style="color:#078046; font-weight:700;">₹{{ p.revenue|default:"0.00" }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" style="text-align:center; padding:1.5rem; color:#888;">No sales data available.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- CATEGORY SALES BREAKDOWN -->
+                    <div class="product-panel" style="margin: 0;">
+                        <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+                            <h3 style="margin:0; font-size:16px; color:#1e293b;">🏷️ Category Performance</h3>
+                            <span style="font-size:12px; color:#64748b; font-weight:600;">By Revenue</span>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Items Sold</th>
+                                        <th>Total Sales</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cat in category_reports %}
+                                    <tr>
+                                        <td><strong>{{ cat.name }}</strong></td>
+                                        <td>{{ cat.units_sold|default:"0" }} items</td>
+                                        <td style="color:#078046; font-weight:700;">₹{{ cat.revenue|default:"0.00" }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" style="text-align:center; padding:1.5rem; color:#888;">No category data available.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ORDER STATUS SUMMARY CARDS -->
+                <div class="product-panel">
+                    <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0;">
+                        <h3 style="margin:0; font-size:16px; color:#1e293b;">📈 Order Breakdown Summary</h3>
+                    </div>
+                    <div style="padding: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <span style="font-weight:600; color:#078046;">● Delivered</span>
+                                <strong style="font-size:18px; color:#078046;">{{ delivered_orders_count }}</strong>
+                            </div>
+                            <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden;">
+                                <div style="background:#078046; height:100%; width:{% if total_orders > 0 %}{% widthratio delivered_orders_count total_orders 100 %}{% else %}0{% endif %}%;"></div>
+                            </div>
+                        </div>
+
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <span style="font-weight:600; color:#d97706;">● Pending</span>
+                                <strong style="font-size:18px; color:#d97706;">{{ pending_orders_count }}</strong>
+                            </div>
+                            <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden;">
+                                <div style="background:#d97706; height:100%; width:{% if total_orders > 0 %}{% widthratio pending_orders_count total_orders 100 %}{% else %}0{% endif %}%;"></div>
+                            </div>
+                        </div>
+
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <span style="font-weight:600; color:#dc2626;">● Cancelled</span>
+                                <strong style="font-size:18px; color:#dc2626;">{{ cancelled_orders_count }}</strong>
+                            </div>
+                            <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden;">
+                                <div style="background:#dc2626; height:100%; width:{% if total_orders > 0 %}{% widthratio cancelled_orders_count total_orders 100 %}{% else %}0{% endif %}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <section id="settings" class="page">
+                <div class="page-header">
+                    <div>
+                        <h1>Store & System Settings</h1>
+                        <p>Configure general store details, delivery charges, payment options, and announcements</p>
+                    </div>
+                </div>
+
+                <form id="storeSettingsForm" onsubmit="saveStoreSettings(event)">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+
+                        <!-- 1. GENERAL STORE INFO -->
+                        <div class="admin-card-panel" style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                            <div style="border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:16px;">
+                                <h3 style="margin:0 0 4px 0; font-size:16px; color:#1e293b; display:flex; align-items:center; gap:8px;">
+                                    <span>🏪</span> Store General Information
+                                </h3>
+                                <p style="margin:0; font-size:13px; color:#64748b;">Basic store details displayed to customers</p>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom:14px;">
+                                <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Store Name</label>
+                                <input type="text" id="settingStoreName" value="{{ store_settings.store_name }}" required
+                                    style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
+                            </div>
+
+                            <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+                                <div class="form-group">
+                                    <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Contact Phone</label>
+                                    <input type="text" id="settingContactPhone" value="{{ store_settings.contact_phone }}" required
+                                        style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
+                                </div>
+                                <div class="form-group">
+                                    <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Support Email</label>
+                                    <input type="email" id="settingContactEmail" value="{{ store_settings.contact_email }}" required
+                                        style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom:14px;">
+                                <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Operating Hours</label>
+                                <input type="text" id="settingOperatingHours" value="{{ store_settings.operating_hours }}" placeholder="e.g. 06:00 AM - 10:00 PM"
+                                    style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
+                            </div>
+
+                            <div class="form-group">
+                                <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Store Physical Address</label>
+                                <textarea id="settingStoreAddress" rows="2" style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box; resize:vertical;">{{ store_settings.store_address }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- 2. DELIVERY & ORDER RULES -->
+                        <div class="admin-card-panel" style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                            <div style="border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:16px;">
+                                <h3 style="margin:0 0 4px 0; font-size:16px; color:#1e293b; display:flex; align-items:center; gap:8px;">
+                                    <span>🚚</span> Delivery & Packaging Charges
+                                </h3>
+                                <p style="margin:0; font-size:13px; color:#64748b;">Pricing and delivery fee rules applied at checkout</p>
+                            </div>
+
+                            <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+                                <div class="form-group">
+                                    <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Free Delivery Above (₹)</label>
+                                    <input type="number" id="settingFreeDeliveryThreshold" value="{{ store_settings.free_delivery_threshold }}" step="0.01" min="0" required
+                                        style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
+                                </div>
+                                <div class="form-group">
+                                    <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Standard Delivery Fee (₹)</label>
+                                    <input type="number" id="settingStandardDelivery" value="{{ store_settings.standard_delivery_charge }}" step="0.01" min="0" required
+                                        style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom:20px;">
+                                <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Packaging Charge (₹)</label>
+                                <input type="number" id="settingPackagingCharge" value="{{ store_settings.packaging_charge }}" step="0.01" min="0" required
+                                    style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
+                            </div>
+
+                            <!-- STORE OPERATING STATUS -->
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <strong style="display:block; font-size:14px; color:#1e293b;">Accepting Orders Now</strong>
+                                    <span style="font-size:12px; color:#64748b;">Toggle off during maintenance or holidays</span>
+                                </div>
+                                <label class="switch" style="position:relative; display:inline-block; width:48px; height:26px;">
+                                    <input type="checkbox" id="settingStoreOpen" {% if store_settings.store_open %}checked{% endif %} style="opacity:0; width:0; height:0;">
+                                    <span class="slider round" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#cbd5e1; transition:.3s; border-radius:26px;"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- BOTTOM ROW: PAYMENT MODES & ANNOUNCEMENT BANNER -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+
+                        <!-- 3. PAYMENT METHODS -->
+                        <div class="admin-card-panel" style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                            <div style="border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:16px;">
+                                <h3 style="margin:0 0 4px 0; font-size:16px; color:#1e293b; display:flex; align-items:center; gap:8px;">
+                                    <span>💳</span> Payment Methods
+                                </h3>
+                                <p style="margin:0; font-size:13px; color:#64748b;">Choose payment options available at checkout</p>
+                            </div>
+
+                            <div style="display:flex; flex-direction:column; gap:12px;">
+                                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
+                                    <div>
+                                        <strong style="display:block; font-size:14px; color:#1e293b;">Cash on Delivery (COD)</strong>
+                                        <span style="font-size:12px; color:#64748b;">Allow customers to pay cash upon arrival</span>
+                                    </div>
+                                    <label class="switch" style="position:relative; display:inline-block; width:48px; height:26px;">
+                                        <input type="checkbox" id="settingEnableCOD" {% if store_settings.enable_cod %}checked{% endif %} style="opacity:0; width:0; height:0;">
+                                        <span class="slider round" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#cbd5e1; transition:.3s; border-radius:26px;"></span>
+                                    </label>
+                                </div>
+
+                                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
+                                    <div>
+                                        <strong style="display:block; font-size:14px; color:#1e293b;">Online Payments (UPI / Card / NetBanking)</strong>
+                                        <span style="font-size:12px; color:#64748b;">Instant online checkout payment</span>
+                                    </div>
+                                    <label class="switch" style="position:relative; display:inline-block; width:48px; height:26px;">
+                                        <input type="checkbox" id="settingEnableOnline" {% if store_settings.enable_online %}checked{% endif %} style="opacity:0; width:0; height:0;">
+                                        <span class="slider round" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#cbd5e1; transition:.3s; border-radius:26px;"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. ANNOUNCEMENT BANNER -->
+                        <div class="admin-card-panel" style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                            <div style="border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:16px;">
+                                <h3 style="margin:0 0 4px 0; font-size:16px; color:#1e293b; display:flex; align-items:center; gap:8px;">
+                                    <span>📢</span> Customer Announcement Banner
+                                </h3>
+                                <p style="margin:0; font-size:13px; color:#64748b;">Display notification or flash offer to all shop visitors</p>
+                            </div>
+
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                                <div>
+                                    <strong style="display:block; font-size:14px; color:#1e293b;">Show Announcement Banner</strong>
+                                    <span style="font-size:12px; color:#64748b;">Enable banner on store frontend</span>
+                                </div>
+                                <label class="switch" style="position:relative; display:inline-block; width:48px; height:26px;">
+                                    <input type="checkbox" id="settingShowAnnouncement" {% if store_settings.show_announcement %}checked{% endif %} style="opacity:0; width:0; height:0;">
+                                    <span class="slider round" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#cbd5e1; transition:.3s; border-radius:26px;"></span>
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Announcement Message</label>
+                                <textarea id="settingAnnouncementText" rows="2" placeholder="e.g. Special Offer: Free butter with all milk orders over ₹500 today!"
+                                    style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box; resize:vertical;">{{ store_settings.announcement_text }}</textarea>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- SAVE BUTTON BAR -->
+                    <div style="display:flex; justify-content:flex-end; gap:12px;">
+                        <button type="submit" id="btnSaveStoreSettings" class="save-btn" style="padding:12px 28px; font-size:15px; background:#078046; color:#fff; border:none; border-radius:8px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                            <span>💾 Save Store Settings</span>
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+
+            <!-- ================= PROFILE ================= -->
+
+            <section id="profile" class="page">
+
+                <div class="page-header">
+                    <div>
+                        <h1>My Profile</h1>
+                        <p>Manage administrator account, credentials, and settings</p>
+                    </div>
+                </div>
+
+                <div class="admin-profile-container">
+
+                    <!-- Admin Profile Card -->
+                    <div class="admin-profile-card">
+                        <div class="admin-profile-avatar-wrap">
+                            <img id="adminProfileAvatarImg" src="{{ admin_profile.avatar_url }}" alt="Admin Avatar"
+                                class="admin-profile-avatar-img">
+                            <input type="file" id="adminAvatarFileInput" accept="image/*" style="display: none;"
+                                onchange="uploadAdminAvatar(this)">
+                            <button type="button" class="admin-avatar-edit-btn"
+                                onclick="document.getElementById('adminAvatarFileInput').click()"
+                                title="Change Profile Picture">
+                                📷
+                            </button>
+                        </div>
+
+                        <div class="admin-profile-card-details">
+                            <h2 id="adminCardFullName">{{ request.user.get_full_name|default:request.user.username }}</h2>
+                            <div class="admin-role-badge">🛡️ Super Administrator</div>
+                            <p class="admin-card-email">✉️ {{ request.user.email|default:"No email provided" }}</p>
+                            <p class="admin-card-phone">📞 {% if admin_profile.phone %}+91 {{ admin_profile.phone }}{% else %}Phone not set{% endif %}</p>
+                        </div>
+
+                        <div class="admin-quick-stats">
+                            <div class="stat-pill">
+                                <strong>{{ total_products }}</strong>
+                                <span>Products</span>
+                            </div>
+                            <div class="stat-pill">
+                                <strong>{{ total_orders }}</strong>
+                                <span>Orders</span>
+                            </div>
+                            <div class="stat-pill">
+                                <strong>{{ total_customers }}</strong>
+                                <span>Customers</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Forms Grid -->
+                    <div class="admin-profile-grid">
+
+                        <!-- Personal Information Form -->
+                        <div class="admin-card-panel">
+                            <div class="card-panel-header">
+                                <h3>👤 Personal Information</h3>
+                                <p>Update your personal details and contact info</p>
+                            </div>
+
+                            <form id="adminProfileForm" onsubmit="saveAdminProfile(event)">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>First Name</label>
+                                        <input type="text" id="adminFirstName" value="{{ request.user.first_name }}"
+                                            placeholder="First Name" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Last Name</label>
+                                        <input type="text" id="adminLastName" value="{{ request.user.last_name }}"
+                                            placeholder="Last Name">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Email Address</label>
+                                        <input type="email" id="adminEmail" value="{{ request.user.email }}"
+                                            placeholder="admin@example.com" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Phone Number</label>
+                                        <input type="text" id="adminPhone" value="{{ admin_profile.phone }}"
+                                            placeholder="10-digit mobile number">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Store / Dairy Address</label>
+                                    <textarea id="adminAddress" rows="3"
+                                        placeholder="Enter dairy store address">{{ admin_profile.address }}</textarea>
+                                </div>
+
+                                <button type="submit" class="primary-btn" id="saveAdminProfileBtn">
+                                    ✓ Save Profile Changes
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Security / Change Password -->
+                        <div class="admin-card-panel">
+                            <div class="card-panel-header">
+                                <h3>🔒 Security & Password</h3>
+                                <p>Ensure your admin account is secured with a strong password</p>
+                            </div>
+
+                            <form id="adminPasswordForm" onsubmit="changeAdminPassword(event)">
+                                <div class="form-group">
+                                    <label>Current Password</label>
+                                    <input type="password" id="adminCurrentPassword" placeholder="••••••••" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>New Password</label>
+                                    <input type="password" id="adminNewPassword" placeholder="Minimum 6 characters"
+                                        required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Confirm New Password</label>
+                                    <input type="password" id="adminConfirmPassword" placeholder="Re-enter new password"
+                                        required>
+                                </div>
+
+                                <button type="submit" class="primary-btn" id="changeAdminPasswordBtn"
+                                    style="background: #172235;">
+                                    🔑 Update Password
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- FOOTER -->
+
+            <footer>
+                © 2025 Dairy Store. All rights reserved.
+            </footer>
+
+        </main>
+
+    </div>
+
+
+
+    <!-- ================= ADD PRODUCT MODAL ================= -->
+
+    <div class="modal-overlay" id="productModal">
+
+        <div class="modal">
+
+            <div class="modal-header">
+
+                <div>
+                    <h2 id="productModalTitle">Add New Product</h2>
+                    <p id="productModalSubtitle">Add a new product to your store</p>
+                </div>
+
+                <button onclick="closeAddProduct()" class="close-btn">
+                    ×
+                </button>
+
+            </div>
+
+
+            <form id="addProductForm" enctype="multipart/form-data">
+
+                <input type="hidden" id="editProductId" value="">
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label>Product Name</label>
+
+                        <input type="text" id="productName" placeholder="Enter product name" required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>Quantity / Unit (Liter/Gram)</label>
+
+                        <input type="text" id="productQuantityLabel" placeholder="e.g. 1 L, 500 ml, 500 g, 1 kg">
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label>Category</label>
+
+                        <select id="productCategory" required>
+
+                            <option value="">Select category</option>
+
+                            {% for cat in categories %}
+                            <option value="{{ cat.name }}">{{ cat.name }}</option>
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>Price</label>
+
+                        <input type="number" id="productPrice" placeholder="₹0" required>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label>Stock</label>
+
+                        <input type="number" id="productStock" placeholder="Enter stock" required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>Availability</label>
+
+                        <select id="productStatus">
+
+                            <option value="Available">
+                                Available
+                            </option>
+
+                            <option value="Unavailable">
+                                Unavailable
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Product Image</label>
+
+                    <input type="file" id="productImage" accept="image/*">
+
+                </div>
+
+
+                <div class="modal-actions">
+
+                    <button type="button" class="cancel-btn" onclick="closeAddProduct()">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="save-btn">
+                        + Add Product
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= ADD / EDIT CATEGORY MODAL ================= -->
+
+    <div class="modal-overlay" id="categoryModal">
+
+        <div class="modal">
+
+            <div class="modal-header">
+                <div>
+                    <h2 id="categoryModalTitle">Add New Category</h2>
+                    <p id="categoryModalSubtitle">Create a new product category</p>
+                </div>
+                <button onclick="closeAddCategory()" class="close-btn">×</button>
+            </div>
+
+            <form id="addCategoryForm">
+
+                <input type="hidden" id="editCategoryId">
+
+                <div class="form-group">
+                    <label>Category Name</label>
+                    <input type="text" id="categoryName" placeholder="Enter category name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Description (optional)</label>
+                    <input type="text" id="categoryDescription" placeholder="Enter description">
+                </div>
+
+                <div class="form-group">
+                    <label>Category Image (optional)</label>
+                    <input type="file" id="categoryImage" accept="image/*">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" onclick="closeAddCategory()">Cancel</button>
+                    <button type="submit" class="save-btn" id="categorySaveBtn">+ Add Category</button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= EDIT CUSTOMER MODAL ================= -->
+
+    <div class="modal-overlay" id="customerModal">
+
+        <div class="modal">
+
+            <div class="modal-header">
+                <div>
+                    <h2>Edit Customer</h2>
+                    <p>Update customer details</p>
+                </div>
+                <button onclick="closeCustomerModal()" class="close-btn">×</button>
+            </div>
+
+            <form id="editCustomerForm">
+
+                <input type="hidden" id="editCustomerId">
+
+                <div class="form-group">
+                    <label>Customer Name</label>
+                    <input type="text" id="customerEditName" placeholder="Full name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="customerEditEmail" placeholder="Email" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <input type="text" id="customerEditPhone" placeholder="Mobile number">
+                </div>
+
+                <div class="form-group">
+                    <label>Account Role / Privilege</label>
+                    <select id="customerEditRole">
+                        <option value="Customer">Customer</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" onclick="closeCustomerModal()">Cancel</button>
+                    <button type="submit" class="save-btn">✓ Save Changes</button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= ADD COUPON MODAL ================= -->
+
+    <div class="modal-overlay" id="addCouponModal">
+
+        <div class="modal">
+
+            <div class="modal-header">
+                <div>
+                    <h2>Create New Coupon</h2>
+                    <p>Set up a promo code and discount rules</p>
+                </div>
+                <button onclick="closeAddCouponModal()" class="close-btn">×</button>
+            </div>
+
+            <form id="addCouponForm" onsubmit="submitAddCoupon(event)">
+
+                <div class="form-group">
+                    <label>Coupon Code</label>
+                    <input type="text" id="couponCode" placeholder="e.g. FESTIVE25" style="text-transform: uppercase;" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Discount Type</label>
+                        <select id="couponDiscountType" required>
+                            <option value="percentage">Percentage (%)</option>
+                            <option value="flat">Flat Amount (₹)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Discount Value</label>
+                        <input type="number" id="couponDiscountValue" placeholder="e.g. 15 or 50" step="0.01" min="1" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Minimum Order Amount (₹)</label>
+                        <input type="number" id="couponMinAmount" placeholder="e.g. 200" step="0.01" min="0" value="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Valid Until (Optional)</label>
+                        <input type="date" id="couponValidUntil">
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" onclick="closeAddCouponModal()">Cancel</button>
+                    <button type="submit" class="save-btn" id="couponSubmitBtn">+ Create Coupon</button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <script src="{% static 'js/admin.js' %}"></script>
+    <script>
+    function setReportPreset(preset) {
+        document.getElementById('reportDatePresetInput').value = preset;
+        if (preset !== 'custom') {
+            const sInput = document.getElementById('reportStartDate');
+            const eInput = document.getElementById('reportEndDate');
+            if (sInput) sInput.value = '';
+            if (eInput) eInput.value = '';
+        }
+        document.getElementById('reportDateFilterForm').submit();
+    }
+    </script>
+
+</body>
+
+</html>

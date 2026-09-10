@@ -1,0 +1,210 @@
+/* =====================================================
+   BOTTOM NAVIGATION - SHARED ACROSS ALL PAGES
+   =====================================================
+   This file is the SINGLE SOURCE OF TRUTH for bottom nav styles.
+   Include this CSS in every page to ensure consistent navbar.
+===================================================== */
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: 88px;
+    background: #fff;
+    border-top: 1px solid #d8dfdc;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 10;
+}
+
+/* ── Base nav item ── */
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #71818a;
+    font-size: 13px;
+    position: relative;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+    transition: color 0.2s ease, transform 0.2s ease;
+    padding: 4px 5px;
+    border-radius: 12px;
+}
+
+.nav-item:hover {
+    text-decoration: none;
+    transform: translateY(-3px);
+}
+
+.nav-icon {
+    display: block;
+    font-size: 26px;
+    line-height: 1;
+    margin-bottom: 3px;
+}
+
+/* ── Individual nav item colors (CSS custom property) ── */
+
+/* Home → Blue */
+.nav-item[href*="home"],
+.nav-item[href="/"] {
+    --nav-color: #2563eb;
+}
+
+/* Shop → Green */
+.nav-item[href*="shop"] {
+    --nav-color: #059669;
+}
+
+/* Orders → Orange */
+.nav-item[href*="orders"] {
+    --nav-color: #ea580c;
+}
+
+/* Cart → Red */
+.nav-item[href*="cart"] {
+    --nav-color: #dc2626;
+}
+
+/* Favorites → Pink */
+.nav-item[href*="favourite"] {
+    --nav-color: #db2777;
+}
+
+/* Contact → Purple */
+.nav-item[href*="contact"] {
+    --nav-color: #7c3aed;
+}
+
+/* Apply color on hover */
+.nav-item:hover {
+    color: var(--nav-color, #078046);
+}
+
+/* Active state */
+.nav-item.active {
+    color: var(--nav-color, #078046);
+    font-weight: 700;
+}
+
+/* Active dot indicator below icon */
+.nav-item.active::after {
+    content: '';
+    display: block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--nav-color, #078046);
+    margin: 3px auto 0;
+    animation: dotPop 0.3s ease;
+}
+
+@keyframes dotPop {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+/* ── Nav icon box (for cart with badge) ── */
+.nav-icon-box {
+    position: relative;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.cart-nav-item {
+    position: relative;
+}
+
+.bottom-nav .cart-count {
+    position: absolute;
+    top: -5px;
+    right: -10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #e52525;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: 0 2px 4px rgba(229, 37, 37, 0.4);
+    z-index: 5;
+    border: 1.5px solid #ffffff;
+    pointer-events: none;
+    line-height: 1;
+}
+
+/* =====================================================
+   RESPONSIVE - MOBILE
+===================================================== */
+@media (max-width: 700px) {
+    .bottom-nav {
+        height: 64px;
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .nav-item {
+        font-size: 10px;
+    }
+
+    .nav-icon {
+        font-size: 20px;
+    }
+
+    .bottom-nav .cart-count {
+        top: -4px;
+        right: -8px;
+        width: 17px;
+        height: 17px;
+        font-size: 10px;
+        border: 1px solid #ffffff;
+    }
+}
+
+/* ================= FAVORITE HEART BUTTON (BOTTOM-RIGHT OF PRODUCT IMAGE) ================= */
+.product-image {
+    position: relative;
+}
+
+.fav-heart-btn {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #e63946;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    padding: 0;
+    line-height: 1;
+}
+
+.fav-heart-btn:hover {
+    transform: scale(1.15);
+    background: #ffffff;
+}
+
+.fav-heart-btn.active {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(230, 57, 70, 0.35);
+}

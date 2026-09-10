@@ -1,0 +1,535 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Secure Payment - Khamkar Dairy</title>
+
+    <link rel="stylesheet" href="{% static 'css/Payment.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bottom_nav.css' %}">
+</head>
+
+<body>
+
+<div class="payment-page">
+
+    <!-- TOP -->
+    <div class="top-bar">
+
+        <div class="secure-top">
+            <span class="shield">✓</span>
+            <span>100% Secure Payment</span>
+        </div>
+    </div>
+
+
+    <!-- HEADER -->
+    <header class="payment-header">
+
+        <div class="header-icon">
+            🛍
+        </div>
+
+        <div>
+            <h1>Secure Payment</h1>
+            <p>Complete your payment and place your order</p>
+        </div>
+
+    </header>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="payment-container">
+
+        <!-- LEFT SIDE -->
+        <section class="payment-left">
+
+            <div class="payment-card">
+
+                <h2>Choose Payment Method</h2>
+
+
+                <!-- UPI -->
+                <label class="payment-option selected" data-method="upi">
+
+                    <input type="radio" name="payment" value="upi" checked>
+
+                    <span class="radio"></span>
+
+                    <div class="method-icon">
+                        UPI
+                    </div>
+
+                    <div class="method-details">
+                        <strong>UPI</strong>
+                        <span>Pay using any UPI app</span>
+                    </div>
+
+                    <div class="payment-logos">
+                        <span>G Pay</span>
+                        <span>◉</span>
+                        <span>paytm</span>
+                    </div>
+
+                </label>
+
+
+                <!-- CARD -->
+                <label class="payment-option" data-method="card">
+
+                    <input type="radio" name="payment" value="card">
+
+                    <span class="radio"></span>
+
+                    <div class="method-icon card-icon">
+                        ▣
+                    </div>
+
+                    <div class="method-details">
+                        <strong>Credit / Debit Card</strong>
+                        <span>Visa, Mastercard, Rupay & more</span>
+                    </div>
+
+                    <div class="payment-logos">
+                        <span>VISA</span>
+                        <span>●●</span>
+                        <span>RuPay</span>
+                    </div>
+
+                </label>
+
+
+                <!-- NET BANKING -->
+                <label class="payment-option" data-method="bank">
+
+                    <input type="radio" name="payment" value="bank">
+
+                    <span class="radio"></span>
+
+                    <div class="method-icon">
+                        🏦
+                    </div>
+
+                    <div class="method-details">
+                        <strong>Net Banking</strong>
+                        <span>Pay using your bank account</span>
+                    </div>
+
+                    <span class="arrow">›</span>
+
+                </label>
+
+
+                <!-- WALLET -->
+                <label class="payment-option" data-method="wallet">
+
+                    <input type="radio" name="payment" value="wallet">
+
+                    <span class="radio"></span>
+
+                    <div class="method-icon">
+                        👛
+                    </div>
+
+                    <div class="method-details">
+                        <strong>Wallets</strong>
+                        <span>Pay using your wallet</span>
+                    </div>
+
+                    <div class="payment-logos">
+                        <span>paytm</span>
+                        <span>amazon pay</span>
+                    </div>
+
+                </label>
+
+
+                <!-- COD -->
+                <label class="payment-option" data-method="cod">
+
+                    <input type="radio" name="payment" value="cod">
+
+                    <span class="radio"></span>
+
+                    <div class="method-icon">
+                        💵
+                    </div>
+
+                    <div class="method-details">
+                        <strong>Cash on Delivery</strong>
+                        <span>Pay in cash when your order is delivered</span>
+                    </div>
+
+                </label>
+
+
+                <!-- UPI BOX -->
+                <div class="upi-box" id="upiBox">
+
+                    <h3>Pay using UPI</h3>
+
+                    <div class="qr-wrapper">
+                       <div class="qr-code">
+                           <img src="{% static 'images/QR.png' %}"
+                            alt="UPI Payment QR Code">
+                       </div>
+                    </div>
+
+                    <p class="scan-text">
+                        Scan QR code using any UPI app (GPay, PhonePe, Paytm)
+                    </p>
+
+                    <div class="or">
+                        <span></span>
+                        <b>or enter UPI ID</b>
+                        <span></span>
+                    </div>
+
+                    <div class="upi-input-wrapper">
+                        <input type="text" id="userUpiId" class="pay-input" placeholder="e.g. yourname@okhdfcbank or 9876543210@paytm">
+                    </div>
+
+                    <div class="upi-id">
+                        Official Merchant UPI:
+                        <strong>dairyshop@upi</strong>
+                        <button type="button" onclick="copyUPI()" title="Copy UPI ID">⧉</button>
+                    </div>
+
+                    <div class="valid-time">
+                        ◷ &nbsp; QR code active &amp; secure
+                    </div>
+
+                </div>
+
+
+                <!-- CARD FORM -->
+                <div class="extra-payment" id="cardBox">
+
+                    <h3>Credit / Debit Card Details</h3>
+
+                    <div class="input-group">
+                        <label for="cardNumber">Card Number</label>
+                        <div class="input-with-icon">
+                            <input type="text" id="cardNumber" class="pay-input" placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="cc-number">
+                            <span class="input-badge" id="cardTypeBadge">💳</span>
+                        </div>
+                    </div>
+
+                    <div class="two-inputs">
+                        <div class="input-group">
+                            <label for="cardExpiry">Expiry Date</label>
+                            <input type="text" id="cardExpiry" class="pay-input" placeholder="MM / YY" maxlength="7" autocomplete="cc-exp">
+                        </div>
+                        <div class="input-group">
+                            <label for="cardCvv">CVV / CVC</label>
+                            <input type="password" id="cardCvv" class="pay-input" placeholder="•••" maxlength="4" autocomplete="cc-csc">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="cardHolder">Cardholder's Name</label>
+                        <input type="text" id="cardHolder" class="pay-input" placeholder="Name as printed on card" autocomplete="cc-name">
+                    </div>
+
+                </div>
+
+
+                <!-- BANK -->
+                <div class="extra-payment" id="bankBox">
+
+                    <h3>Select Net Banking Account</h3>
+
+                    <div class="quick-bank-grid">
+                        <button type="button" class="quick-bank-btn" data-bank="sbi" onclick="selectQuickBank('sbi', this)">
+                            <span>🏛️</span> SBI
+                        </button>
+                        <button type="button" class="quick-bank-btn" data-bank="hdfc" onclick="selectQuickBank('hdfc', this)">
+                            <span>🏛️</span> HDFC
+                        </button>
+                        <button type="button" class="quick-bank-btn" data-bank="icici" onclick="selectQuickBank('icici', this)">
+                            <span>🏛️</span> ICICI
+                        </button>
+                        <button type="button" class="quick-bank-btn" data-bank="axis" onclick="selectQuickBank('axis', this)">
+                            <span>🏛️</span> Axis
+                        </button>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="bankSelect">Choose Bank</label>
+                        <select id="bankSelect" class="pay-select" onchange="onBankSelectChange(this)">
+                            <option value="">-- Choose Your Bank --</option>
+                            <option value="sbi">State Bank of India (SBI)</option>
+                            <option value="hdfc">HDFC Bank</option>
+                            <option value="icici">ICICI Bank</option>
+                            <option value="axis">Axis Bank</option>
+                            <option value="kotak">Kotak Mahindra Bank</option>
+                            <option value="pnb">Punjab National Bank (PNB)</option>
+                            <option value="bob">Bank of Baroda</option>
+                            <option value="canara">Canara Bank</option>
+                            <option value="union">Union Bank of India</option>
+                            <option value="idbi">IDBI Bank</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="bankUserId">Net Banking User ID / Customer ID</label>
+                        <input type="text" id="bankUserId" class="pay-input" placeholder="Enter Net Banking User ID / Customer ID">
+                    </div>
+
+                </div>
+
+
+                <!-- WALLET -->
+                <div class="extra-payment" id="walletBox">
+
+                    <h3>Select Digital Wallet</h3>
+
+                    <div class="quick-bank-grid">
+                        <button type="button" class="quick-bank-btn" data-wallet="paytm" onclick="selectQuickWallet('paytm', this)">
+                            <span>📱</span> Paytm
+                        </button>
+                        <button type="button" class="quick-bank-btn" data-wallet="amazonpay" onclick="selectQuickWallet('amazonpay', this)">
+                            <span>📦</span> Amazon Pay
+                        </button>
+                        <button type="button" class="quick-bank-btn" data-wallet="phonepe" onclick="selectQuickWallet('phonepe', this)">
+                            <span>💜</span> PhonePe
+                        </button>
+                        <button type="button" class="quick-bank-btn" data-wallet="mobikwik" onclick="selectQuickWallet('mobikwik', this)">
+                            <span>⚡</span> MobiKwik
+                        </button>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="walletSelect">Choose Wallet</label>
+                        <select id="walletSelect" class="pay-select" onchange="onWalletSelectChange(this)">
+                            <option value="">-- Choose Your Wallet --</option>
+                            <option value="paytm">Paytm Wallet</option>
+                            <option value="amazonpay">Amazon Pay</option>
+                            <option value="phonepe">PhonePe Wallet</option>
+                            <option value="mobikwik">MobiKwik</option>
+                            <option value="freecharge">FreeCharge</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="walletMobile">Registered Mobile Number</label>
+                        <input type="tel" id="walletMobile" class="pay-input" placeholder="Enter 10-digit mobile number" maxlength="10">
+                    </div>
+
+                </div>
+
+                <!-- COD NOTICE BOX -->
+                <div class="extra-payment" id="codBox">
+                    <h3>Cash on Delivery</h3>
+                    <div class="cod-info-box">
+                        <span class="cod-icon">💵</span>
+                        <div>
+                            <p><strong>Pay with Cash on Delivery</strong></p>
+                            <p style="color:#66716d; font-size:13px; margin-top:4px;">Keep ₹{{ total_price }} in cash ready when our delivery executive arrives.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INLINE ERROR MESSAGE BOX -->
+                <div id="paymentErrorBox" class="payment-error-box" style="display: none;">
+                    <span class="error-icon">⚠️</span>
+                    <span id="paymentErrorMsg">Please fill all required payment details.</span>
+                </div>
+
+                <!-- PAY BUTTON -->
+                <button class="pay-button order" id="orderButton" onclick="makePayment()">
+
+                    <span>🔒</span>
+
+                    <span id="payText">
+                        Pay ₹{{ total_price }}
+                    </span>
+
+                </button>
+
+
+                <div class="secure-message">
+                    🛡 &nbsp; Your payment information is 256-bit encrypted and 100% secure
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- RIGHT SIDE -->
+        <aside class="payment-right">
+
+
+            <!-- ORDER SUMMARY -->
+            <div class="side-card order-summary">
+
+                <h2>Order Summary</h2>
+
+                <div class="summary-row">
+                    <span>Subtotal ({{ total_items }} Item{% if total_items != 1 %}s{% endif %})</span>
+                    <strong>₹{{ subtotal }}</strong>
+                </div>
+
+                <div class="summary-row">
+                    <span>Delivery Charges</span>
+                    <div>
+                        {% if is_free_delivery %}
+                        <del>₹50</del>
+                        <strong class="free">FREE</strong>
+                        {% else %}
+                        <strong style="color:#e53935;">₹{{ delivery_charges }}</strong>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="summary-row">
+                    <span>Packaging Charges</span>
+                    <strong>₹{{ packaging_charges }}</strong>
+                </div>
+
+                <div class="summary-line"></div>
+
+                <div class="total-row">
+                    <strong>To Pay</strong>
+                    <strong>₹{{ total_price }}</strong>
+                </div>
+
+
+                <div class="saving-box">
+                    {% if is_free_delivery %}
+                    🏷 &nbsp;
+                    <strong>You saved ₹50 on delivery!</strong>
+                    {% else %}
+                    🚚 &nbsp;
+                    <strong>Add ₹{{ needed_for_free }} more for FREE delivery!</strong>
+                    {% endif %}
+                </div>
+
+
+                <div class="guarantees">
+
+                    <div>
+                        🔒
+                        <span>Safe & Secure Payments</span>
+                    </div>
+
+                    <div>
+                        🛡
+                        <span>100% Money Back Guarantee</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- DELIVERY -->
+            <div class="side-card">
+
+                <h2>We deliver fresh and pure</h2>
+
+                <div class="benefit">
+                    <span>🌿</span>
+                    <p>100% Pure & Fresh Products</p>
+                </div>
+
+                <div class="benefit">
+                    <span>🚚</span>
+                    <p>On-time Delivery</p>
+                </div>
+
+                <div class="benefit">
+                    <span>💧</span>
+                    <p>Hygienic Packaging</p>
+                </div>
+
+                <div class="benefit">
+                    <span>🏅</span>
+                    <p>Quality You Can Trust</p>
+                </div>
+
+            </div>
+
+
+            <!-- HELP -->
+            <div class="side-card help-card">
+
+                <h2>Need Help?</h2>
+
+                <p>Our support team is here to help you.</p>
+
+                <div class="contact">
+                    ☎
+                    <span>+91 72196 21129</span>
+                </div>
+
+                <div class="contact">
+                    ✉
+                    <span>khamkardairy72@gmail.com</span>
+                </div>
+
+            </div>
+
+        </aside>
+
+    </main>
+
+</div>
+
+
+<script>
+    window.ORDER_TOTAL = {{ total_price }};
+</script>
+<script src="{% static 'js/Payment.js' %}"></script>
+
+
+<!-- ================= BOTTOM NAV ================= -->
+<nav class="bottom-nav">
+
+    <!-- HOME -->
+    <a href="{% url 'home' %}" class="nav-item">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+    </a>
+
+    <!-- SHOP -->
+    <a href="{% url 'shop_product' %}" class="nav-item">
+        <span class="nav-icon">🛍️</span>
+        <span>Shop</span>
+    </a>
+
+    <!-- ORDERS -->
+    <a href="{% url 'orders' %}" class="nav-item">
+        <span class="nav-icon">📦</span>
+        <span>Orders</span>
+    </a>
+
+    <!-- CART -->
+    <a href="{% url 'cart' %}" class="nav-item cart-nav-item">
+        <span class="nav-icon-box">
+            <span class="nav-icon">🛒</span>
+            <span class="cart-count" id="bottomCartCount" {% if not cart_count or cart_count == 0 %}style="display:none;"{% endif %}>{{ cart_count|default:"" }}</span>
+        </span>
+        <span>Cart</span>
+    </a>
+
+    <!-- FAVORITES -->
+    <a href="{% url 'favourite' %}" class="nav-item">
+        <span class="nav-icon">🩷</span>
+        <span>Favorites</span>
+    </a>
+
+    <!-- CONTACT -->
+    <a href="{% url 'contact' %}" class="nav-item">
+        <span class="nav-icon">📞</span>
+        <span>Contact</span>
+    </a>
+
+</nav>
+
+</body>
+</html>
