@@ -107,3 +107,4 @@ Example:
 {% load static %}
 <img src="{% static 'images/product.jpg' %}" alt="Product">
 ```
+"# Khamkar-Dairy" 
