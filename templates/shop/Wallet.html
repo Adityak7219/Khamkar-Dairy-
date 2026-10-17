@@ -1,0 +1,665 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dairy Wallet & Khata - {{ store_settings.store_name|default:"Khamkar Dairy" }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/Home.css' %}">
+    <style>
+        .wallet-page-wrapper {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 20px 16px 40px 16px;
+        }
+
+        .wallet-top-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .wallet-top-header h2 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #075334;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            color: #475569;
+            font-weight: 600;
+            font-size: 14px;
+            background: #fff;
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* WALLET CARD */
+        .wallet-hero-card {
+            background: linear-gradient(135deg, #075334 0%, #0d7a4e 60%, #159b64 100%);
+            border-radius: 20px;
+            padding: 28px;
+            color: #ffffff;
+            box-shadow: 0 16px 32px -8px rgba(7, 83, 52, 0.35);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .wallet-hero-card::after {
+            content: "🥛";
+            font-size: 140px;
+            position: absolute;
+            right: -20px;
+            bottom: -35px;
+            opacity: 0.12;
+            pointer-events: none;
+        }
+
+        .wallet-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .wallet-brand {
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 700;
+            opacity: 0.9;
+        }
+
+        .wallet-badge-live {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .wallet-badge-live::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 8px #4ade80;
+        }
+
+        .balance-label {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-bottom: 4px;
+        }
+
+        .balance-amount {
+            font-size: 40px;
+            font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: -0.5px;
+            margin-bottom: 20px;
+        }
+
+        .wallet-card-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-item .stat-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+            margin-bottom: 2px;
+        }
+
+        .stat-item .stat-val {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        /* TOP-UP BOX */
+        .topup-card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 28px;
+        }
+
+        .topup-card h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .topup-card p {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 16px;
+        }
+
+        .chips-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .amount-chip {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .amount-chip:hover, .amount-chip.active {
+            background: #e8f5ee;
+            color: #075334;
+            border-color: #075334;
+            transform: translateY(-2px);
+        }
+
+        .topup-input-group {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .currency-symbol {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            font-weight: 700;
+            color: #64748b;
+        }
+
+        .topup-input {
+            width: 100%;
+            padding: 12px 16px 12px 34px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            box-sizing: border-box;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .topup-input:focus {
+            border-color: #075334;
+            box-shadow: 0 0 0 3px rgba(7, 83, 52, 0.1);
+        }
+
+        .btn-topup {
+            width: 100%;
+            background: #075334;
+            color: #fff;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(7, 83, 52, 0.25);
+        }
+
+        .btn-topup:hover {
+            background: #053e26;
+            transform: translateY(-1px);
+        }
+
+        /* PASSBOOK LIST */
+        .passbook-section h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tx-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tx-card {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 16px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            transition: transform 0.15s;
+        }
+
+        .tx-card:hover {
+            transform: translateX(3px);
+        }
+
+        .tx-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tx-icon-box {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .tx-credit .tx-icon-box {
+            background: #e8f5ee;
+            color: #16a34a;
+        }
+
+        .tx-debit .tx-icon-box {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .tx-details h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 3px;
+        }
+
+        .tx-details .tx-date {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .tx-amount {
+            font-size: 16px;
+            font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+            text-align: right;
+        }
+
+        .tx-credit .tx-amount {
+            color: #16a34a;
+        }
+
+        .tx-debit .tx-amount {
+            color: #dc2626;
+        }
+
+        .empty-passbook {
+            text-align: center;
+            padding: 40px 20px;
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px dashed #cbd5e1;
+            color: #64748b;
+        }
+
+        .empty-passbook span {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* TOAST */
+        .toast-msg {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: #075334;
+            color: #fff;
+            padding: 14px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            font-weight: 600;
+            font-size: 14px;
+            z-index: 9999;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wallet-page-wrapper">
+        <div class="wallet-top-header">
+            <h2>👛 Dairy Wallet & Khata</h2>
+            <a href="{% url 'home' %}" class="back-link">← Home</a>
+        </div>
+
+        <!-- HERO BALANCE CARD -->
+        <div class="wallet-hero-card">
+            <div class="wallet-card-header">
+                <div class="wallet-brand">{{ store_settings.store_name|default:"Khamkar Dairy" }} Prepaid Pass</div>
+                <div class="wallet-badge-live">Active Khata</div>
+            </div>
+            <div class="balance-label">Available Wallet Balance</div>
+            <div class="balance-amount" id="displayWalletBalance">₹{{ wallet.balance }}</div>
+
+            <div class="wallet-card-stats">
+                <div class="stat-item">
+                    <div class="stat-title">Total Added</div>
+                    <div class="stat-val">+ ₹{{ total_credited }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-title">Total Orders Paid</div>
+                    <div class="stat-val">- ₹{{ total_spent }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOP-UP SECTION -->
+        <div class="topup-card">
+            <h3>⚡ Add Money to Wallet</h3>
+            <p>Fast 1-click checkout for your daily milk and dairy products.</p>
+
+            <div class="chips-row">
+                <button type="button" class="amount-chip" onclick="selectAmount(100)">+ ₹100</button>
+                <button type="button" class="amount-chip" onclick="selectAmount(200)">+ ₹200</button>
+                <button type="button" class="amount-chip" onclick="selectAmount(500)">+ ₹500</button>
+                <button type="button" class="amount-chip" onclick="selectAmount(1000)">+ ₹1,000</button>
+            </div>
+
+            <form id="walletTopupForm" onsubmit="handleTopup(event)">
+                <div class="topup-input-group">
+                    <span class="currency-symbol">₹</span>
+                    <input type="number" id="topupAmountInput" class="topup-input" placeholder="Enter amount (min ₹10)" min="10" max="50000" required>
+                </div>
+                <button type="submit" class="btn-topup" id="btnSubmitTopup" style="background:#5f259f; box-shadow:0 4px 14px rgba(95,37,159,0.35);">
+                    <span style="font-size:18px;">🟣</span>
+                    <span>Pay & Add Funds with PhonePe</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- PASSBOOK / TRANSACTIONS -->
+        <div class="passbook-section">
+            <h3>📖 Digital Khata / Passbook</h3>
+
+            <div class="tx-list" id="txList">
+                {% for tx in transactions %}
+                <div class="tx-card {% if tx.transaction_type == 'credit' %}tx-credit{% else %}tx-debit{% endif %}">
+                    <div class="tx-left">
+                        <div class="tx-icon-box">
+                            {% if tx.transaction_type == 'credit' %}↓{% else %}↑{% endif %}
+                        </div>
+                        <div class="tx-details">
+                            <h4>{{ tx.description }}</h4>
+                            <div class="tx-date">{{ tx.created_at|date:"d M Y, h:i A" }}</div>
+                        </div>
+                    </div>
+                    <div class="tx-amount">
+                        {% if tx.transaction_type == 'credit' %}+{% else %}-{% endif %}₹{{ tx.amount }}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-passbook">
+                    <span>👛</span>
+                    <h4>No transactions yet</h4>
+                    <p>Add money to start making instant dairy purchases!</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- PHONEPE PAYMENT MODAL -->
+    <div class="phonepe-modal-backdrop" id="phonepeModalBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); backdrop-filter:blur(4px); z-index:9999; justify-content:center; align-items:center; padding:16px;">
+        <div class="phonepe-modal-card" style="background:#ffffff; border-radius:20px; max-width:440px; width:100%; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #e2e8f0;">
+            <!-- HEADER -->
+            <div style="background:#5f259f; color:#ffffff; padding:18px 22px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:34px; height:34px; border-radius:50%; background:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:900; color:#5f259f; font-size:18px;">पे</div>
+                    <div>
+                        <h3 style="font-size:16px; font-weight:800; margin:0;">PhonePe UPI Payment</h3>
+                        <p style="font-size:12px; opacity:0.85; margin:0;">{{ store_settings.store_name|default:"Khamkar Dairy" }} Official Merchant</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closePhonepeModal()" style="background:none; border:none; color:#ffffff; font-size:22px; cursor:pointer; padding:0; line-height:1;">✕</button>
+            </div>
+
+            <!-- BODY -->
+            <div style="padding:22px; text-align:center;">
+                <div style="font-size:12px; text-transform:uppercase; letter-spacing:0.5px; color:#64748b; font-weight:700;">Top-Up Amount</div>
+                <div id="modalPayAmount" style="font-size:36px; font-weight:800; color:#5f259f; font-family:'Space Grotesk', sans-serif; margin:4px 0 16px 0;">₹0</div>
+
+                <!-- MOBILE PHONEPE APP LAUNCH BUTTON -->
+                <div id="mobileAppAction" style="margin-bottom:16px;">
+                    <a id="phonepeDeepLinkBtn" href="#" style="display:flex; align-items:center; justify-content:center; gap:8px; background:#5f259f; color:#ffffff; text-decoration:none; padding:14px; border-radius:12px; font-weight:700; font-size:15px; box-shadow:0 4px 14px rgba(95,37,159,0.35);">
+                        <span>🟣</span>
+                        <span>Open PhonePe App to Pay</span>
+                    </a>
+                    <p style="font-size:12px; color:#64748b; margin-top:6px;">Tap above to launch PhonePe and pay directly from your mobile.</p>
+                </div>
+
+                <!-- QR CODE SECTION -->
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:16px; margin-bottom:16px;">
+                    <div style="font-size:12px; font-weight:700; color:#475569; margin-bottom:10px;">or Scan PhonePe QR to Pay</div>
+                    <div style="display:inline-block; background:#ffffff; padding:10px; border-radius:12px; border:1px solid #cbd5e1; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+                        <img id="phonepeQrImg" src="" alt="PhonePe QR" style="width:180px; height:180px; display:block;">
+                    </div>
+                    <div style="margin-top:10px; font-size:12px; color:#64748b;">
+                        UPI ID: <strong id="merchantUpiDisplay" style="color:#0f172a;">7219621129@ybl</strong>
+                        <button type="button" onclick="copyMerchantUPI()" style="background:none; border:none; color:#5f259f; cursor:pointer; font-weight:700; margin-left:4px;">Copy</button>
+                    </div>
+                </div>
+
+                <!-- CONFIRM PAYMENT BUTTON -->
+                <button type="button" id="btnConfirmPayment" onclick="confirmPaymentAndCredit()" style="width:100%; background:#075334; color:#ffffff; border:none; padding:14px; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 12px rgba(7,83,52,0.25);">
+                    <span>✅</span>
+                    <span>Payment Completed - Update Balance</span>
+                </button>
+                <p style="font-size:11px; color:#94a3b8; margin-top:8px;">Once you complete the payment in PhonePe, tap above to add funds to your wallet.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-msg" id="toastMsg"></div>
+
+    <script>
+        let currentPendingAmount = 0;
+
+        function selectAmount(amt) {
+            document.getElementById('topupAmountInput').value = amt;
+            document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('active'));
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toastMsg');
+            toast.textContent = msg;
+            toast.style.background = isError ? '#dc2626' : '#075334';
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3500);
+        }
+
+        function handleTopup(e) {
+            e.preventDefault();
+            const input = document.getElementById('topupAmountInput');
+            const amt = parseFloat(input.value);
+
+            if (!amt || amt < 10) {
+                showToast('Please enter an amount of at least ₹10', true);
+                return;
+            }
+            if (amt > 50000) {
+                showToast('Maximum top-up amount is ₹50,000', true);
+                return;
+            }
+
+            currentPendingAmount = amt;
+            openPhonepeModal(amt);
+        }
+
+        function openPhonepeModal(amt) {
+            document.getElementById('modalPayAmount').textContent = '₹' + amt.toFixed(2);
+
+            const upiId = '7219621129@ybl';
+            const merchantName = encodeURIComponent('Khamkar Dairy');
+            const note = encodeURIComponent('Wallet Topup');
+            const upiUri = `upi://pay?pa=${upiId}&pn=${merchantName}&am=${amt}&cu=INR&tn=${note}`;
+            const phonepeUri = `phonepe://pay?pa=${upiId}&pn=${merchantName}&am=${amt}&cu=INR&tn=${note}`;
+
+            // Set link for Mobile App
+            const deepLinkBtn = document.getElementById('phonepeDeepLinkBtn');
+            if (deepLinkBtn) {
+                deepLinkBtn.href = phonepeUri;
+                deepLinkBtn.onclick = function(event) {
+                    // Try PhonePe app, fallback to universal UPI intent
+                    window.location.href = phonepeUri;
+                    setTimeout(() => {
+                        window.location.href = upiUri;
+                    }, 500);
+                };
+            }
+
+            // Generate dynamic QR Code for PhonePe
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiUri)}`;
+            const qrImg = document.getElementById('phonepeQrImg');
+            if (qrImg) qrImg.src = qrUrl;
+
+            // Show Modal
+            const modal = document.getElementById('phonepeModalBackdrop');
+            if (modal) modal.style.display = 'flex';
+
+            // Auto-trigger PhonePe if user is on mobile
+            const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+            if (isMobile) {
+                setTimeout(() => {
+                    window.location.href = phonepeUri;
+                }, 300);
+            }
+        }
+
+        function closePhonepeModal() {
+            const modal = document.getElementById('phonepeModalBackdrop');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function copyMerchantUPI() {
+            navigator.clipboard.writeText('7219621129@ybl').then(() => {
+                showToast('PhonePe UPI ID copied: 7219621129@ybl');
+            }).catch(() => {
+                showToast('UPI ID: 7219621129@ybl');
+            });
+        }
+
+        async function confirmPaymentAndCredit() {
+            if (!currentPendingAmount || currentPendingAmount < 10) {
+                showToast('Invalid top-up amount', true);
+                return;
+            }
+
+            const confirmBtn = document.getElementById('btnConfirmPayment');
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span>⏳</span> Verifying PhonePe Payment...';
+
+            try {
+                const response = await fetch("{% url 'wallet_add_funds' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        amount: currentPendingAmount,
+                        source: 'PhonePe UPI'
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    closePhonepeModal();
+                    showToast(data.message);
+                    document.getElementById('displayWalletBalance').textContent = '₹' + data.new_balance;
+                    document.getElementById('topupAmountInput').value = '';
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1200);
+                } else {
+                    showToast(data.error || 'Failed to update wallet balance', true);
+                }
+            } catch (err) {
+                showToast('Network error while processing wallet update', true);
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = originalText;
+            }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

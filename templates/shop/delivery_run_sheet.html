@@ -1,0 +1,968 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Run Sheet - {{ target_date_formatted }} - Khamkar Dairy</title>
+    <meta name="description" content="Day-wise Delivery Run Sheet for Khamkar Dairy & Products delivery partners.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #075334;
+            --primary-dark: #043823;
+            --primary-light: #e8f5ee;
+            --accent: #f59e0b;
+            --accent-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --border-dark: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.5;
+            font-size: 14px;
+            padding-bottom: 50px;
+        }
+
+        .run-sheet-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* ── INTERACTIVE CONTROLS BAR (Hidden on Print) ── */
+        .controls-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .controls-top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .controls-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .controls-title h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .controls-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            font-size: 13.5px;
+            font-weight: 600;
+            border-radius: 8px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #ffffff;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: #ffffff;
+            color: var(--text-main);
+            border-color: var(--border-dark);
+        }
+        .btn-outline:hover {
+            background: var(--bg-page);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: #ffffff;
+        }
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        /* Filter Controls Grid */
+        .filter-form {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .filter-input, .filter-select {
+            padding: 7px 12px;
+            border: 1px solid var(--border-dark);
+            border-radius: 6px;
+            font-size: 13px;
+            background: #ffffff;
+            color: var(--text-main);
+            outline: none;
+        }
+        .filter-input:focus, .filter-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(7, 83, 52, 0.12);
+        }
+
+        .quick-chips {
+            display: flex;
+            gap: 6px;
+        }
+
+        .chip {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .chip:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .chip.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+        }
+
+        /* ── RUN SHEET PRINTABLE PAPER ── */
+        .sheet-paper {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        /* Sheet Header */
+        .sheet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 18px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .brand-meta {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logo-img {
+            width: 68px;
+            height: 68px;
+            object-fit: contain;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            padding: 2px;
+            background: #ffffff;
+        }
+
+        .brand-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+
+        .brand-sub {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .sheet-meta-box {
+            text-align: right;
+            background: var(--primary-light);
+            border: 1px solid #b7e4ce;
+            padding: 10px 18px;
+            border-radius: 10px;
+        }
+
+        .sheet-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sheet-date {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-top: 3px;
+        }
+
+        .sheet-delivery-info {
+            font-size: 12.5px;
+            color: #166534;
+            margin-top: 2px;
+        }
+
+        /* Partner Details Strip */
+        .partner-details-bar {
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 22px;
+            font-size: 13px;
+        }
+
+        .partner-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .partner-detail-item strong {
+            color: var(--text-main);
+        }
+
+        /* ── SUMMARY STATS PILLS ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            border-left: 4px solid var(--primary);
+        }
+        .stat-card.cod { border-left-color: var(--danger); }
+        .stat-card.prepaid { border-left-color: var(--success); }
+        .stat-card.pending { border-left-color: var(--accent); }
+
+        .stat-label {
+            font-size: 11.5px;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-top: 2px;
+        }
+
+        /* ── VEHICLE CRATE LOADING SECTION ── */
+        .section-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1.5px solid var(--border);
+        }
+
+        .section-heading h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .crate-summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 28px;
+            background: #ffffff;
+        }
+
+        .crate-summary-table th {
+            background: #f8fafc;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 9px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .crate-summary-table td {
+            padding: 9px 14px;
+            border: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .crate-summary-table tr:nth-child(even) {
+            background: #fbfcfe;
+        }
+
+        .qty-badge {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 700;
+            font-size: 13px;
+            padding: 3px 10px;
+            border-radius: 6px;
+        }
+
+        /* ── STOPS ROUTE TABLE ── */
+        .stops-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+            background: #ffffff;
+        }
+
+        .stops-table th {
+            background: var(--primary);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 10px 12px;
+            border: 1px solid #06452b;
+            text-align: left;
+        }
+
+        .stops-table td {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            vertical-align: middle;
+            font-size: 13px;
+        }
+
+        .stops-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        .stop-num {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            text-align: center;
+            width: 38px;
+            background: #eef2f6;
+            border-radius: 4px;
+            padding: 3px 0;
+        }
+
+        .order-id-badge {
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 12px;
+            color: #1e293b;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .customer-phone {
+            color: var(--text-muted);
+            font-size: 12px;
+            text-decoration: none;
+        }
+        .customer-phone:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .address-text {
+            font-size: 12.5px;
+            color: #334155;
+            max-width: 220px;
+            line-height: 1.35;
+        }
+
+        .items-list {
+            font-size: 12.5px;
+            line-height: 1.35;
+        }
+
+        .payment-pill {
+            display: inline-block;
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .payment-pill.cod {
+            background: var(--danger-light);
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        .payment-pill.prepaid {
+            background: var(--success-light);
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .cod-amount-collect {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            color: #b91c1c;
+        }
+
+        .sig-box {
+            width: 100px;
+            height: 32px;
+            border-bottom: 1.5px dashed #94a3b8;
+            margin: 0 auto;
+        }
+
+        /* Signatures block */
+        .signatures-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .sig-col {
+            text-align: center;
+        }
+
+        .sig-line {
+            width: 220px;
+            border-bottom: 1.5px solid #64748b;
+            margin: 0 auto 8px auto;
+            height: 40px;
+        }
+
+        .sig-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        .sig-sub {
+            font-size: 11.5px;
+            color: var(--text-muted);
+        }
+
+        .empty-run-sheet {
+            text-align: center;
+            padding: 50px 20px;
+            background: #ffffff;
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+        }
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        /* ── PRINT MEDIA STYLES ── */
+        @media print {
+            body {
+                background: #ffffff !important;
+                padding: 0 !important;
+                font-size: 11px !important;
+                color: #000000 !important;
+            }
+
+            .run-sheet-container {
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .no-print, .controls-card {
+                display: none !important;
+            }
+
+            .sheet-paper {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                border-radius: 0 !important;
+            }
+
+            .sheet-header {
+                border-bottom: 2px solid #000000 !important;
+                margin-bottom: 14px !important;
+                padding-bottom: 10px !important;
+            }
+
+            .sheet-meta-box {
+                background: #f3f4f6 !important;
+                border: 1px solid #9ca3af !important;
+                padding: 6px 12px !important;
+            }
+
+            .partner-details-bar {
+                background: #f3f4f6 !important;
+                border: 1px solid #d1d5db !important;
+                padding: 6px 10px !important;
+                margin-bottom: 14px !important;
+            }
+
+            .stat-card {
+                border: 1px solid #000000 !important;
+                padding: 6px 10px !important;
+            }
+
+            .crate-summary-table th, .stops-table th {
+                background: #e5e7eb !important;
+                color: #000000 !important;
+                border: 1px solid #000000 !important;
+                padding: 6px 8px !important;
+            }
+
+            .crate-summary-table td, .stops-table td {
+                border: 1px solid #000000 !important;
+                padding: 6px 8px !important;
+            }
+
+            .stops-table tr {
+                page-break-inside: avoid !important;
+            }
+
+            .qty-badge {
+                background: transparent !important;
+                color: #000000 !important;
+                font-weight: 800 !important;
+                padding: 0 !important;
+            }
+
+            .payment-pill {
+                border: 1px solid #000000 !important;
+                color: #000000 !important;
+                background: transparent !important;
+            }
+
+            .cod-amount-collect {
+                color: #000000 !important;
+                font-weight: 800 !important;
+            }
+
+            .signatures-grid {
+                page-break-inside: avoid !important;
+                margin-top: 30px !important;
+            }
+
+            a {
+                text-decoration: none !important;
+                color: #000000 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="run-sheet-container">
+
+        <!-- ============================================
+             CONTROLS CARD (Screen only, hidden on print)
+             ============================================ -->
+        <div class="controls-card no-print">
+            <div class="controls-top-row">
+                <div class="controls-title">
+                    <span style="font-size: 24px;">📋</span>
+                    <div>
+                        <h2>Daily Delivery Run Sheet</h2>
+                        <span style="font-size: 12.5px; color: var(--text-muted);">
+                            Khamkar Dairy & Products · Date-wise Order Dispatching
+                        </span>
+                    </div>
+                </div>
+
+                <div class="controls-actions">
+                    <button class="btn btn-primary" onclick="window.print()">
+                        🖨️ Print Run Sheet
+                    </button>
+                    <a href="?date={{ target_date_iso }}&slot={{ selected_slot }}&boy_id={{ selected_boy_id }}&status={{ selected_status }}&export=csv" class="btn btn-success">
+                        📥 Download Excel / CSV
+                    </a>
+                    <a href="{% url 'delivery_dashboard' %}" class="btn btn-outline">
+                        🛵 Delivery Panel
+                    </a>
+                </div>
+            </div>
+
+            <!-- Date & Slot Filter Form -->
+            <form method="GET" action="{% url 'delivery_run_sheet' %}" class="filter-form" id="runSheetFilterForm">
+                
+                <!-- Quick Date Chips -->
+                <div class="filter-group">
+                    <span class="filter-label">Quick Date:</span>
+                    <div class="quick-chips">
+                        <a href="?date={{ yesterday_date }}&slot={{ selected_slot }}&boy_id={{ selected_boy_id }}" class="chip {% if target_date_iso == yesterday_date %}active{% endif %}">
+                            Yesterday
+                        </a>
+                        <a href="?date={{ today_date }}&slot={{ selected_slot }}&boy_id={{ selected_boy_id }}" class="chip {% if target_date_iso == today_date %}active{% endif %}">
+                            Today
+                        </a>
+                        <a href="?date={{ tomorrow_date }}&slot={{ selected_slot }}&boy_id={{ selected_boy_id }}" class="chip {% if target_date_iso == tomorrow_date %}active{% endif %}">
+                            Tomorrow
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Custom Date Picker -->
+                <div class="filter-group">
+                    <label for="dateInput" class="filter-label">Custom Date:</label>
+                    <input type="date" id="dateInput" name="date" value="{{ target_date_iso }}" class="filter-input" onchange="document.getElementById('runSheetFilterForm').submit()">
+                </div>
+
+                <!-- Slot Selector -->
+                <div class="filter-group">
+                    <label for="slotSelect" class="filter-label">Shift / Slot:</label>
+                    <select name="slot" id="slotSelect" class="filter-select" onchange="document.getElementById('runSheetFilterForm').submit()">
+                        <option value="all" {% if selected_slot == 'all' %}selected{% endif %}>🌟 All Shifts</option>
+                        <option value="morning" {% if selected_slot == 'morning' %}selected{% endif %}>🌅 Morning (06:30 - 08:30 AM)</option>
+                        <option value="evening" {% if selected_slot == 'evening' %}selected{% endif %}>🌆 Evening (05:30 - 07:30 PM)</option>
+                    </select>
+                </div>
+
+                <!-- Admin Delivery Boy Selector -->
+                {% if is_admin and delivery_boys_list %}
+                <div class="filter-group">
+                    <label for="boySelect" class="filter-label">Delivery Partner:</label>
+                    <select name="boy_id" id="boySelect" class="filter-select" onchange="document.getElementById('runSheetFilterForm').submit()">
+                        <option value="">👥 All Delivery Partners</option>
+                        <option value="unassigned" {% if selected_boy_id == 'unassigned' %}selected{% endif %}>📦 Unassigned Orders</option>
+                        {% for boy in delivery_boys_list %}
+                        <option value="{{ boy.id }}" {% if selected_boy_id == boy.id|stringformat:"s" %}selected{% endif %}>
+                            🛵 {{ boy.get_full_name|default:boy.username }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <!-- Status Filter -->
+                <div class="filter-group">
+                    <label for="statusSelect" class="filter-label">Status:</label>
+                    <select name="status" id="statusSelect" class="filter-select" onchange="document.getElementById('runSheetFilterForm').submit()">
+                        <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Orders</option>
+                        <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Pending / Out for Delivery</option>
+                        <option value="delivered" {% if selected_status == 'delivered' %}selected{% endif %}>Delivered</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+
+        <!-- ============================================
+             PRINTABLE RUN SHEET PAPER
+             ============================================ -->
+        <div class="sheet-paper">
+
+            <!-- Sheet Header -->
+            <div class="sheet-header">
+                <div class="brand-meta">
+                    <img src="{% static 'images/logo.png' %}" alt="Khamkar Dairy Logo" class="brand-logo-img" onerror="this.src='https://ui-avatars.com/api/?name=Khamkar+Dairy&background=075334&color=fff&size=200'">
+                    <div>
+                        <h1 class="brand-name">KHAMKAR DAIRY & PRODUCTS</h1>
+                        <div class="brand-sub">Pure . Fresh . Healthy · Milk & Dairy Distribution</div>
+                    </div>
+                </div>
+
+                <div class="sheet-meta-box">
+                    <div class="sheet-title">DELIVERY RUN SHEET</div>
+                    <div class="sheet-date">📅 {{ target_date_formatted }}</div>
+                    <div class="sheet-delivery-info">
+                        Shift: <strong>{% if selected_slot == 'morning' %}Morning (06:30 - 08:30 AM){% elif selected_slot == 'evening' %}Evening (05:30 - 07:30 PM){% else %}All Shifts{% endif %}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Partner & Shift Details Strip -->
+            <div class="partner-details-bar">
+                <div class="partner-detail-item">
+                    <span>🛵 Delivery Partner:</span>
+                    <strong>{{ current_boy_name }}</strong>
+                </div>
+                {% if current_boy_phone and current_boy_phone != '-' %}
+                <div class="partner-detail-item">
+                    <span>📞 Contact:</span>
+                    <strong>{{ current_boy_phone }}</strong>
+                </div>
+                {% endif %}
+                <div class="partner-detail-item">
+                    <span>📦 Total Stops:</span>
+                    <strong>{{ total_orders }}</strong>
+                </div>
+                <div class="partner-detail-item">
+                    <span>🕒 Print Time:</span>
+                    <span>{{ generated_time }}</span>
+                </div>
+            </div>
+
+            <!-- KPI Stats Bar -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Deliveries</div>
+                    <div class="stat-value">{{ total_orders }} Stops</div>
+                </div>
+                <div class="stat-card cod">
+                    <div class="stat-label">COD Cash to Collect</div>
+                    <div class="stat-value" style="color: #b91c1c;">₹ {{ total_cod_amount }}</div>
+                    <span style="font-size: 11px; color: var(--text-muted);">({{ cod_orders_count }} cash orders)</span>
+                </div>
+                <div class="stat-card prepaid">
+                    <div class="stat-label">Prepaid Online</div>
+                    <div class="stat-value" style="color: #059669;">₹ {{ total_prepaid_amount }}</div>
+                    <span style="font-size: 11px; color: var(--text-muted);">({{ prepaid_orders_count }} paid orders)</span>
+                </div>
+                <div class="stat-card pending">
+                    <div class="stat-label">Progress</div>
+                    <div class="stat-value">{{ delivered_count }} / {{ total_orders }}</div>
+                    <span style="font-size: 11px; color: var(--text-muted);">{{ pending_count }} pending stops</span>
+                </div>
+            </div>
+
+            {% if orders %}
+
+            <!-- ============================================
+                 1. VEHICLE CRATE LOADING SUMMARY
+                 ============================================ -->
+            <div class="section-heading">
+                <h3>🥛 Vehicle Crate Loading Summary</h3>
+                <span style="font-size: 12px; color: var(--text-muted);">Load items in crate before departure</span>
+            </div>
+
+            <table class="crate-summary-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Product / Item Name</th>
+                        <th style="width: 120px;">Packaging Unit</th>
+                        <th style="width: 140px; text-align: center;">Total Packets / Qty</th>
+                        <th style="width: 120px; text-align: center;">Customer Stops</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in product_summary %}
+                    <tr>
+                        <td style="font-weight: 600; color: var(--text-muted);">{{ forloop.counter }}</td>
+                        <td style="font-weight: 600; color: var(--primary-dark);">{{ p.name }}</td>
+                        <td>{{ p.unit }}</td>
+                        <td style="text-align: center;">
+                            <span class="qty-badge">{{ p.total_qty }} {{ p.unit }}</span>
+                        </td>
+                        <td style="text-align: center; color: var(--text-muted);">{{ p.order_count }} orders</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 15px;">
+                            No items scheduled for this shift.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- ============================================
+                 2. CUSTOMER STOPS ROUTE TABLE
+                 ============================================ -->
+            <div class="section-heading">
+                <h3>🛵 Customer Delivery Stops List</h3>
+                <span style="font-size: 12px; color: var(--text-muted);">{{ total_orders }} deliveries in sequence</span>
+            </div>
+
+            <table class="stops-table">
+                <thead>
+                    <tr>
+                        <th style="width: 36px; text-align: center;">#</th>
+                        <th style="width: 90px;">Order ID</th>
+                        <th style="width: 160px;">Customer & Phone</th>
+                        <th>Delivery Address & Landmark</th>
+                        <th style="width: 200px;">Items Ordered</th>
+                        <th style="width: 80px;">Slot</th>
+                        <th style="width: 110px;">To Collect</th>
+                        <th style="width: 90px; text-align: center;">Signature / Check</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td class="stop-num">{{ forloop.counter }}</td>
+                        <td>
+                            <span class="order-id-badge">#{{ order.order_id }}</span>
+                            <div style="font-size: 11px; color: var(--text-muted);">
+                                {{ order.created_at|date:"h:i A" }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="customer-name">{{ order.customer_name }}</div>
+                            <a href="tel:{{ order.customer_phone }}" class="customer-phone">
+                                📞 {{ order.customer_phone }}
+                            </a>
+                        </td>
+                        <td>
+                            <div class="address-text">{{ order.customer_address }}</div>
+                            {% if order.latitude and order.longitude %}
+                            <a href="{{ order.maps_navigation_url }}" target="_blank" class="no-print" style="font-size: 11px; color: #2563eb; display: inline-flex; align-items: center; gap: 3px; margin-top: 2px;">
+                                📍 Open Maps
+                            </a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="items-list">
+                                {% for item in order.items.all %}
+                                <div><strong>{{ item.quantity }}x</strong> {{ item.item_name }} ({{ item.item_label }})</div>
+                                {% empty %}
+                                <div>1x Order Pack</div>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td style="font-size: 12px;">
+                            {{ order.get_delivery_slot_display|truncatewords:2 }}
+                        </td>
+                        <td>
+                            {% if order.is_prepaid %}
+                            <span class="payment-pill prepaid">PAID ₹0</span>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                                {{ order.get_payment_method_display }}
+                            </div>
+                            {% else %}
+                            <span class="payment-pill cod">COD</span>
+                            <div class="cod-amount-collect">₹ {{ order.total_amount }}</div>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="sig-box"></div>
+                            <span style="font-size: 10px; color: var(--text-muted);">Sign / Received</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- ============================================
+                 3. SIGNATURE VERIFICATION BLOCK
+                 ============================================ -->
+            <div class="signatures-grid">
+                <div class="sig-col">
+                    <div class="sig-line"></div>
+                    <div class="sig-title">Delivery Partner Signature</div>
+                    <div class="sig-sub">{{ current_boy_name }}</div>
+                </div>
+                <div class="sig-col">
+                    <div class="sig-line"></div>
+                    <div class="sig-title">Depot Manager / Dispatcher Signature</div>
+                    <div class="sig-sub">Khamkar Dairy & Products</div>
+                </div>
+            </div>
+
+            {% else %}
+
+            <!-- Empty State -->
+            <div class="empty-run-sheet">
+                <div class="empty-icon">📭</div>
+                <h3 style="font-size: 18px; margin-bottom: 6px;">No Orders Found for {{ target_date_formatted }}</h3>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">
+                    There are no scheduled deliveries matching the selected date and shift filter.
+                </p>
+                <div class="no-print" style="display: flex; gap: 10px; justify-content: center;">
+                    <a href="?date={{ today_date }}" class="btn btn-primary">Go to Today's Run Sheet</a>
+                    <a href="{% url 'delivery_dashboard' %}" class="btn btn-outline">Back to Delivery Dashboard</a>
+                </div>
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</body>
+</html>

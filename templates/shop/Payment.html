@@ -2,6 +2,7 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,522 +15,646 @@
 
 <body>
 
-<div class="payment-page">
+    <div class="payment-page">
 
-    <!-- TOP -->
-    <div class="top-bar">
-
-        <div class="secure-top">
-            <span class="shield">✓</span>
-            <span>100% Secure Payment</span>
+        <!-- Store Closed Notice -->
+        {% if not store_settings.store_open %}
+        <div
+            style="background:#fee2e2; border-left:4px solid #ef4444; color:#991b1b; padding:14px 18px; margin:12px; border-radius:10px; display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600;">
+            <span>🔒</span>
+            <div>
+                <div>Store is currently closed</div>
+                <div style="font-weight:400; font-size:12px; margin-top:3px;">Orders cannot be placed right now. Please
+                    try again later.</div>
+            </div>
         </div>
+        {% endif %}
+
+        <!-- TOP -->
+        <div class="top-bar">
+
+            <div class="secure-top">
+                <span class="shield">✓</span>
+                <span>100% Secure Payment</span>
+            </div>
+        </div>
+
+
+        <!-- HEADER -->
+        <header class="payment-header">
+
+            <div class="header-icon">
+                🛍
+            </div>
+
+            <div>
+                <h1>Secure Payment</h1>
+                <p>Complete your payment and place your order</p>
+            </div>
+
+        </header>
+
+
+        <!-- MAIN CONTENT -->
+        <main class="payment-container">
+
+            <!-- LEFT SIDE -->
+            <section class="payment-left">
+
+                    <!-- DELIVERY SLOT SELECTION -->
+                    <div class="delivery-slot-card" style="margin-bottom:26px; padding:20px; background:#ffffff; border:1.5px solid #d1fae5; border-radius:16px; box-shadow:0 4px 15px rgba(7,83,52,0.04);">
+                        <h2 style="font-size:18px; margin-bottom:4px; display:flex; align-items:center; gap:8px; color:#075334;">
+                            <span>📅</span> Choose Delivery Day & Time Slot
+                        </h2>
+                        <p style="font-size:13px; color:#64748b; margin-bottom:14px;">Select when you want your pure dairy products delivered to your door.</p>
+                        
+                        <!-- DAY SELECTION CHIPS -->
+                        <div style="display:flex; gap:10px; margin-bottom:14px;">
+                            <button type="button" class="slot-day-btn active" id="dayBtnToday" onclick="selectDeliveryDay('today')" style="flex:1; border:1.5px solid #075334; background:#e8f5ee; color:#075334; padding:10px 12px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; text-align:center; transition:all 0.2s;">
+                                🌅 Today's Batch
+                            </button>
+                            <button type="button" class="slot-day-btn" id="dayBtnTomorrow" onclick="selectDeliveryDay('tomorrow')" style="flex:1; border:1.5px solid #cbd5e1; background:#f8fafc; color:#475569; padding:10px 12px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; text-align:center; transition:all 0.2s;">
+                                🥛 Tomorrow Fresh
+                            </button>
+                        </div>
+                        <input type="hidden" id="selectedDeliveryDay" value="today">
+
+                        <!-- TIME SLOT SELECTION -->
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <div class="slot-item-row selected" id="slotMorning" onclick="selectDeliverySlot('morning')" style="border:1.5px solid #075334; background:#f0fdf4; padding:11px 14px; border-radius:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <input type="radio" name="delivery_slot_radio" value="morning" checked style="accent-color:#075334;">
+                                    <div>
+                                        <strong style="font-size:14px; color:#1e293b; display:block;">🌅 Morning Slot (06:30 AM - 08:30 AM)</strong>
+                                        <span style="font-size:12px; color:#64748b;">Best for breakfast tea & fresh morning milk</span>
+                                    </div>
+                                </div>
+                                <span style="font-size:11px; font-weight:700; background:#dcfce7; color:#166534; padding:3px 8px; border-radius:6px;">Recommended</span>
+                            </div>
+
+                            <div class="slot-item-row" id="slotEvening" onclick="selectDeliverySlot('evening')" style="border:1.5px solid #cbd5e1; background:#ffffff; padding:11px 14px; border-radius:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <input type="radio" name="delivery_slot_radio" value="evening" style="accent-color:#075334;">
+                                    <div>
+                                        <strong style="font-size:14px; color:#1e293b; display:block;">🌆 Evening Slot (05:30 PM - 07:30 PM)</strong>
+                                        <span style="font-size:12px; color:#64748b;">Fresh evening batch before dinner</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slot-item-row" id="slotAnytime" onclick="selectDeliverySlot('anytime')" style="border:1.5px solid #cbd5e1; background:#ffffff; padding:11px 14px; border-radius:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <input type="radio" name="delivery_slot_radio" value="anytime" style="accent-color:#075334;">
+                                    <div>
+                                        <strong style="font-size:14px; color:#1e293b; display:block;">⚡ Standard Express (Anytime)</strong>
+                                        <span style="font-size:12px; color:#64748b;">Fastest dispatch during store hours</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="selectedDeliverySlot" value="morning">
+                    </div>
+
+                    <!-- DELIVERY ADDRESS CONFIRMATION CARD -->
+                    <div class="delivery-address-card" style="margin-bottom:20px; padding:18px; background:#ffffff; border:1.5px solid #bbf7d0; border-radius:16px; box-shadow:0 4px 14px rgba(7,83,52,0.04);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <h3 style="font-size:15px; color:#075334; font-weight:800; display:flex; align-items:center; gap:8px; margin:0;">
+                                <span>🏡</span> Confirm Delivery Address
+                            </h3>
+                            <span style="font-size:11px; background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:6px; font-weight:700;">Sangli Local Delivery</span>
+                        </div>
+                        <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Please confirm your house / flat number, building, landmark, and area so our delivery partner reaches quickly.</p>
+                        <textarea id="deliveryAddressInput" rows="2" style="width:100%; border:1.5px solid #cbd5e1; border-radius:10px; padding:10px 12px; font-size:13px; font-family:inherit; color:#1e293b; outline:none; resize:vertical; transition:border 0.2s;" placeholder="e.g. Flat 302, Sai Residency, Near Ganpati Temple, Market Yard, Sangli">{{ user_profile.address|default:'' }}</textarea>
+                    </div>
+
+                    <!-- LIVE GPS LOCATION CARD -->
+                    <div class="delivery-gps-card" style="margin-bottom:26px; padding:18px; background:#f0fdf4; border:1.5px dashed #22c55e; border-radius:16px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <div>
+                                <h3 style="font-size:15px; color:#15803d; font-weight:800; display:flex; align-items:center; gap:8px; margin-bottom:2px;">
+                                    <span>🎯</span> Share Live Delivery GPS Location
+                                </h3>
+                                <p style="font-size:12px; color:#166534; margin:0;">Pin your exact location so the delivery partner gets turn-by-turn navigation straight to your doorstep.</p>
+                            </div>
+                            <button type="button" id="btnDetectGps" onclick="getLiveGpsLocation()" style="background:#15803d; color:white; border:none; padding:10px 16px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:6px; flex-shrink:0; box-shadow:0 2px 8px rgba(21,128,61,0.25);">
+                                {% if user_profile.latitude and user_profile.longitude %}
+                                <span>✓</span> Location Pinned (Update)
+                                {% else %}
+                                <span>📍</span> Pin My Live Location
+                                {% endif %}
+                            </button>
+                        </div>
+                        
+                        <div id="gpsStatusText" style="margin-top:10px; font-size:12px; font-weight:700; color:#166534; {% if user_profile.latitude and user_profile.longitude %}display:block;{% else %}display:none;{% endif %} background:#dcfce7; padding:8px 12px; border-radius:8px;">
+                            {% if user_profile.latitude and user_profile.longitude %}
+                            ✓ Saved GPS Location Active ({{ user_profile.latitude|floatformat:4 }}, {{ user_profile.longitude|floatformat:4 }}) — Turn-by-turn Google Maps route ready for delivery partner!
+                            {% endif %}
+                        </div>
+                        <input type="hidden" id="userLatitude" value="{{ user_profile.latitude|default:'' }}">
+                        <input type="hidden" id="userLongitude" value="{{ user_profile.longitude|default:'' }}">
+                    </div>
+
+                    <h2>Choose Payment Method</h2>
+
+                    <!-- KHAMKAR DAIRY WALLET (PREPAID KHATA) -->
+                    <label class="payment-option {% if user_wallet.balance >= total_price %}selected{% endif %}" data-method="wallet" style="border: 1.5px solid #075334; background: #f0fdf4;">
+
+                        <input type="radio" name="payment" value="wallet" {% if user_wallet.balance >= total_price %}checked{% endif %}>
+
+                        <span class="radio"></span>
+
+                        <div class="method-icon" style="background:#e8f5ee; color:#075334; font-size:22px;">
+                            👛
+                        </div>
+
+                        <div class="method-details">
+                            <strong style="color:#075334; font-size:15px;">Khamkar Dairy Wallet & Khata</strong>
+                            <span>Available Balance: <b style="color:#075334; font-size:15px;">₹{{ user_wallet.balance|default:"0.00" }}</b></span>
+                        </div>
+
+                        <div class="payment-logos">
+                            {% if user_wallet.balance >= total_price %}
+                            <span style="color:#16a34a; font-weight:700; font-size:11px; background:#dcfce7; padding:4px 10px; border-radius:6px; border:1px solid #bbf7d0;">✓ 1-Click Fast Pay</span>
+                            {% else %}
+                            <span style="color:#b91c1c; font-weight:700; font-size:11px; background:#fee2e2; padding:4px 10px; border-radius:6px;">Low Balance</span>
+                            {% endif %}
+                        </div>
+
+                    </label>
+
+                    {% if store_settings.enable_online %}
+                    <!-- UPI -->
+                    <label class="payment-option {% if user_wallet.balance < total_price %}selected{% endif %}" data-method="upi">
+
+                        <input type="radio" name="payment" value="upi" {% if user_wallet.balance < total_price %}checked{% endif %}>
+
+                        <span class="radio"></span>
+
+                        <div class="method-icon">
+                            UPI
+                        </div>
+
+                        <div class="method-details">
+                            <strong>UPI (GPay / PhonePe / Paytm)</strong>
+                            <span>Pay using any UPI app or QR</span>
+                        </div>
+
+                        <div class="payment-logos">
+                            <span>G Pay</span>
+                            <span>PhonePe</span>
+                            <span>paytm</span>
+                        </div>
+
+                    </label>
+
+                    <!-- CARD -->
+                    <label class="payment-option" data-method="card">
+
+                        <input type="radio" name="payment" value="card">
+
+                        <span class="radio"></span>
+
+                        <div class="method-icon card-icon">
+                            ▣
+                        </div>
+
+                        <div class="method-details">
+                            <strong>Credit / Debit Card</strong>
+                            <span>Visa, Mastercard, Rupay & more</span>
+                        </div>
+
+                        <div class="payment-logos">
+                            <span>VISA</span>
+                            <span>●●</span>
+                            <span>RuPay</span>
+                        </div>
+
+                    </label>
+
+                    <!-- NET BANKING -->
+                    <label class="payment-option" data-method="bank">
+
+                        <input type="radio" name="payment" value="bank">
+
+                        <span class="radio"></span>
+
+                        <div class="method-icon">
+                            🏦
+                        </div>
+
+                        <div class="method-details">
+                            <strong>Net Banking</strong>
+                            <span>Pay using your bank account</span>
+                        </div>
+
+                        <span class="arrow">›</span>
+
+                    </label>
+
+                    {% endif %}{# end enable_online #}
+
+                    <!-- COD -->
+                    {% if store_settings.enable_cod %}
+                    <label class="payment-option" data-method="cod">
+
+                        <input type="radio" name="payment" value="cod">
+
+                        <span class="radio"></span>
+
+                        <div class="method-icon">
+                            💵
+                        </div>
+
+                        <div class="method-details">
+                            <strong>Cash on Delivery</strong>
+                            <span>Pay in cash when your order is delivered</span>
+                        </div>
+
+                    </label>
+                    {% endif %}{# end enable_cod #}
+
+
+                    <!-- UPI BOX -->
+                    <div class="upi-box" id="upiBox">
+
+                        <h3>Pay using UPI</h3>
+
+                        <div class="qr-wrapper">
+                            <div class="qr-code">
+                                <img src="{% static 'images/QR.png' %}" alt="UPI Payment QR Code">
+                            </div>
+                        </div>
+
+                        <p class="scan-text">
+                            Scan QR code using any UPI app (GPay, PhonePe, Paytm)
+                        </p>
+
+                        <div class="or">
+                            <span></span>
+                            <b>or enter UPI ID</b>
+                            <span></span>
+                        </div>
+
+                        <div class="upi-input-wrapper">
+                            <input type="text" id="userUpiId" class="pay-input"
+                                placeholder="e.g. yourname@okhdfcbank or 9876543210@paytm">
+                        </div>
+
+                        <div class="upi-id">
+                            Official Merchant UPI:
+                            <strong>dairyshop@upi</strong>
+                            <button type="button" onclick="copyUPI()" title="Copy UPI ID">⧉</button>
+                        </div>
+
+                        <div class="valid-time">
+                            ◷ &nbsp; QR code active &amp; secure
+                        </div>
+
+                    </div>
+
+
+                    <!-- CARD FORM -->
+                    <div class="extra-payment" id="cardBox">
+
+                        <h3>Credit / Debit Card Details</h3>
+
+                        <div class="input-group">
+                            <label for="cardNumber">Card Number</label>
+                            <div class="input-with-icon">
+                                <input type="text" id="cardNumber" class="pay-input" placeholder="1234 5678 9012 3456"
+                                    maxlength="19" autocomplete="cc-number">
+                                <span class="input-badge" id="cardTypeBadge">💳</span>
+                            </div>
+                        </div>
+
+                        <div class="two-inputs">
+                            <div class="input-group">
+                                <label for="cardExpiry">Expiry Date</label>
+                                <input type="text" id="cardExpiry" class="pay-input" placeholder="MM / YY" maxlength="7"
+                                    autocomplete="cc-exp">
+                            </div>
+                            <div class="input-group">
+                                <label for="cardCvv">CVV / CVC</label>
+                                <input type="password" id="cardCvv" class="pay-input" placeholder="•••" maxlength="4"
+                                    autocomplete="cc-csc">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="cardHolder">Cardholder's Name</label>
+                            <input type="text" id="cardHolder" class="pay-input" placeholder="Name as printed on card"
+                                autocomplete="cc-name">
+                        </div>
+
+                    </div>
+
+
+                    <!-- BANK -->
+                    <div class="extra-payment" id="bankBox">
+
+                        <h3>Select Net Banking Account</h3>
+
+                        <div class="quick-bank-grid">
+                            <button type="button" class="quick-bank-btn" data-bank="sbi"
+                                onclick="selectQuickBank('sbi', this)">
+                                <span>🏛️</span> SBI
+                            </button>
+                            <button type="button" class="quick-bank-btn" data-bank="hdfc"
+                                onclick="selectQuickBank('hdfc', this)">
+                                <span>🏛️</span> HDFC
+                            </button>
+                            <button type="button" class="quick-bank-btn" data-bank="icici"
+                                onclick="selectQuickBank('icici', this)">
+                                <span>🏛️</span> ICICI
+                            </button>
+                            <button type="button" class="quick-bank-btn" data-bank="axis"
+                                onclick="selectQuickBank('axis', this)">
+                                <span>🏛️</span> Axis
+                            </button>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="bankSelect">Choose Bank</label>
+                            <select id="bankSelect" class="pay-select" onchange="onBankSelectChange(this)">
+                                <option value="">-- Choose Your Bank --</option>
+                                <option value="sbi">State Bank of India (SBI)</option>
+                                <option value="hdfc">HDFC Bank</option>
+                                <option value="icici">ICICI Bank</option>
+                                <option value="axis">Axis Bank</option>
+                                <option value="kotak">Kotak Mahindra Bank</option>
+                                <option value="pnb">Punjab National Bank (PNB)</option>
+                                <option value="bob">Bank of Baroda</option>
+                                <option value="canara">Canara Bank</option>
+                                <option value="union">Union Bank of India</option>
+                                <option value="idbi">IDBI Bank</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="bankUserId">Net Banking User ID / Customer ID</label>
+                            <input type="text" id="bankUserId" class="pay-input"
+                                placeholder="Enter Net Banking User ID / Customer ID">
+                        </div>
+
+                    </div>
+
+
+                    <!-- WALLET -->
+                    <div class="extra-payment" id="walletBox">
+
+                        <h3>Khamkar Dairy Wallet Payment</h3>
+
+                        <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:14px; padding:18px; margin-top:10px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                                <div>
+                                    <span style="font-size:12px; color:#64748b; text-transform:uppercase; font-weight:700; display:block;">Prepaid Balance</span>
+                                    <strong style="font-size:24px; color:#075334; font-family:'Space Grotesk', sans-serif;">₹{{ user_wallet.balance|default:"0.00" }}</strong>
+                                </div>
+                                <a href="{% url 'wallet' %}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700; color:#075334; background:#e8f5ee; padding:6px 12px; border-radius:8px; text-decoration:none;">
+                                    + Add Money
+                                </a>
+                            </div>
+
+                            {% if user_wallet.balance >= total_price %}
+                            <div style="background:#dcfce7; color:#166534; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px;">
+                                <span>✓</span>
+                                <span>Sufficient balance! ₹{{ total_price }} will be deducted instantly from your Dairy Wallet upon clicking Pay.</span>
+                            </div>
+                            {% else %}
+                            <div style="background:#fee2e2; color:#b91c1c; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:600; display:flex; align-items:flex-start; gap:8px;">
+                                <span>⚠️</span>
+                                <div>
+                                    <span>Insufficient Balance! Order total is ₹{{ total_price }}. Please </span>
+                                    <a href="{% url 'wallet' %}" target="_blank" style="color:#b91c1c; font-weight:800; text-decoration:underline;">click here to top up your wallet</a>
+                                    <span> or select UPI / Cash on Delivery.</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+
+                    <!-- COD NOTICE BOX -->
+                    <div class="extra-payment" id="codBox">
+                        <h3>Cash on Delivery</h3>
+                        <div class="cod-info-box">
+                            <span class="cod-icon">💵</span>
+                            <div>
+                                <p><strong>Pay with Cash on Delivery</strong></p>
+                                <p style="color:#66716d; font-size:13px; margin-top:4px;">Keep ₹{{ total_price }} in
+                                    cash ready when our delivery executive arrives.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INLINE ERROR MESSAGE BOX -->
+                    <div id="paymentErrorBox" class="payment-error-box" style="display: none;">
+                        <span class="error-icon">⚠️</span>
+                        <span id="paymentErrorMsg">Please fill all required payment details.</span>
+                    </div>
+
+                    {% if not store_settings.store_open %}
+                    <div style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:12px; padding:14px 16px; margin-bottom:16px; font-weight:bold; text-align:center;">
+                        🔒 Shop is currently closed & not accepting orders.
+                    </div>
+                    <button class="pay-button order" id="orderButton" disabled style="opacity: 0.6; cursor: not-allowed; background:#dc2626;">
+                        <span>🔒</span>
+                        <span>Shop Closed</span>
+                    </button>
+                    {% else %}
+                    <!-- PAY BUTTON -->
+                    <button class="pay-button order" id="orderButton" onclick="makePayment()">
+
+                        <span>🔒</span>
+
+                        <span id="payText">
+                            Pay ₹{{ total_price }}
+                        </span>
+
+                    </button>
+                    {% endif %}
+
+
+                    <div class="secure-message">
+                        🛡 &nbsp; Your payment information is 256-bit encrypted and 100% secure
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- RIGHT SIDE -->
+            <aside class="payment-right">
+
+
+                <!-- ORDER SUMMARY -->
+                <div class="side-card order-summary">
+
+                    <h2>Order Summary</h2>
+
+                    <div class="summary-row">
+                        <span>Subtotal ({{ total_items }} Item{% if total_items != 1 %}s{% endif %})</span>
+                        <strong>₹{{ subtotal }}</strong>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Delivery Charges</span>
+                        <div>
+                            {% if is_free_delivery %}
+                            <del>₹{{ standard_delivery_charge }}</del>
+                            <strong class="free">FREE</strong>
+                            {% else %}
+                            <strong style="color:#e53935;">₹{{ delivery_charges }}</strong>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Packaging Charges</span>
+                        <strong>₹{{ packaging_charges }}</strong>
+                    </div>
+
+                    <div class="summary-line"></div>
+
+                    <div class="total-row">
+                        <strong>To Pay</strong>
+                        <strong>₹{{ total_price }}</strong>
+                    </div>
+
+
+                    <div class="saving-box">
+                        {% if is_free_delivery %}
+                        🏷 &nbsp;
+                        <strong>You saved ₹{{ standard_delivery_charge }} on delivery!</strong>
+                        {% else %}
+                        🚚 &nbsp;
+                        <strong>Add ₹{{ needed_for_free }} more for FREE delivery!</strong>
+                        {% endif %}
+                    </div>
+
+
+                    <div class="guarantees">
+
+                        <div>
+                            🔒
+                            <span>Safe & Secure Payments</span>
+                        </div>
+
+                        <div>
+                            🛡
+                            <span>100% Money Back Guarantee</span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- DELIVERY -->
+                <div class="side-card">
+
+                    <h2>We deliver fresh and pure</h2>
+
+                    <div class="benefit">
+                        <span>🌿</span>
+                        <p>100% Pure & Fresh Products</p>
+                    </div>
+
+                    <div class="benefit">
+                        <span>🚚</span>
+                        <p>On-time Delivery</p>
+                    </div>
+
+                    <div class="benefit">
+                        <span>💧</span>
+                        <p>Hygienic Packaging</p>
+                    </div>
+
+                    <div class="benefit">
+                        <span>🏅</span>
+                        <p>Quality You Can Trust</p>
+                    </div>
+
+                </div>
+
+
+                <!-- HELP -->
+                <div class="side-card help-card">
+
+                    <h2>Need Help?</h2>
+
+                    <p>Our support team is here to help you.</p>
+
+                    <div class="contact">
+                        ☎
+                        <span>{{ store_settings.contact_phone }}</span>
+                    </div>
+
+                    <div class="contact">
+                        ✉
+                        <span>{{ store_settings.contact_email }}</span>
+                    </div>
+
+                </div>
+
+            </aside>
+
+        </main>
+
     </div>
 
 
-    <!-- HEADER -->
-    <header class="payment-header">
-
-        <div class="header-icon">
-            🛍
-        </div>
-
-        <div>
-            <h1>Secure Payment</h1>
-            <p>Complete your payment and place your order</p>
-        </div>
-
-    </header>
-
-
-    <!-- MAIN CONTENT -->
-    <main class="payment-container">
-
-        <!-- LEFT SIDE -->
-        <section class="payment-left">
-
-            <div class="payment-card">
-
-                <h2>Choose Payment Method</h2>
-
-
-                <!-- UPI -->
-                <label class="payment-option selected" data-method="upi">
-
-                    <input type="radio" name="payment" value="upi" checked>
-
-                    <span class="radio"></span>
-
-                    <div class="method-icon">
-                        UPI
-                    </div>
-
-                    <div class="method-details">
-                        <strong>UPI</strong>
-                        <span>Pay using any UPI app</span>
-                    </div>
-
-                    <div class="payment-logos">
-                        <span>G Pay</span>
-                        <span>◉</span>
-                        <span>paytm</span>
-                    </div>
-
-                </label>
-
-
-                <!-- CARD -->
-                <label class="payment-option" data-method="card">
-
-                    <input type="radio" name="payment" value="card">
-
-                    <span class="radio"></span>
-
-                    <div class="method-icon card-icon">
-                        ▣
-                    </div>
-
-                    <div class="method-details">
-                        <strong>Credit / Debit Card</strong>
-                        <span>Visa, Mastercard, Rupay & more</span>
-                    </div>
-
-                    <div class="payment-logos">
-                        <span>VISA</span>
-                        <span>●●</span>
-                        <span>RuPay</span>
-                    </div>
-
-                </label>
-
-
-                <!-- NET BANKING -->
-                <label class="payment-option" data-method="bank">
-
-                    <input type="radio" name="payment" value="bank">
-
-                    <span class="radio"></span>
-
-                    <div class="method-icon">
-                        🏦
-                    </div>
-
-                    <div class="method-details">
-                        <strong>Net Banking</strong>
-                        <span>Pay using your bank account</span>
-                    </div>
-
-                    <span class="arrow">›</span>
-
-                </label>
-
-
-                <!-- WALLET -->
-                <label class="payment-option" data-method="wallet">
-
-                    <input type="radio" name="payment" value="wallet">
-
-                    <span class="radio"></span>
-
-                    <div class="method-icon">
-                        👛
-                    </div>
-
-                    <div class="method-details">
-                        <strong>Wallets</strong>
-                        <span>Pay using your wallet</span>
-                    </div>
-
-                    <div class="payment-logos">
-                        <span>paytm</span>
-                        <span>amazon pay</span>
-                    </div>
-
-                </label>
-
-
-                <!-- COD -->
-                <label class="payment-option" data-method="cod">
-
-                    <input type="radio" name="payment" value="cod">
-
-                    <span class="radio"></span>
-
-                    <div class="method-icon">
-                        💵
-                    </div>
-
-                    <div class="method-details">
-                        <strong>Cash on Delivery</strong>
-                        <span>Pay in cash when your order is delivered</span>
-                    </div>
-
-                </label>
-
-
-                <!-- UPI BOX -->
-                <div class="upi-box" id="upiBox">
-
-                    <h3>Pay using UPI</h3>
-
-                    <div class="qr-wrapper">
-                       <div class="qr-code">
-                           <img src="{% static 'images/QR.png' %}"
-                            alt="UPI Payment QR Code">
-                       </div>
-                    </div>
-
-                    <p class="scan-text">
-                        Scan QR code using any UPI app (GPay, PhonePe, Paytm)
-                    </p>
-
-                    <div class="or">
-                        <span></span>
-                        <b>or enter UPI ID</b>
-                        <span></span>
-                    </div>
-
-                    <div class="upi-input-wrapper">
-                        <input type="text" id="userUpiId" class="pay-input" placeholder="e.g. yourname@okhdfcbank or 9876543210@paytm">
-                    </div>
-
-                    <div class="upi-id">
-                        Official Merchant UPI:
-                        <strong>dairyshop@upi</strong>
-                        <button type="button" onclick="copyUPI()" title="Copy UPI ID">⧉</button>
-                    </div>
-
-                    <div class="valid-time">
-                        ◷ &nbsp; QR code active &amp; secure
-                    </div>
-
-                </div>
-
-
-                <!-- CARD FORM -->
-                <div class="extra-payment" id="cardBox">
-
-                    <h3>Credit / Debit Card Details</h3>
-
-                    <div class="input-group">
-                        <label for="cardNumber">Card Number</label>
-                        <div class="input-with-icon">
-                            <input type="text" id="cardNumber" class="pay-input" placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="cc-number">
-                            <span class="input-badge" id="cardTypeBadge">💳</span>
-                        </div>
-                    </div>
-
-                    <div class="two-inputs">
-                        <div class="input-group">
-                            <label for="cardExpiry">Expiry Date</label>
-                            <input type="text" id="cardExpiry" class="pay-input" placeholder="MM / YY" maxlength="7" autocomplete="cc-exp">
-                        </div>
-                        <div class="input-group">
-                            <label for="cardCvv">CVV / CVC</label>
-                            <input type="password" id="cardCvv" class="pay-input" placeholder="•••" maxlength="4" autocomplete="cc-csc">
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="cardHolder">Cardholder's Name</label>
-                        <input type="text" id="cardHolder" class="pay-input" placeholder="Name as printed on card" autocomplete="cc-name">
-                    </div>
-
-                </div>
-
-
-                <!-- BANK -->
-                <div class="extra-payment" id="bankBox">
-
-                    <h3>Select Net Banking Account</h3>
-
-                    <div class="quick-bank-grid">
-                        <button type="button" class="quick-bank-btn" data-bank="sbi" onclick="selectQuickBank('sbi', this)">
-                            <span>🏛️</span> SBI
-                        </button>
-                        <button type="button" class="quick-bank-btn" data-bank="hdfc" onclick="selectQuickBank('hdfc', this)">
-                            <span>🏛️</span> HDFC
-                        </button>
-                        <button type="button" class="quick-bank-btn" data-bank="icici" onclick="selectQuickBank('icici', this)">
-                            <span>🏛️</span> ICICI
-                        </button>
-                        <button type="button" class="quick-bank-btn" data-bank="axis" onclick="selectQuickBank('axis', this)">
-                            <span>🏛️</span> Axis
-                        </button>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="bankSelect">Choose Bank</label>
-                        <select id="bankSelect" class="pay-select" onchange="onBankSelectChange(this)">
-                            <option value="">-- Choose Your Bank --</option>
-                            <option value="sbi">State Bank of India (SBI)</option>
-                            <option value="hdfc">HDFC Bank</option>
-                            <option value="icici">ICICI Bank</option>
-                            <option value="axis">Axis Bank</option>
-                            <option value="kotak">Kotak Mahindra Bank</option>
-                            <option value="pnb">Punjab National Bank (PNB)</option>
-                            <option value="bob">Bank of Baroda</option>
-                            <option value="canara">Canara Bank</option>
-                            <option value="union">Union Bank of India</option>
-                            <option value="idbi">IDBI Bank</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="bankUserId">Net Banking User ID / Customer ID</label>
-                        <input type="text" id="bankUserId" class="pay-input" placeholder="Enter Net Banking User ID / Customer ID">
-                    </div>
-
-                </div>
-
-
-                <!-- WALLET -->
-                <div class="extra-payment" id="walletBox">
-
-                    <h3>Select Digital Wallet</h3>
-
-                    <div class="quick-bank-grid">
-                        <button type="button" class="quick-bank-btn" data-wallet="paytm" onclick="selectQuickWallet('paytm', this)">
-                            <span>📱</span> Paytm
-                        </button>
-                        <button type="button" class="quick-bank-btn" data-wallet="amazonpay" onclick="selectQuickWallet('amazonpay', this)">
-                            <span>📦</span> Amazon Pay
-                        </button>
-                        <button type="button" class="quick-bank-btn" data-wallet="phonepe" onclick="selectQuickWallet('phonepe', this)">
-                            <span>💜</span> PhonePe
-                        </button>
-                        <button type="button" class="quick-bank-btn" data-wallet="mobikwik" onclick="selectQuickWallet('mobikwik', this)">
-                            <span>⚡</span> MobiKwik
-                        </button>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="walletSelect">Choose Wallet</label>
-                        <select id="walletSelect" class="pay-select" onchange="onWalletSelectChange(this)">
-                            <option value="">-- Choose Your Wallet --</option>
-                            <option value="paytm">Paytm Wallet</option>
-                            <option value="amazonpay">Amazon Pay</option>
-                            <option value="phonepe">PhonePe Wallet</option>
-                            <option value="mobikwik">MobiKwik</option>
-                            <option value="freecharge">FreeCharge</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="walletMobile">Registered Mobile Number</label>
-                        <input type="tel" id="walletMobile" class="pay-input" placeholder="Enter 10-digit mobile number" maxlength="10">
-                    </div>
-
-                </div>
-
-                <!-- COD NOTICE BOX -->
-                <div class="extra-payment" id="codBox">
-                    <h3>Cash on Delivery</h3>
-                    <div class="cod-info-box">
-                        <span class="cod-icon">💵</span>
-                        <div>
-                            <p><strong>Pay with Cash on Delivery</strong></p>
-                            <p style="color:#66716d; font-size:13px; margin-top:4px;">Keep ₹{{ total_price }} in cash ready when our delivery executive arrives.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- INLINE ERROR MESSAGE BOX -->
-                <div id="paymentErrorBox" class="payment-error-box" style="display: none;">
-                    <span class="error-icon">⚠️</span>
-                    <span id="paymentErrorMsg">Please fill all required payment details.</span>
-                </div>
-
-                <!-- PAY BUTTON -->
-                <button class="pay-button order" id="orderButton" onclick="makePayment()">
-
-                    <span>🔒</span>
-
-                    <span id="payText">
-                        Pay ₹{{ total_price }}
-                    </span>
-
-                </button>
-
-
-                <div class="secure-message">
-                    🛡 &nbsp; Your payment information is 256-bit encrypted and 100% secure
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- RIGHT SIDE -->
-        <aside class="payment-right">
-
-
-            <!-- ORDER SUMMARY -->
-            <div class="side-card order-summary">
-
-                <h2>Order Summary</h2>
-
-                <div class="summary-row">
-                    <span>Subtotal ({{ total_items }} Item{% if total_items != 1 %}s{% endif %})</span>
-                    <strong>₹{{ subtotal }}</strong>
-                </div>
-
-                <div class="summary-row">
-                    <span>Delivery Charges</span>
-                    <div>
-                        {% if is_free_delivery %}
-                        <del>₹50</del>
-                        <strong class="free">FREE</strong>
-                        {% else %}
-                        <strong style="color:#e53935;">₹{{ delivery_charges }}</strong>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div class="summary-row">
-                    <span>Packaging Charges</span>
-                    <strong>₹{{ packaging_charges }}</strong>
-                </div>
-
-                <div class="summary-line"></div>
-
-                <div class="total-row">
-                    <strong>To Pay</strong>
-                    <strong>₹{{ total_price }}</strong>
-                </div>
-
-
-                <div class="saving-box">
-                    {% if is_free_delivery %}
-                    🏷 &nbsp;
-                    <strong>You saved ₹50 on delivery!</strong>
-                    {% else %}
-                    🚚 &nbsp;
-                    <strong>Add ₹{{ needed_for_free }} more for FREE delivery!</strong>
-                    {% endif %}
-                </div>
-
-
-                <div class="guarantees">
-
-                    <div>
-                        🔒
-                        <span>Safe & Secure Payments</span>
-                    </div>
-
-                    <div>
-                        🛡
-                        <span>100% Money Back Guarantee</span>
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- DELIVERY -->
-            <div class="side-card">
-
-                <h2>We deliver fresh and pure</h2>
-
-                <div class="benefit">
-                    <span>🌿</span>
-                    <p>100% Pure & Fresh Products</p>
-                </div>
-
-                <div class="benefit">
-                    <span>🚚</span>
-                    <p>On-time Delivery</p>
-                </div>
-
-                <div class="benefit">
-                    <span>💧</span>
-                    <p>Hygienic Packaging</p>
-                </div>
-
-                <div class="benefit">
-                    <span>🏅</span>
-                    <p>Quality You Can Trust</p>
-                </div>
-
-            </div>
-
-
-            <!-- HELP -->
-            <div class="side-card help-card">
-
-                <h2>Need Help?</h2>
-
-                <p>Our support team is here to help you.</p>
-
-                <div class="contact">
-                    ☎
-                    <span>+91 72196 21129</span>
-                </div>
-
-                <div class="contact">
-                    ✉
-                    <span>khamkardairy72@gmail.com</span>
-                </div>
-
-            </div>
-
-        </aside>
-
-    </main>
-
-</div>
-
-
-<script>
-    window.ORDER_TOTAL = {{ total_price }};
-</script>
-<script src="{% static 'js/Payment.js' %}"></script>
-
-
-<!-- ================= BOTTOM NAV ================= -->
-<nav class="bottom-nav">
-
-    <!-- HOME -->
-    <a href="{% url 'home' %}" class="nav-item">
-        <span class="nav-icon">🏠</span>
-        <span>Home</span>
-    </a>
-
-    <!-- SHOP -->
-    <a href="{% url 'shop_product' %}" class="nav-item">
-        <span class="nav-icon">🛍️</span>
-        <span>Shop</span>
-    </a>
-
-    <!-- ORDERS -->
-    <a href="{% url 'orders' %}" class="nav-item">
-        <span class="nav-icon">📦</span>
-        <span>Orders</span>
-    </a>
-
-    <!-- CART -->
-    <a href="{% url 'cart' %}" class="nav-item cart-nav-item">
-        <span class="nav-icon-box">
-            <span class="nav-icon">🛒</span>
-            <span class="cart-count" id="bottomCartCount" {% if not cart_count or cart_count == 0 %}style="display:none;"{% endif %}>{{ cart_count|default:"" }}</span>
-        </span>
-        <span>Cart</span>
-    </a>
-
-    <!-- FAVORITES -->
-    <a href="{% url 'favourite' %}" class="nav-item">
-        <span class="nav-icon">🩷</span>
-        <span>Favorites</span>
-    </a>
-
-    <!-- CONTACT -->
-    <a href="{% url 'contact' %}" class="nav-item">
-        <span class="nav-icon">📞</span>
-        <span>Contact</span>
-    </a>
-
-</nav>
+    <script>
+        window.ORDER_TOTAL = {{ total_price }};
+    </script>
+    <script src="{% static 'js/Payment.js' %}"></script>
+
+
+    <!-- ================= BOTTOM NAV ================= -->
+    <nav class="bottom-nav">
+
+        <!-- HOME -->
+        <a href="{% url 'home' %}" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+        </a>
+
+        <!-- SHOP -->
+        <a href="{% url 'shop_product' %}" class="nav-item">
+            <span class="nav-icon">🛍️</span>
+            <span>Shop</span>
+        </a>
+
+        <!-- ORDERS -->
+        <a href="{% url 'orders' %}" class="nav-item">
+            <span class="nav-icon">📦</span>
+            <span>Orders</span>
+        </a>
+
+        <!-- CART -->
+        <a href="{% url 'cart' %}" class="nav-item cart-nav-item">
+            <span class="nav-icon-box">
+                <span class="nav-icon">🛒</span>
+                <span class="cart-count" id="bottomCartCount" {% if not cart_count or cart_count == 0 %}style="display:none;"{% endif %}>{{ cart_count|default:"" }}</span>
+            </span>
+            <span>Cart</span>
+        </a>
+
+        <!-- FAVORITES -->
+        <a href="{% url 'favourite' %}" class="nav-item">
+            <span class="nav-icon">🩷</span>
+            <span>Favorites</span>
+        </a>
+
+        <!-- CONTACT -->
+        <a href="{% url 'contact' %}" class="nav-item">
+            <span class="nav-icon">📞</span>
+            <span>Contact</span>
+        </a>
+
+    </nav>
 
 </body>
+
 </html>

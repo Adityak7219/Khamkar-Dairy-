@@ -901,14 +901,14 @@ function displayProducts() {
         const favActiveClass = isFav ? 'active' : '';
 
         card.innerHTML = `
-<div class="product-image">
+<div class="product-image" onclick="openProductModal(${product.id})" style="cursor:pointer;">
     ${imageHtml}
     <button type="button" class="fav-heart-btn ${favActiveClass}" onclick="toggleShopFavorite(${product.id}, this, event)" title="Add to Favorites">
         ${favHeartSymbol}
     </button>
 </div>
 
-            <div class="product-details">
+            <div class="product-details" onclick="openProductModal(${product.id})" style="cursor:pointer;">
 
                 <div class="product-name">
                     ${product.name}
@@ -1427,4 +1427,121 @@ function toggleShopFavorite(productId, buttonElem, event) {
             buttonElem.disabled = false;
             console.error('Favorite toggle error:', err);
         });
+}
+
+/* ================= PRODUCT MODAL ================= */
+const modalStyle = document.createElement('style');
+modalStyle.textContent = `
+.product-info-modal-backdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.product-info-modal-backdrop.show { opacity: 1; pointer-events: auto; }
+.product-info-modal {
+    background: white; border-radius: 16px;
+    width: 90%; max-width: 360px; padding: 20px; position: relative;
+    transform: translateY(20px); transition: transform 0.3s;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.product-info-modal-backdrop.show .product-info-modal { transform: translateY(0); }
+.close-modal-btn {
+    position: absolute; top: 12px; right: 12px;
+    background: #f1f5f3; border: none; font-size: 16px;
+    width: 30px; height: 30px; border-radius: 50%; color: #555;
+    display: flex; align-items: center; justify-content: center;
+}
+.product-modal-image-container {
+    width: 100%; height: 180px;
+    background: linear-gradient(145deg, #e8f5ee, #c8e6d6);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+}
+.modal-product-photo { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+.product-modal-image-container .food { font-size: 80px; }
+.product-modal-category {
+    font-size: 12px; font-weight: 700; color: var(--green, #006b3c);
+    text-transform: uppercase; margin-bottom: 4px;
+}
+.product-modal-title { font-size: 22px; font-weight: 800; color: #111; margin-bottom: 6px; }
+.product-modal-size { font-size: 14px; color: #6b7280; margin-bottom: 12px; }
+.product-modal-price { font-size: 24px; font-weight: 800; color: var(--green, #006b3c); margin-bottom: 16px; }
+.product-modal-description { font-size: 14px; color: #4b5563; line-height: 1.5; margin-bottom: 20px; }
+.product-modal-actions .quantity {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #eef7f2; border-radius: 20px; padding: 4px; width: 120px; margin: 0 auto 12px;
+}
+.product-modal-actions .quantity button {
+    width: 32px; height: 32px; background: white; border: none; border-radius: 50%;
+    font-size: 18px; font-weight: 700; color: #006b3c; display: flex; align-items: center; justify-content: center;
+}
+.product-modal-actions .quantity-number { font-weight: 700; font-size: 16px; color: #006b3c; }
+.product-modal-actions .add-cart {
+    width: 100%; padding: 12px; background: #006b3c; color: white; border: none; border-radius: 12px;
+    font-weight: 700; font-size: 16px; transition: all 0.2s;
+}
+.product-modal-actions .add-cart:active { transform: translateY(2px); }
+`;
+document.head.appendChild(modalStyle);
+
+function openProductModal(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    document.getElementById('modalProductCategory').textContent = product.category;
+    document.getElementById('modalProductTitle').textContent = product.name;
+    document.getElementById('modalProductSize').textContent = product.size;
+    document.getElementById('modalProductPrice').textContent = '₹' + product.price;
+
+    const imgEl = document.getElementById('modalProductImage');
+    const emojiEl = document.getElementById('modalProductEmoji');
+    if (product.image) {
+        imgEl.src = product.image;
+        imgEl.style.display = 'block';
+        emojiEl.style.display = 'none';
+        imgEl.onerror = function() {
+            imgEl.style.display = 'none';
+            emojiEl.textContent = product.emoji || '🥛';
+            emojiEl.style.display = 'block';
+        };
+    } else {
+        imgEl.style.display = 'none';
+        emojiEl.textContent = product.emoji || '🥛';
+        emojiEl.style.display = 'block';
+    }
+
+    let actionsHtml = '';
+    const isAvailable = (product.stock === undefined || product.stock > 0) && (product.is_active === undefined || product.is_active !== false);
+    
+    if (isAvailable) {
+        if (!quantities[product.id]) quantities[product.id] = 1;
+        actionsHtml = `
+            <div class="quantity">
+                <button onclick="changeQuantity(${product.id}, -1); updateModalQty(${product.id})">−</button>
+                <span class="quantity-number" id="modal-qty-${product.id}">${quantities[product.id]}</span>
+                <button onclick="changeQuantity(${product.id}, 1); updateModalQty(${product.id})">+</button>
+            </div>
+            <button class="add-cart" onclick="addToCart(${product.id}, this); closeProductModal()">🛒 Add to Cart</button>
+        `;
+    } else {
+        actionsHtml = `<button class="add-cart" style="background:#e0e8e3; color:#888; cursor:not-allowed;" disabled>Unavailable</button>`;
+    }
+    
+    document.getElementById('modalProductActions').innerHTML = actionsHtml;
+
+    const backdrop = document.getElementById('productInfoModalBackdrop');
+    backdrop.style.display = 'flex';
+    setTimeout(() => backdrop.classList.add('show'), 10);
+}
+
+function updateModalQty(productId) {
+    const el = document.getElementById('modal-qty-' + productId);
+    if (el) el.textContent = quantities[productId];
+}
+
+function closeProductModal() {
+    const backdrop = document.getElementById('productInfoModalBackdrop');
+    backdrop.classList.remove('show');
+    setTimeout(() => backdrop.style.display = 'none', 300);
 }

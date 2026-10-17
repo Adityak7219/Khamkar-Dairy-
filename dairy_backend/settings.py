@@ -6,7 +6,21 @@ SECRET_KEY = "change-this-secret-key"
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.trycloudflare.com",
+    "https://*.lhr.life",
+    "https://*.ngrok-free.app",
+    "https://*.loca.lt",
+    "https://*.onrender.com",
+    "https://*.pythonanywhere.com",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+]
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 INSTALLED_APPS = [
+    "jazzmin",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -21,6 +35,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -66,6 +81,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -82,4 +98,33 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
+}
+
+JAZZMIN_SETTINGS = {
+    "site_title": "Dairy Shop Admin",
+    "site_header": "Dairy Shop",
+    "site_brand": "Dairy Admin",
+    "welcome_sign": "Welcome to the Dairy Shop Admin Panel",
+    "copyright": "Dairy Shop Ltd",
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "shop.Product": "fas fa-box",
+        "shop.Order": "fas fa-shopping-cart",
+        "shop.Category": "fas fa-list",
+    },
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "theme": "pulse",
+    "dark_mode_theme": "darkly",
+    "navbar": "navbar-primary navbar-dark",
+    "sidebar": "sidebar-dark-primary",
+    "brand_colour": "navbar-primary",
+    "accent": "accent-primary",
 }

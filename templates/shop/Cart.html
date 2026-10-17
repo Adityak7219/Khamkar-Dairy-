@@ -2,6 +2,7 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,380 +15,366 @@
 
 <body>
 
-<div class="cart-page">
+    <div class="cart-page">
 
-    <!-- =================================================
+        <!-- =================================================
          HEADER
     ================================================= -->
 
-    <header class="top-header">
+        <header class="top-header">
 
-        <div class="header-left">
+            <div class="header-left">
 
-            <h1 class="page-title">
-                Shopping Cart
-            </h1>
+                <h1 class="page-title">
+                    Shopping Cart
+                </h1>
 
-        </div>
-
-        <div class="header-actions">
-
-            <div class="header-icon">
-                🛒
-                <span class="badge">{{ cart_count }}</span>
             </div>
 
-        </div>
+            <div class="header-actions">
 
-    </header>
+                <div class="header-icon">
+                    🛒
+                    <span class="badge">{{ cart_count }}</span>
+                </div>
+
+            </div>
+
+        </header>
 
 
-    <!-- =================================================
+        <!-- =================================================
          FREE DELIVERY
     ================================================= -->
 
-    <div class="delivery-banner">
+        <div class="delivery-banner">
 
-        <div class="delivery-icon">
-            🚚
+            <div class="delivery-icon">
+                🚚
+            </div>
+
+            <div class="delivery-text">
+
+                {% if needed_for_free > 0 %}
+                <div class="delivery-title">
+                    Add ₹{{ needed_for_free }} more to get FREE delivery
+                </div>
+
+                <div class="delivery-subtitle">
+                    Free delivery on orders above ₹{{ free_delivery_threshold }}. Below ₹{{ free_delivery_threshold }}
+                    delivery charges ₹{{ standard_delivery_charge }}.
+                </div>
+                {% else %}
+                <div class="delivery-title">
+                    🎉 Yay! You are getting FREE delivery
+                </div>
+
+                <div class="delivery-subtitle">
+                    You saved ₹50 on delivery!
+                </div>
+                {% endif %}
+
+            </div>
+
+            <div class="progress-area">
+
+                <div class="progress">
+                    <div class="progress-fill" style="width: {{ progress_percent }}%;"></div>
+                </div>
+
+                <div class="progress-value">
+                    ₹{{ subtotal }} / ₹{{ free_delivery_threshold }}
+                </div>
+
+            </div>
+
+            <a href="{% url 'shop_product' %}" class="add-items-btn"
+                style="text-decoration: none; display: inline-flex; align-items: center;">
+                Add More Items &nbsp; ›
+            </a>
+
         </div>
 
-        <div class="delivery-text">
 
-            {% if needed_for_free > 0 %}
-            <div class="delivery-title">
-                Add ₹{{ needed_for_free }} more to get FREE delivery
-            </div>
-
-            <div class="delivery-subtitle">
-                Free delivery on orders above ₹200. Below ₹200 delivery charges ₹50.
-            </div>
-            {% else %}
-            <div class="delivery-title">
-                🎉 Yay! You are getting FREE delivery
-            </div>
-
-            <div class="delivery-subtitle">
-                You saved ₹50 on delivery!
-            </div>
-            {% endif %}
-
-        </div>
-
-        <div class="progress-area">
-
-            <div class="progress">
-                <div class="progress-fill" style="width: {{ progress_percent }}%;"></div>
-            </div>
-
-            <div class="progress-value">
-                ₹{{ subtotal }} / ₹200
-            </div>
-
-        </div>
-
-        <a
-            href="{% url 'shop_product' %}"
-            class="add-items-btn"
-            style="text-decoration: none; display: inline-flex; align-items: center;"
-        >
-            Add More Items &nbsp; ›
-        </a>
-
-    </div>
-
-
-    <!-- =================================================
+        <!-- =================================================
          MAIN
     ================================================= -->
 
-    <main class="cart-content">
+        <main class="cart-content">
 
-        <!-- =================================================
+            <!-- =================================================
              CART ITEMS
         ================================================= -->
 
-        <section class="cart-items" id="cartItems">
+            <section class="cart-items" id="cartItems">
 
-            <h2 class="cart-heading">
-                <span id="itemCount">{{ item_count }}</span>
-                Items in your cart
-            </h2>
-
-
-            {% for item in cart_items %}
-            <div
-                class="cart-item"
-                data-id="{{ item.id }}"
-                data-price="{{ item.product.price }}"
-            >
-
-                <div class="product-image">
-
-                    {% if item.product.image %}
-                    <img
-                        src="{{ item.product.image.url }}"
-                        alt="{{ item.product.name }}"
-                    >
-                    {% else %}
-                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#eee;color:#888;">🥛</div>
-                    {% endif %}
-
-                </div>
-
-
-                <div>
-
-                    <div class="product-name">
-                        {{ item.product.name }}
-                    </div>
-
-                    <div class="product-size">
-                        {{ item.product.quantity_label }}
-                    </div>
-
-                    <div class="product-price">
-                        ₹{{ item.product.price }}
-                    </div>
-
-                </div>
-
-
-                <div class="quantity-box">
-
-                    <button
-                        class="qty-btn"
-                        onclick="changeQty(this, -1)"
-                    >
-                        −
-                    </button>
-
-                    <div class="qty-number">
-                        {{ item.quantity }}
-                    </div>
-
-                    <button
-                        class="qty-btn"
-                        onclick="changeQty(this, 1)"
-                    >
-                        +
-                    </button>
-
-                </div>
-
-
-                <div class="item-total">
-                    ₹{% widthratio item.product.price 1 item.quantity %}
-                </div>
-
-
-                <button
-                    class="remove-btn"
-                    onclick="removeItem(this)"
-                >
-                    🗑
-                </button>
-
-            </div>
-            {% endfor %}
-
-
-            {% if item_count > 0 %}
-            <button
-                class="clear-cart"
-                onclick="clearCart()"
-            >
-                🗑 &nbsp; Clear Cart
-            </button>
-            {% endif %}
-
-
-            <div
-                class="empty-cart"
-                id="emptyCart"
-                style="display: {% if item_count == 0 %}block{% else %}none{% endif %};"
-            >
-                <div class="empty-icon">
-                    🛒
-                </div>
-
-                <h2>
-                    Your cart is empty
+                <h2 class="cart-heading">
+                    <span id="itemCount">{{ item_count }}</span>
+                    Items in your cart
                 </h2>
 
-                <p>
-                    Add fresh pure milk, curd, paneer & ghee to your cart.
-                </p>
 
-                <a href="{% url 'shop_product' %}" class="empty-cart-btn">
-                    🛍️ Start Shopping Now &nbsp; →
-                </a>
-            </div>
+                {% for item in cart_items %}
+                <div class="cart-item" data-id="{{ item.id }}" data-price="{{ item.product.price }}">
 
-        </section>
+                    <div class="product-image">
+
+                        {% if item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                        {% else %}
+                        <div
+                            style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#eee;color:#888;">
+                            🥛</div>
+                        {% endif %}
+
+                    </div>
 
 
-        <!-- =================================================
+                    <div>
+
+                        <div class="product-name">
+                            {{ item.product.name }}
+                        </div>
+
+                        <div class="product-size">
+                            {{ item.product.quantity_label }}
+                        </div>
+
+                        <div class="product-price">
+                            ₹{{ item.product.price }}
+                        </div>
+
+                    </div>
+
+
+                    <div class="quantity-box">
+
+                        <button class="qty-btn" onclick="changeQty(this, -1)">
+                            −
+                        </button>
+
+                        <div class="qty-number">
+                            {{ item.quantity }}
+                        </div>
+
+                        <button class="qty-btn" onclick="changeQty(this, 1)">
+                            +
+                        </button>
+
+                    </div>
+
+
+                    <div class="item-total">
+                        ₹{% widthratio item.product.price 1 item.quantity %}
+                    </div>
+
+
+                    <button class="remove-btn" onclick="removeItem(this)">
+                        🗑
+                    </button>
+
+                </div>
+                {% endfor %}
+
+
+                {% if item_count > 0 %}
+                <button class="clear-cart" onclick="clearCart()">
+                    🗑 &nbsp; Clear Cart
+                </button>
+                {% endif %}
+
+
+                <div class="empty-cart" id="emptyCart"
+                    style="display: {% if item_count == 0 %}block{% else %}none{% endif %};">
+                    <div class="empty-icon">
+                        🛒
+                    </div>
+
+                    <h2>
+                        Your cart is empty
+                    </h2>
+
+                    <p>
+                        Add fresh pure milk, curd, paneer & ghee to your cart.
+                    </p>
+
+                    <a href="{% url 'shop_product' %}" class="empty-cart-btn">
+                        🛍️ Start Shopping Now &nbsp; →
+                    </a>
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
              ORDER SUMMARY
         ================================================= -->
 
-        <aside class="order-summary">
+            <aside class="order-summary">
 
-            <h2 class="summary-title">
-                Order Summary
-            </h2>
-
-
-            <div class="summary-row">
-
-                <span>
-                    Subtotal (<span id="summaryItems">{{ total_items }}</span> Items)
-                </span>
-
-                <strong id="subtotal">
-                    ₹{{ subtotal }}
-                </strong>
-
-            </div>
+                <h2 class="summary-title">
+                    Order Summary
+                </h2>
 
 
-            <div class="summary-row">
+                <div class="summary-row">
 
-                <span>
-                    Delivery Charges
-                </span>
+                    <span>
+                        Subtotal (<span id="summaryItems">{{ total_items }}</span> Items)
+                    </span>
 
-                <span>
+                    <strong id="subtotal">
+                        ₹{{ subtotal }}
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-row">
+
+                    <span>
+                        Delivery Charges
+                    </span>
+
+                    <span>
+                        {% if is_free_delivery %}
+                        <span class="strike">₹{{ standard_delivery_charge }}</span>
+                        <strong class="free">FREE</strong>
+                        {% else %}
+                        <strong style="color:#e53935;">₹{{ delivery_charges }}</strong>
+                        {% endif %}
+                    </span>
+
+                </div>
+
+
+                <div class="summary-row">
+
+                    <span>
+                        Packaging Charges
+                    </span>
+
+                    <strong>
+                        ₹{{ packaging_charges }}
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-divider"></div>
+
+
+                <div class="total-row">
+
+                    <span>
+                        To Pay
+                    </span>
+
+                    <span class="total-price" id="totalPrice">
+                        ₹{{ total_price }}
+                    </span>
+
+                </div>
+
+
+                <div class="saved-box">
                     {% if is_free_delivery %}
-                    <span class="strike">₹50</span>
-                    <strong class="free">FREE</strong>
+                    🏷 &nbsp; You saved ₹{{ standard_delivery_charge }} on delivery!
                     {% else %}
-                    <strong style="color:#e53935;">₹{{ delivery_charges }}</strong>
+                    🚚 &nbsp; Add ₹{{ needed_for_free }} more for FREE delivery!
                     {% endif %}
-                </span>
+                </div>
 
-            </div>
-
-
-            <div class="summary-row">
-
-                <span>
-                    Packaging Charges
-                </span>
-
-                <strong>
-                    ₹{{ packaging_charges }}
-                </strong>
-
-            </div>
-
-
-            <div class="summary-divider"></div>
-
-
-            <div class="total-row">
-
-                <span>
-                    To Pay
-                </span>
-
-                <span
-                    class="total-price"
-                    id="totalPrice"
-                >
-                    ₹{{ total_price }}
-                </span>
-
-            </div>
-
-
-            <div class="saved-box">
-                {% if is_free_delivery %}
-                🏷 &nbsp; You saved ₹50 on delivery!
+                {% if not store_settings.store_open %}
+                <div class="saved-box" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; margin-bottom:12px; font-weight:bold; text-align:center;">
+                    🔒 Shop is currently closed & not accepting orders.
+                </div>
+                <button class="checkout-btn" disabled style="opacity: 0.6; cursor: not-allowed; background:#dc2626;">
+                    Shop Closed
+                </button>
+                {% elif item_count > 0 %}
+                    {% if min_order_amount > 0 and not is_min_order_met %}
+                    <button class="checkout-btn" disabled style="opacity: 0.6; cursor: not-allowed; background:#94a3b8;">
+                        Add ₹{{ needed_for_min_order }} more to Checkout
+                    </button>
+                    {% else %}
+                    <a href="{% url 'payment' %}" class="checkout-btn">
+                        Continue to Payment →
+                    </a>
+                    {% endif %}
                 {% else %}
-                🚚 &nbsp; Add ₹{{ needed_for_free }} more for FREE delivery!
+                <button class="checkout-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
+                    Cart is Empty
+                </button>
                 {% endif %}
-            </div>
 
-            {% if item_count > 0 %}
-            <a href="{% url 'payment' %}" class="checkout-btn">
-                Continue to Payment →
-            </a>
-            {% else %}
-            <button class="checkout-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
-                Cart is Empty
-            </button>
-            {% endif %}
-
-            <a
-                href="{% url 'shop_product' %}"
-                class="continue-btn"
-            >
-                <span class="btn-arrow">←</span>
-                <span>Continue Shopping</span>
-            </a>
+                <a href="{% url 'shop_product' %}" class="continue-btn">
+                    <span class="btn-arrow">←</span>
+                    <span>Continue Shopping</span>
+                </a>
 
 
-            <div class="secure-payment">
+                <div class="secure-payment">
 
-                🔒
-                Secure Payments
+                    🔒
+                    Secure Payments
 
-            </div>
+                </div>
 
-        </aside>
+            </aside>
 
-    </main>
+        </main>
 
-<!-- =====================================================
+        <!-- =====================================================
      BOTTOM NAVIGATION
 ===================================================== -->
-<nav class="bottom-nav">
+        <nav class="bottom-nav">
 
-    <!-- HOME -->
-    <a href="{% url 'home' %}" class="nav-item">
-        <span class="nav-icon">🏠</span>
-        <span>Home</span>
-    </a>
+            <!-- HOME -->
+            <a href="{% url 'home' %}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>Home</span>
+            </a>
 
-    <!-- SHOP -->
-    <a href="{% url 'shop_product' %}" class="nav-item">
-        <span class="nav-icon">🛍️</span>
-        <span>Shop</span>
-    </a>
+            <!-- SHOP -->
+            <a href="{% url 'shop_product' %}" class="nav-item">
+                <span class="nav-icon">🛍️</span>
+                <span>Shop</span>
+            </a>
 
-    <!-- ORDERS -->
-    <a href="{% url 'orders' %}" class="nav-item">
-        <span class="nav-icon">📦</span>
-        <span>Orders</span>
-    </a>
+            <!-- ORDERS -->
+            <a href="{% url 'orders' %}" class="nav-item">
+                <span class="nav-icon">📦</span>
+                <span>Orders</span>
+            </a>
 
-    <!-- CART -->
-    <a href="{% url 'cart' %}" class="nav-item cart-nav-item active">
-        <span class="nav-icon-box">
-            <span class="nav-icon">🛒</span>
-            <span class="cart-count" id="bottomCartCount" {% if not cart_count or cart_count == 0 %}style="display:none;"{% endif %}>{{ cart_count|default:"" }}</span>
-        </span>
-        <span>Cart</span>
-    </a>
+            <!-- CART -->
+            <a href="{% url 'cart' %}" class="nav-item cart-nav-item active">
+                <span class="nav-icon-box">
+                    <span class="nav-icon">🛒</span>
+                    <span class="cart-count" id="bottomCartCount" {% if not cart_count or cart_count == 0 %}style="display:none;"{% endif %}>{{ cart_count|default:"" }}</span>
+                </span>
+                <span>Cart</span>
+            </a>
 
-    <!-- FAVORITES -->
-    <a href="{% url 'favourite' %}" class="nav-item">
-        <span class="nav-icon">🩷</span>
-        <span>Favorites</span>
-    </a>
+            <!-- FAVORITES -->
+            <a href="{% url 'favourite' %}" class="nav-item">
+                <span class="nav-icon">🩷</span>
+                <span>Favorites</span>
+            </a>
 
-    <!-- CONTACT -->
-    <a href="{% url 'contact' %}" class="nav-item">
-        <span class="nav-icon">📞</span>
-        <span>Contact</span>
-    </a>
+            <!-- CONTACT -->
+            <a href="{% url 'contact' %}" class="nav-item">
+                <span class="nav-icon">📞</span>
+                <span>Contact</span>
+            </a>
 
-</nav>
+        </nav>
 
 
 
 
 </body>
 <script src="{% static 'js/Cart.js' %}"></script>
+
 </html>

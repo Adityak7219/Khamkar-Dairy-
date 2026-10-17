@@ -1,0 +1,949 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Boy Panel - Khamkar Dairy</title>
+    <meta name="description" content="Khamkar Dairy Delivery Partner Portal — manage deliveries, track orders, and view earnings.">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/Delivery.css' %}">
+
+    <!-- Leaflet CSS & JS for Live Route Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+
+<body class="delivery-body">
+
+    <!-- CSRF Token -->
+    {% csrf_token %}
+
+    <div class="delivery-layout">
+
+        <!-- ============================================
+             SIDEBAR NAVIGATION
+             ============================================ -->
+        <aside class="delivery-sidebar" id="deliverySidebar">
+
+            <!-- Brand -->
+            <div class="sidebar-brand">
+                <div class="sidebar-brand-icon">🥛</div>
+                <div class="sidebar-brand-text">
+                    <div class="sidebar-brand-name">Khamkar Dairy</div>
+                    <div class="sidebar-brand-tagline">Pure Milk Pure Life</div>
+                </div>
+            </div>
+
+            <!-- Duty Status Pill in Sidebar -->
+            <div class="sidebar-duty-status">
+                <div class="duty-indicator" id="sidebarDutyIndicator"></div>
+                <div class="duty-text">
+                    <span class="duty-title" id="sidebarDutyTitle">On Delivery Duty</span>
+                    <span class="duty-sub" id="sidebarDutySub">Ready for orders</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links (Separate Views) -->
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-item active" data-view="dashboard">
+                    <span class="nav-item-icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="#orders" class="nav-item" data-view="orders">
+                    <span class="nav-item-icon">📦</span>
+                    My Orders
+                    {% if pending_count > 0 %}
+                    <span class="nav-badge">{{ pending_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="#earnings" class="nav-item" data-view="earnings">
+                    <span class="nav-item-icon">💰</span>
+                    My Earnings
+                </a>
+                <a href="#location" class="nav-item" data-view="location">
+                    <span class="nav-item-icon">📍</span>
+                    Customer Location
+                </a>
+                <a href="{% url 'delivery_run_sheet' %}" class="nav-item" target="_blank" title="Open Day-wise Delivery Run Sheet">
+                    <span class="nav-item-icon">📋</span>
+                    Day Run Sheet
+                </a>
+                <a href="javascript:void(0)" class="nav-item sos-nav-item" onclick="openSOSModal()">
+                    <span class="nav-item-icon">🚨</span>
+                    Depot SOS Help
+                </a>
+                <a href="{% url 'profile' %}" class="nav-item">
+                    <span class="nav-item-icon">👤</span>
+                    Profile
+                </a>
+                <a href="{% url 'contact' %}" class="nav-item">
+                    <span class="nav-item-icon">❓</span>
+                    Help & Support
+                </a>
+                <a href="{% url 'home' %}" class="nav-item">
+                    <span class="nav-item-icon">🏠</span>
+                    Home
+                </a>
+                <a href="{% url 'logout' %}" class="nav-item logout-item">
+                    <span class="nav-item-icon">🚪</span>
+                    Logout
+                </a>
+            </nav>
+
+            <!-- Footer with Theme Toggle -->
+            <div class="sidebar-footer">
+                <div class="sidebar-theme-row">
+                    <span>Night Delivery Mode</span>
+                    <button class="theme-toggle-btn-mini" onclick="toggleDarkMode()" title="Toggle Dark Theme">🌙</button>
+                </div>
+                <div class="sidebar-footer-text">Good Milk · Better Life</div>
+            </div>
+        </aside>
+
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- ============================================
+             MAIN CONTENT WRAPPER
+             ============================================ -->
+        <main class="delivery-main" id="deliveryMain">
+
+            <!-- ── TOP HEADER BAR ── -->
+            <header class="delivery-topbar">
+                <div class="topbar-left">
+                    <button class="hamburger-btn" id="hamburgerBtn" title="Toggle Sidebar">☰</button>
+                    <div class="topbar-title">
+                        <h1 id="topbarHeading">Delivery Boy Panel</h1>
+                        <span id="topbarSubtitle">Delivering Freshness to Your Home</span>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <!-- Duty Toggle Switch -->
+                    <div class="duty-switch-container">
+                        <label class="duty-switch" title="Toggle Duty Status">
+                            <input type="checkbox" id="dutyToggleCheckbox" checked>
+                            <span class="duty-slider"></span>
+                        </label>
+                        <span class="duty-switch-label" id="dutySwitchLabel">🟢 On Duty</span>
+                    </div>
+
+                    <!-- Dark Mode Toggle Button -->
+                    <button class="dark-mode-toggle-btn" id="darkModeBtn" onclick="toggleDarkMode()" title="Switch Light/Dark Mode">
+                        🌙
+                    </button>
+
+                    <button class="notification-btn" title="Pending Deliveries" onclick="switchView('orders', 'pending')">
+                        🔔
+                        {% if pending_count > 0 %}
+                        <span class="notification-badge" id="headerNotificationBadge">{{ pending_count }}</span>
+                        {% endif %}
+                    </button>
+
+                    <div class="user-profile-section">
+                        <img src="{% if delivery_profile.avatar_url %}{{ delivery_profile.avatar_url }}{% else %}https://ui-avatars.com/api/?name=Delivery+Partner&background=075334&color=fff&size=200{% endif %}" alt="Avatar" class="user-avatar">
+                        <div class="user-info">
+                            <span class="user-name">{{ delivery_boy_name }}</span>
+                            <span class="user-role">Delivery Partner</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- ── CONTENT CONTAINER ── -->
+            <div class="delivery-content">
+
+                <!-- Offline Status Banner (Auto shows when network is lost) -->
+                <div class="offline-banner" id="offlineBanner" style="display: none;">
+                    <span>⚡ Offline Mode Active — Cached customer data loaded. You can continue deliveries safely!</span>
+                </div>
+
+                <!-- Off Duty Banner (shown when toggled off) -->
+                <div class="off-duty-banner" id="offDutyBanner" style="display: none;">
+                    <div class="off-duty-icon">☕</div>
+                    <div class="off-duty-content">
+                        <h3>You are currently Off Duty (On Break)</h3>
+                        <p>Turn on the duty switch in the header when you are ready to resume deliveries.</p>
+                    </div>
+                    <button class="resume-duty-btn" onclick="setDutyStatus(true)">Resume Duty 🟢</button>
+                </div>
+
+                <!-- ============================================
+                     1. DASHBOARD VIEW (VIEW: DASHBOARD)
+                     ============================================ -->
+                <section class="delivery-view-section active" id="view-dashboard">
+                    <!-- Welcome Section -->
+                    <div class="welcome-section">
+                        <div class="welcome-text">
+                            <h2>Welcome, {{ request.user.first_name|default:delivery_boy_name }} ! 👋</h2>
+                            <p>Delivering fresh dairy products with pride. Let's make every delivery count!</p>
+                        </div>
+                        <div class="welcome-actions-group">
+                            <button class="welcome-next-cta" onclick="startNextDelivery()">
+                                🛵 Next Stop
+                            </button>
+                            <div class="welcome-date">
+                                <span class="welcome-date-icon">📅</span>
+                                {{ today_date_formatted }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slot / Shift Selector Pills -->
+                    <div class="shift-selector-bar">
+                        <span class="shift-label">Delivery Shift:</span>
+                        <div class="shift-pills">
+                            <button class="shift-pill active" data-slot="all" onclick="filterBySlot('all')">
+                                🌟 All Shifts ({{ total_count }})
+                            </button>
+                            <button class="shift-pill" data-slot="morning" onclick="filterBySlot('morning')">
+                                🌅 Morning Slot <span>6:00 AM - 9:00 AM</span>
+                            </button>
+                            <button class="shift-pill" data-slot="evening" onclick="filterBySlot('evening')">
+                                🌇 Evening Slot <span>5:00 PM - 8:00 PM</span>
+                            </button>
+                        </div>
+                        <a href="{% url 'delivery_run_sheet' %}?date={{ today_date_iso|default:'' }}" class="print-quick-btn" target="_blank" title="View & Print Day-wise Run Sheet" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                            📋 Day Run Sheet
+                        </a>
+                    </div>
+
+                    <!-- KPI Stats Grid -->
+                    <div class="kpi-stats-grid">
+                        <div class="kpi-stat-card" onclick="switchView('orders')">
+                            <div class="kpi-icon-box orders">📋</div>
+                            <div class="kpi-stat-info">
+                                <div class="kpi-stat-value" id="kpiTotalOrders">{{ total_count }}</div>
+                                <div class="kpi-stat-label">Today's Orders</div>
+                            </div>
+                        </div>
+                        <div class="kpi-stat-card" onclick="switchView('orders', 'pending')">
+                            <div class="kpi-icon-box pending">⏳</div>
+                            <div class="kpi-stat-info">
+                                <div class="kpi-stat-value" id="kpiPending">{{ pending_count }}</div>
+                                <div class="kpi-stat-label">Pending</div>
+                            </div>
+                        </div>
+                        <div class="kpi-stat-card" onclick="switchView('orders', 'delivered')">
+                            <div class="kpi-icon-box delivered">✅</div>
+                            <div class="kpi-stat-info">
+                                <div class="kpi-stat-value" id="kpiDelivered">{{ delivered_count }}</div>
+                                <div class="kpi-stat-label">Delivered</div>
+                            </div>
+                        </div>
+                        <div class="kpi-stat-card" onclick="switchView('orders', 'cancelled')">
+                            <div class="kpi-icon-box cancelled">❌</div>
+                            <div class="kpi-stat-info">
+                                <div class="kpi-stat-value" id="kpiCancelled">{{ cancelled_count }}</div>
+                                <div class="kpi-stat-label">Cancelled</div>
+                            </div>
+                        </div>
+                        <div class="kpi-stat-card" onclick="switchView('earnings')">
+                            <div class="kpi-icon-box collection">₹</div>
+                            <div class="kpi-stat-info">
+                                <div class="kpi-stat-value">₹{{ total_collection }}</div>
+                                <div class="kpi-stat-label">Today's Collection</div>
+                            </div>
+                        </div>
+                        <div class="kpi-stat-card" onclick="switchView('location')">
+                            <div class="kpi-icon-box distance">🏃</div>
+                            <div class="kpi-stat-info">
+                                <div class="kpi-stat-value">{{ total_distance }} km</div>
+                                <div class="kpi-stat-label">Total Distance</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Main Grid -->
+                    <div class="dashboard-grid">
+
+                        <!-- Active / Pending Deliveries Snapshot -->
+                        <div class="dashboard-card active-deliveries-card">
+                            <div class="dashboard-card-header">
+                                <div class="card-header-left">
+                                    <h3>🛵 Priority Deliveries</h3>
+                                    <span class="active-badge" id="priorityOrdersBadge">{{ pending_count }} Available</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <button class="refresh-orders-btn" onclick="fetchPriorityOrders(true)" title="Check for incoming orders">
+                                        🔄 Refresh
+                                    </button>
+                                    <button class="see-all-btn" onclick="switchView('orders')">View All Orders →</button>
+                                </div>
+                            </div>
+
+                            <div class="active-orders-list" id="priorityOrdersList">
+                                {% if active_orders %}
+                                    {% for order in active_orders %}
+                                    <div class="active-order-item" id="dash-order-{{ order.order_id }}" data-slot="{{ order.delivery_slot|default:'anytime' }}">
+                                        <div class="active-order-main">
+                                            <div class="active-order-top">
+                                                <span class="active-order-id">#{{ order.order_id }}</span>
+                                                {% if order.status == 'pending' or order.status == 'confirmed' %}
+                                                <span class="status-badge pending pulse">🔔 New Order</span>
+                                                {% elif order.status == 'out_for_delivery' %}
+                                                <span class="status-badge out_for_delivery">🛵 Out for Delivery</span>
+                                                {% else %}
+                                                <span class="status-badge {{ order.status }}">{{ order.get_status_display }}</span>
+                                                {% endif %}
+                                                <span class="slot-badge-mini {{ order.delivery_slot }}">{{ order.get_delivery_slot_display }}</span>
+                                                <span class="order-time-mini" style="font-size: 11px; color: var(--text-muted); margin-left: 6px;">🕒 {{ order.created_at|date:"h:i A" }}</span>
+                                            </div>
+                                            <div class="active-order-customer">
+                                                <strong>{{ order.customer_name }}</strong>
+                                                <span>📞 {{ order.customer_phone }}</span>
+                                            </div>
+                                            <div class="active-order-address">
+                                                📍 {{ order.customer_address|truncatewords:6 }}
+                                                {% if order.has_live_location %}
+                                                <span class="live-gps-badge" style="background:#dcfce7; color:#15803d; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; margin-left:6px; display:inline-flex; align-items:center; gap:2px;">🎯 GPS Ready</span>
+                                                {% else %}
+                                                <span class="addr-only-badge" style="background:#fef3c7; color:#b45309; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; margin-left:6px; display:inline-flex; align-items:center; gap:2px;">📝 Address Only</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="active-order-meta">
+                                                <span class="meta-tag amount">₹ {{ order.total_amount }} ({% if order.is_prepaid %}Prepaid{% else %}COD{% endif %})</span>
+                                                <span class="meta-tag items" style="font-size: 12px; color: var(--text-secondary);">
+                                                    📦 {% for item in order.items.all %}{{ item.quantity }}x {{ item.item_label }}{% if not forloop.last %}, {% endif %}{% empty %}1 Pack{% endfor %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="active-order-actions" id="dash-actions-{{ order.order_id }}">
+                                            <button class="action-icon-btn view" title="View details" onclick="openOrderModal('{{ order.order_id }}')">👁️</button>
+                                            <a href="tel:{{ order.customer_phone }}" class="action-icon-btn call" title="Call customer">📞</a>
+                                            {% if not order.has_live_location %}
+                                            <button class="action-icon-btn loc-ask" title="Request Live GPS Location on WhatsApp" onclick="requestCustomerLiveLocation('{{ order.customer_phone }}', '{{ order.customer_name }}', '{{ order.order_id }}')" style="background:#fef3c7; color:#b45309;">📲</button>
+                                            {% endif %}
+                                            <button class="action-icon-btn whatsapp" title="Send WhatsApp message" onclick="sendWhatsAppAlert('{{ order.customer_phone }}', '{{ order.customer_name }}', '{{ order.order_id }}', '{{ order.total_amount }}')">💬</button>
+                                            {% if not order.is_prepaid %}
+                                            <button class="action-icon-btn qr" title="Doorstep UPI QR Code" onclick="showDoorstepQR('{{ order.order_id }}', '{{ order.customer_name }}', '{{ order.total_amount }}')">📲</button>
+                                            {% endif %}
+                                            <a href="{{ order.maps_navigation_url }}" target="_blank" class="action-icon-btn map" title="Navigate on Google Maps">📍</a>
+
+                                            <!-- Order Acceptance & Delivery Actions -->
+                                            {% if order.status == 'pending' or order.status == 'confirmed' or not order.delivery_boy %}
+                                                <button class="take-order-btn" onclick="takeOrder('{{ order.order_id }}')">
+                                                    🛵 Take Order
+                                                </button>
+                                            {% elif order.status == 'out_for_delivery' and order.delivery_boy == request.user %}
+                                                <button class="complete-order-btn" onclick="completeOrder('{{ order.order_id }}')">
+                                                    ✅ Delivered
+                                                </button>
+                                            {% elif order.status == 'out_for_delivery' and order.delivery_boy %}
+                                                <span class="taken-by-badge">🛵 Taken by {{ order.delivery_boy.first_name|default:order.delivery_boy.username }}</span>
+                                            {% elif order.status == 'delivered' %}
+                                                <span class="delivered-pill-badge">✅ Delivered</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="empty-state-small" id="priorityOrdersEmpty">
+                                        <span>🎉 No pending orders right now. New orders will appear here automatically!</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+
+                    </div>
+                </section>
+
+
+                <!-- ============================================
+                     2. MY ORDERS VIEW (VIEW: ORDERS)
+                     ============================================ -->
+                <section class="delivery-view-section" id="view-orders">
+                    
+                    <div class="section-view-header">
+                        <div class="section-header-text">
+                            <h2>📦 My Orders Management</h2>
+                            <p>Track, filter, and view customer deliveries in real time.</p>
+                        </div>
+                        <div class="section-header-actions">
+                            <button class="print-sheet-btn" onclick="printDeliverySheet()">🖨️ Print Run Sheet</button>
+                            <span class="orders-count-pill">{{ total_count }} Total Orders</span>
+                        </div>
+                    </div>
+
+                    <!-- Slot Filter Bar in Orders View -->
+                    <div class="orders-slot-filter-row">
+                        <div class="shift-pills mini">
+                            <button class="shift-pill active" data-slot="all" onclick="filterBySlot('all')">
+                                All Shifts
+                            </button>
+                            <button class="shift-pill" data-slot="morning" onclick="filterBySlot('morning')">
+                                🌅 Morning ({{ morning_count }})
+                            </button>
+                            <button class="shift-pill" data-slot="evening" onclick="filterBySlot('evening')">
+                                🌇 Evening ({{ evening_count }})
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Tabs & Search Bar -->
+                    <div class="orders-control-bar">
+                        <div class="filter-tabs">
+                            <button class="filter-tab active" data-filter="all">
+                                All <span class="count">{{ total_count }}</span>
+                            </button>
+                            <button class="filter-tab" data-filter="pending">
+                                Pending <span class="count">{{ pending_count }}</span>
+                            </button>
+                            <button class="filter-tab" data-filter="out_for_delivery">
+                                Out for Delivery <span class="count">{{ out_count }}</span>
+                            </button>
+                            <button class="filter-tab" data-filter="delivered">
+                                Delivered <span class="count">{{ delivered_count }}</span>
+                            </button>
+                            <button class="filter-tab" data-filter="cancelled">
+                                Cancelled <span class="count">{{ cancelled_count }}</span>
+                            </button>
+                        </div>
+
+                        <div class="orders-search">
+                            <span class="orders-search-icon">🔍</span>
+                            <input type="text" id="orderSearchInput" placeholder="Search customer, phone, or Order ID...">
+                        </div>
+                    </div>
+
+                    <!-- Orders Table -->
+                    <div class="orders-table-card">
+                        <div class="orders-table-wrapper">
+                            {% if orders %}
+                            <table class="orders-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Phone</th>
+                                        <th>Address</th>
+                                        <th>Items</th>
+                                        <th>Amount</th>
+                                        <th>Slot</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ordersTableBody">
+                                    {% for order in orders %}
+                                    <tr class="order-row"
+                                        data-order-id="{{ order.order_id }}"
+                                        data-status="{{ order.status }}"
+                                        data-slot-val="{{ order.delivery_slot|default:'anytime' }}"
+                                        data-name="{{ order.customer_name }}"
+                                        data-phone="{{ order.customer_phone }}"
+                                        data-address="{{ order.customer_address }}"
+                                        data-amount="{{ order.total_amount }}"
+                                        data-time="{{ order.created_at|date:'h:i A' }}"
+                                        data-slot="{{ order.get_delivery_slot_display }}"
+                                        data-prepaid="{% if order.is_prepaid %}true{% else %}false{% endif %}"
+                                        data-payment-display="{{ order.get_payment_method_display }}"
+                                        data-maps-url="{{ order.maps_navigation_url }}"
+                                        data-has-live-location="{% if order.has_live_location %}true{% else %}false{% endif %}"
+                                        data-lat="{{ order.effective_latitude|default:'' }}"
+                                        data-lng="{{ order.effective_longitude|default:'' }}"
+                                        data-delivered-at="{% if order.delivered_at %}{{ order.delivered_at|date:'h:i A' }}{% endif %}"
+                                        data-items='[{% for item in order.items.all %}{"name":"{{ item.item_name }}","qty":{{ item.quantity }},"total":"{{ item.total_price }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'>
+                                        <td class="counter-cell">{{ forloop.counter }}</td>
+                                        <td class="order-id-cell"><strong>#{{ order.order_id }}</strong></td>
+                                        <td class="customer-name-cell">{{ order.customer_name }}</td>
+                                        <td class="phone-cell"><a href="tel:{{ order.customer_phone }}" class="phone-link">📞 {{ order.customer_phone }}</a></td>
+                                        <td class="address-cell" title="{{ order.customer_address }}">
+                                            {{ order.customer_address|truncatewords:5 }}
+                                            {% if order.has_live_location %}
+                                            <span style="font-size:10px; background:#dcfce7; color:#15803d; padding:1px 5px; border-radius:4px; font-weight:700; margin-left:4px;" title="Live GPS Navigation Available">🎯 GPS</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="items-cell">
+                                            {% for item in order.items.all %}
+                                                {{ item.quantity }} {{ item.item_label }}{% if not forloop.last %}, {% endif %}
+                                            {% empty %}
+                                                1 Order Pack
+                                            {% endfor %}
+                                        </td>
+                                        <td class="order-amount">
+                                            ₹ {{ order.total_amount }}
+                                            <span class="payment-badge {% if order.is_prepaid %}prepaid{% else %}cod{% endif %}">
+                                                {% if order.is_prepaid %}Paid{% else %}COD{% endif %}
+                                            </span>
+                                        </td>
+                                        <td class="order-slot">{{ order.get_delivery_slot_display }}</td>
+                                        <td class="status-cell">
+                                            <div class="status-select-wrap">
+                                                <select class="status-select-dropdown status-{{ order.status }}" onchange="updateDeliveryStatus('{{ order.order_id }}', this.value, this)" title="Change Order Status">
+                                                    <option value="out_for_delivery" {% if order.status == 'out_for_delivery' %}selected{% endif %}>🛵 Out for Delivery</option>
+                                                    <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>✅ Delivered</option>
+                                                    <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>❌ Cancelled</option>
+                                                </select>
+                                            </div>
+                                        </td>
+                                        <td class="action-cell">
+                                            {% if order.status == 'out_for_delivery' %}
+                                            <button class="quick-deliver-btn" onclick="updateDeliveryStatus('{{ order.order_id }}', 'delivered')" title="Mark as Delivered">✅ Deliver</button>
+                                            {% endif %}
+                                            <button class="view-btn" onclick="openOrderModal('{{ order.order_id }}')">View</button>
+                                            {% if not order.is_prepaid %}
+                                            <button class="nav-icon-btn qr" title="Doorstep UPI QR" onclick="showDoorstepQR('{{ order.order_id }}', '{{ order.customer_name }}', '{{ order.total_amount }}')">📲</button>
+                                            {% endif %}
+                                            {% if not order.has_live_location %}
+                                            <button class="nav-icon-btn" title="Request Live GPS on WhatsApp" onclick="requestCustomerLiveLocation('{{ order.customer_phone }}', '{{ order.customer_name }}', '{{ order.order_id }}')" style="background:#fef3c7; color:#b45309;">📍</button>
+                                            {% endif %}
+                                            <button class="nav-icon-btn whatsapp" title="WhatsApp Message" onclick="sendWhatsAppAlert('{{ order.customer_phone }}', '{{ order.customer_name }}', '{{ order.order_id }}', '{{ order.total_amount }}')">💬</button>
+                                            <a href="{{ order.maps_navigation_url }}" target="_blank" class="nav-icon-btn" title="Maps Navigation">🚀</a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr id="noOrdersTakenRow">
+                                        <td colspan="10" style="text-align: center; padding: 45px 20px;">
+                                            <div class="empty-state">
+                                                <div class="empty-state-icon" style="font-size: 40px; margin-bottom: 8px;">🛵</div>
+                                                <h3 style="font-size: 18px; margin-bottom: 6px;">No Orders in My Orders Yet</h3>
+                                                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 14px;">Go to Dashboard and click <strong>"🛵 Take Order"</strong> to start delivering!</p>
+                                                <button class="take-order-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; font-size: 14px;" onclick="switchView('dashboard')">
+                                                    📊 Go to Dashboard
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr id="emptyStateRow" style="display:none;">
+                                        <td colspan="10">
+                                            <div class="empty-state">
+                                                <div class="empty-state-icon">🔍</div>
+                                                <h3>No matching orders found</h3>
+                                                <p>Try clearing your search or switching filter tabs.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🛵</div>
+                                <h3>No Orders Found</h3>
+                                <p>There are no delivery orders assigned yet.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ============================================
+                     3. MY EARNINGS VIEW (VIEW: EARNINGS)
+                     ============================================ -->
+                <section class="delivery-view-section" id="view-earnings">
+
+                    <div class="section-view-header">
+                        <div class="section-header-text">
+                            <h2>💰 My Earnings & Collection</h2>
+                            <p>Complete breakdown of collections, cash in hand, and payout incentives.</p>
+                        </div>
+                        <div class="section-header-actions">
+                            <span class="earnings-payout-pill">Today's Payout: ₹{{ total_payout }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Earnings Big KPI Cards -->
+                    <div class="earnings-stats-grid">
+                        <div class="earnings-card primary">
+                            <div class="earnings-card-top">
+                                <span>Total Today's Collection</span>
+                                <span class="card-icon">💰</span>
+                            </div>
+                            <div class="earnings-card-val">₹ {{ total_collection }}</div>
+                            <div class="earnings-card-foot">All orders combined</div>
+                        </div>
+
+                        <div class="earnings-card cash">
+                            <div class="earnings-card-top">
+                                <span>Cash in Hand (COD)</span>
+                                <span class="card-icon">💵</span>
+                            </div>
+                            <div class="earnings-card-val">₹ {{ cash_collected }}</div>
+                            <div class="earnings-card-foot">To be submitted at store</div>
+                        </div>
+
+                        <div class="earnings-card upi">
+                            <div class="earnings-card-top">
+                                <span>Online / UPI Collection</span>
+                                <span class="card-icon">📱</span>
+                            </div>
+                            <div class="earnings-card-val">₹ {{ upi_collected }}</div>
+                            <div class="earnings-card-foot">Directly in dairy account</div>
+                        </div>
+
+                        <div class="earnings-card payout">
+                            <div class="earnings-card-top">
+                                <span>Today's Delivery Pay</span>
+                                <span class="card-icon">🎁</span>
+                            </div>
+                            <div class="earnings-card-val">₹ {{ total_payout }}</div>
+                            <div class="earnings-card-foot">Base ₹{{ base_pay }} + ₹{{ earned_today }} incentives ({{ delivered_count }} × ₹{{ incentive_rate }})</div>
+                        </div>
+                    </div>
+
+                    <!-- Earnings Details Grid -->
+                    <div class="earnings-details-grid">
+                        
+                        <!-- Collection Breakdown Summary -->
+                        <div class="earnings-panel-card">
+                            <div class="panel-card-title">📊 Collection Summary</div>
+                            
+                            <div class="breakdown-bar-wrap">
+                                <div class="breakdown-labels">
+                                    <span>Cash (COD) vs Online (UPI)</span>
+                                    <span>₹{{ total_collection }} Total</span>
+                                </div>
+                                <div class="progress-bar-dual">
+                                    <div class="bar-segment cash" style="width: {% if total_collection > 0 %}{% widthratio cash_collected total_collection 100 %}{% else %}50{% endif %}%;"></div>
+                                    <div class="bar-segment upi" style="width: {% if total_collection > 0 %}{% widthratio upi_collected total_collection 100 %}{% else %}50{% endif %}%;"></div>
+                                </div>
+                                <div class="breakdown-legend">
+                                    <span class="legend-chip cash"><span class="chip-dot"></span> Cash: ₹{{ cash_collected }}</span>
+                                    <span class="legend-chip upi"><span class="chip-dot"></span> Online UPI: ₹{{ upi_collected }}</span>
+                                </div>
+                            </div>
+
+                            <div class="earnings-summary-rows">
+                                <div class="summary-row">
+                                    <span>Delivered Orders</span>
+                                    <strong>{{ delivered_count }} orders</strong>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Total Distance Traveled</span>
+                                    <strong>{{ total_distance }} km</strong>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Incentive per Delivery</span>
+                                    <strong>₹{{ incentive_rate }} / order</strong>
+                                </div>
+                                <div class="summary-row highlight">
+                                    <span>Estimated Daily Pay</span>
+                                    <strong>₹{{ total_payout }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Delivered Collections Transaction Log -->
+                        <div class="earnings-panel-card log-card">
+                            <div class="panel-card-title">
+                                <span>📋 Collection Log (Delivered Orders)</span>
+                                <span class="badge">{{ delivered_count }} completed</span>
+                            </div>
+
+                            <div class="collection-log-table-wrap">
+                                {% if delivered_orders %}
+                                <table class="collection-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Order</th>
+                                            <th>Customer</th>
+                                            <th>Method</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for d_order in delivered_orders %}
+                                        <tr>
+                                            <td><strong>#{{ d_order.order_id }}</strong></td>
+                                            <td>{{ d_order.customer_name }}</td>
+                                            <td>
+                                                <span class="badge-mini {% if d_order.is_prepaid %}online{% else %}cod{% endif %}">
+                                                    {% if d_order.is_prepaid %}UPI / Online{% else %}Cash COD{% endif %}
+                                                </span>
+                                            </td>
+                                            <td class="amount-val">₹ {{ d_order.total_amount }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                {% else %}
+                                <div class="empty-state-small">
+                                    <span>No completed deliveries yet today. Start delivering to see collection logs!</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ============================================
+                     4. CUSTOMER LOCATION VIEW (VIEW: LOCATION)
+                     ============================================ -->
+                <section class="delivery-view-section" id="view-location">
+
+                    <div class="section-view-header">
+                        <div class="section-header-text">
+                            <h2>📍 Customer Locations & Delivery Stops</h2>
+                            <p>Ordered list of today's customer destinations with direct Google Maps navigation.</p>
+                        </div>
+                        <div class="section-header-actions">
+                            <button class="smart-next-btn" onclick="startNextDelivery()">🛵 Start Next Stop</button>
+                            <button class="print-sheet-btn" onclick="printDeliverySheet()">🖨️ Print Sheet</button>
+                            <a href="https://www.google.com/maps" target="_blank" class="open-maps-cta">Open Google Maps 🗺️</a>
+                        </div>
+                    </div>
+
+                    <div class="location-view-grid">
+                        <!-- Left: Stops List -->
+                        <div class="stops-list-card">
+                            <div class="stops-list-header">
+                                <h3>Delivery Stops ({{ active_orders|length }} Active)</h3>
+                            </div>
+                            <div class="stops-items">
+                                {% for order in active_orders %}
+                                <div class="stop-item" data-lat="{{ order.effective_latitude|default:'' }}" data-lng="{{ order.effective_longitude|default:'' }}" data-name="{{ order.customer_name }}" data-order-id="{{ order.order_id }}" data-addr="{{ order.customer_address }}" data-nav="{{ order.maps_navigation_url }}" data-phone="{{ order.customer_phone }}">
+                                    <div class="stop-number">{{ forloop.counter }}</div>
+                                    <div class="stop-details">
+                                        <div class="stop-customer">
+                                            {{ order.customer_name }} <span class="stop-order-id">#{{ order.order_id }}</span>
+                                            {% if order.has_live_location %}
+                                            <span style="background:#dcfce7; color:#15803d; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; margin-left:6px;">🎯 Live GPS</span>
+                                            {% else %}
+                                            <span style="background:#fef3c7; color:#b45309; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; margin-left:6px;">📝 Address Only</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="stop-address">📍 {{ order.customer_address }}</div>
+                                        <div class="stop-phone">📞 {{ order.customer_phone }} | 🕒 {{ order.get_delivery_slot_display }}</div>
+                                    </div>
+                                    <div class="stop-actions-group">
+                                        {% if not order.has_live_location %}
+                                        <button class="stop-wa-btn" title="Request Live GPS on WhatsApp" onclick="requestCustomerLiveLocation('{{ order.customer_phone }}', '{{ order.customer_name }}', '{{ order.order_id }}')" style="background:#fef3c7; color:#b45309;">📲</button>
+                                        {% endif %}
+                                        <button class="stop-wa-btn" title="WhatsApp Customer" onclick="sendWhatsAppAlert('{{ order.customer_phone }}', '{{ order.customer_name }}', '{{ order.order_id }}', '{{ order.total_amount }}')">💬</button>
+                                        <a href="{{ order.maps_navigation_url }}" target="_blank" class="navigate-btn">Navigate 🚀</a>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="empty-state-small">
+                                    <span>No active delivery stops pending!</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Right: Interactive Route Visual Map -->
+                        <div class="location-map-card">
+                            <div class="map-full-container" style="padding:0; overflow:hidden; border-radius:14px; position:relative;">
+                                <div id="deliveryRouteMap" style="width:100%; height:480px; z-index:1;"></div>
+                                <div id="mapControlsOverlay" style="position:absolute; bottom:12px; left:12px; z-index:999; display:flex; gap:8px;">
+                                    <a href="https://www.google.com/maps" target="_blank" class="map-open-btn large" style="box-shadow:0 3px 10px rgba(0,0,0,0.2); font-size:12px; padding:8px 14px;">
+                                        📍 Open Full Route on Google Maps
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ============================================
+         ORDER DETAIL & DELIVERY CONFIRMATION MODAL
+         ============================================ -->
+    <div class="modal-backdrop" id="orderModalBackdrop">
+        <div class="order-modal" id="orderModal">
+            <div class="modal-header">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <h3 id="modalOrderId" style="margin: 0;">Order Details</h3>
+                        <span id="modalOrderStatusBadge" class="status-badge"></span>
+                    </div>
+                    <span class="modal-subtitle" id="modalCustomerName"></span>
+                </div>
+                <button class="modal-close-btn" id="modalCloseBtn" onclick="closeOrderModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h4>Customer Information</h4>
+                    <div class="modal-info-grid">
+                        <div class="modal-info-item">
+                            <span class="label">Phone:</span>
+                            <span class="value" id="modalCustomerPhone"></span>
+                        </div>
+                        <div class="modal-info-item">
+                            <span class="label">Slot:</span>
+                            <span class="value" id="modalDeliverySlot"></span>
+                        </div>
+                        <div class="modal-info-item full">
+                            <span class="label">Address:</span>
+                            <span class="value" id="modalCustomerAddress"></span>
+                        </div>
+                        <div class="modal-info-item full">
+                            <span class="label">GPS Status:</span>
+                            <span class="value" id="modalLocationStatusBadge"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <h4>Order Items</h4>
+                    <div class="modal-items-table" id="modalItemsList"></div>
+                    <div class="modal-total-row">
+                        <span>Total Amount:</span>
+                        <span class="modal-total-amount" id="modalTotalAmount"></span>
+                    </div>
+                    <div class="modal-payment-method" id="modalPaymentDisplay"></div>
+                </div>
+
+                <!-- Dynamic Doorstep UPI QR Code Section (Inside Modal) -->
+                <div class="doorstep-qr-box" id="modalDoorstepQRBox" style="display: none;">
+                    <div class="qr-box-header">
+                        <span>📲 Doorstep UPI QR Code (Scan & Pay)</span>
+                        <button class="qr-close-mini" onclick="hideModalQR()">✕</button>
+                    </div>
+                    <div class="qr-code-img-wrap">
+                        <img id="modalQrCodeImg" src="" alt="UPI QR Code">
+                    </div>
+                    <div class="qr-apps-badge">
+                        <span>Google Pay</span> · <span>PhonePe</span> · <span>Paytm</span> · <span>BHIM</span>
+                    </div>
+                    <div class="qr-amount-text" id="modalQrAmountText">Amount: ₹0</div>
+                </div>
+
+                <!-- Status Update Section in Modal -->
+                <div class="modal-status-section" id="modalStatusSection">
+                    <h4>Change Order Status</h4>
+                    <div class="modal-status-buttons">
+                        <button type="button" class="modal-status-btn out-for-delivery" id="modalBtnOut" onclick="modalChangeStatus('out_for_delivery')">
+                            🛵 Out for Delivery
+                        </button>
+                        <button type="button" class="modal-status-btn delivered" id="modalBtnDelivered" onclick="modalChangeStatus('delivered')">
+                            ✅ Delivered
+                        </button>
+                        <button type="button" class="modal-status-btn cancelled" id="modalBtnCancelled" onclick="modalChangeStatus('cancelled')">
+                            ❌ Cancelled
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-actions-bar">
+                    <button id="modalDoorstepQRBtn" class="modal-link-btn qr-btn" onclick="toggleModalDoorstepQR()">📲 Show UPI QR</button>
+                    <button id="modalAskLocationBtn" class="modal-link-btn" onclick="modalAskCustomerLocation()" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a;">📲 Ask Live Location</button>
+                    <button id="modalWhatsAppBtn" class="modal-link-btn whatsapp" onclick="modalSendWhatsApp()">💬 WhatsApp</button>
+                    <a href="#" id="modalCallBtn" class="modal-link-btn call">📞 Call</a>
+                    <a href="#" id="modalMapsBtn" target="_blank" class="modal-link-btn map">📍 Maps</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         EMERGENCY STORE SOS HELPLINE MODAL
+         ============================================ -->
+    <div class="modal-backdrop" id="sosModalBackdrop">
+        <div class="order-modal sos-modal" id="sosModal">
+            <div class="modal-header sos-header">
+                <div>
+                    <h3>🚨 Depot & Manager Helpline</h3>
+                    <span class="modal-subtitle">Direct Emergency Contact for Delivery Partners</span>
+                </div>
+                <button class="modal-close-btn" onclick="closeSOSModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="sos-alert-text">
+                    Need immediate assistance during your delivery run? Pick an emergency option below:
+                </div>
+
+                <div class="sos-options-list">
+                    <a href="tel:+919876543210" class="sos-contact-card">
+                        <div class="sos-card-icon">👨‍💼</div>
+                        <div class="sos-card-info">
+                            <strong>Store Manager (Direct Call)</strong>
+                            <span>📞 +91 98765 43210 (Khamkar Depot)</span>
+                        </div>
+                        <span class="sos-arrow">→</span>
+                    </a>
+
+                    <a href="https://wa.me/919876543210?text=Emergency%20Breakdown%20Report%20from%20Delivery%20Partner" target="_blank" class="sos-contact-card">
+                        <div class="sos-card-icon">🛵</div>
+                        <div class="sos-card-info">
+                            <strong>Vehicle Breakdown / Puncture</strong>
+                            <span>Send SOS location on WhatsApp</span>
+                        </div>
+                        <span class="sos-arrow">→</span>
+                    </a>
+
+                    <a href="https://wa.me/919876543210?text=Milk%20Item%20Leakage%20Report%20from%20Delivery%20Partner" target="_blank" class="sos-contact-card">
+                        <div class="sos-card-icon">🥛</div>
+                        <div class="sos-card-info">
+                            <strong>Milk Leakage / Item Replacement</strong>
+                            <span>Request depot replacement stock</span>
+                        </div>
+                        <span class="sos-arrow">→</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         PRINTABLE RUN SHEET (FOR PRINT DIALOG)
+         ============================================ -->
+    <div id="printableRunSheet" class="print-sheet-container">
+        <div class="print-header">
+            <div class="print-brand">
+                <h2>🥛 KHAMKAR DAIRY</h2>
+                <p>Pure Milk Pure Life — Daily Delivery Run Sheet</p>
+            </div>
+            <div class="print-meta">
+                <div><strong>Date:</strong> {{ today_date_formatted }}</div>
+                <div><strong>Delivery Partner:</strong> {{ delivery_boy_name }}</div>
+                <div><strong>Total Orders:</strong> {{ total_count }} (Pending: {{ pending_count }})</div>
+            </div>
+        </div>
+
+        <table class="print-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Order ID</th>
+                    <th>Customer Name</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th>Slot</th>
+                    <th>Amount & Pay</th>
+                    <th>Sign / Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>#{{ order.order_id }}</td>
+                    <td>{{ order.customer_name }}</td>
+                    <td>{{ order.customer_phone }}</td>
+                    <td>{{ order.customer_address }}</td>
+                    <td>{{ order.get_delivery_slot_display }}</td>
+                    <td>₹{{ order.total_amount }} ({% if order.is_prepaid %}PAID{% else %}COD{% endif %})</td>
+                    <td>___________</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="print-footer">
+            <div><strong>Total Collection (Cash):</strong> ₹{{ cash_collected }}</div>
+            <div><strong>Total Collection (UPI):</strong> ₹{{ upi_collected }}</div>
+            <div><strong>Signature:</strong> _______________________</div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- JavaScript -->
+    <script src="{% static 'js/Delivery.js' %}"></script>
+</body>
+
+</html>

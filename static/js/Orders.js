@@ -453,42 +453,42 @@ function closeInvoiceModalOnBackdrop(event) {
 }
 
 /* =====================================================
-   DELETE ORDER MODAL & ACTION
+   CANCEL ORDER MODAL & ACTION
 ===================================================== */
-let orderIdToDelete = null;
+let orderIdToCancel = null;
 
-function openDeleteModal(event, orderId) {
+function openCancelModal(event, orderId) {
     if (event) event.stopPropagation();
-    orderIdToDelete = orderId;
-    const numText = document.getElementById("deleteOrderNumberText");
+    orderIdToCancel = orderId;
+    const numText = document.getElementById("cancelOrderNumberText");
     if (numText) numText.textContent = `#${orderId}`;
-    const modal = document.getElementById("deleteModalBackdrop");
+    const modal = document.getElementById("cancelModalBackdrop");
     if (modal) modal.classList.add("show");
 }
 
-function closeDeleteModal() {
-    orderIdToDelete = null;
-    const modal = document.getElementById("deleteModalBackdrop");
+function closeCancelModal() {
+    orderIdToCancel = null;
+    const modal = document.getElementById("cancelModalBackdrop");
     if (modal) modal.classList.remove("show");
 }
 
-function closeDeleteModalOnBackdrop(event) {
-    const modal = document.getElementById("deleteModalBackdrop");
+function closeCancelModalOnBackdrop(event) {
+    const modal = document.getElementById("cancelModalBackdrop");
     if (event.target === modal) {
-        closeDeleteModal();
+        closeCancelModal();
     }
 }
 
-function confirmDeleteOrderAction() {
-    if (!orderIdToDelete) return;
-    const btn = document.getElementById("confirmDeleteBtn");
+function confirmCancelOrderAction() {
+    if (!orderIdToCancel) return;
+    const btn = document.getElementById("confirmCancelBtn");
     if (btn) {
         btn.disabled = true;
-        btn.textContent = "Deleting...";
+        btn.textContent = "Cancelling...";
     }
 
-    const targetOrderId = orderIdToDelete;
-    fetch(`/orders/delete/${targetOrderId}/`, {
+    const targetOrderId = orderIdToCancel;
+    fetch(`/orders/cancel/${targetOrderId}/`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -499,35 +499,87 @@ function confirmDeleteOrderAction() {
     .then(data => {
         if (btn) {
             btn.disabled = false;
-            btn.textContent = "Yes, Delete Order";
+            btn.textContent = "Yes, Cancel Order";
         }
-        closeDeleteModal();
+        closeCancelModal();
 
         if (data.success) {
             const card = document.getElementById(`order-card-${targetOrderId}`);
             if (card) {
-                card.classList.add("deleting");
-                setTimeout(() => {
-                    card.remove();
-                    filterOrders();
-                    // Update tab count
-                    const remaining = document.querySelectorAll(".order-card").length;
-                    const countBadge = document.getElementById("allOrdersCount");
-                    if (countBadge) countBadge.textContent = remaining;
-                }, 350);
+                // 1. Update dataset status so tab filtering works
+                card.dataset.status = "cancelled";
+
+                // 2. Update Status Badge in Card Header
+                const statusBadge = card.querySelector(".status-badge");
+                if (statusBadge) {
+                    statusBadge.className = "status-badge status-cancelled";
+                    statusBadge.innerHTML = '<span class="status-dot"></span>Cancelled';
+                }
+
+                // 3. Update Status Info label and value in header
+                const metaCols = card.querySelectorAll(".order-card-header .order-meta-col");
+                if (metaCols.length >= 3) {
+                    const statusCol = metaCols[2];
+                    const infoLabels = statusCol.querySelectorAll(".info-label");
+                    const infoValues = statusCol.querySelectorAll(".info-value");
+                    if (infoLabels.length >= 2 && infoValues.length >= 1) {
+                        infoLabels[1].textContent = "Status Info";
+                        infoValues[0].className = "info-value text-muted";
+                        infoValues[0].textContent = "Order was cancelled";
+                    }
+                }
+
+                // 4. Update Status Tracker Timeline
+                const timelineSteps = card.querySelectorAll(".timeline-steps .timeline-step");
+                const timelineLines = card.querySelectorAll(".timeline-steps .timeline-line");
+                if (timelineSteps.length >= 3) {
+                    // Step 1: Order Placed (remains completed)
+                    timelineSteps[0].className = "timeline-step completed";
+
+                    // Line 1
+                    if (timelineLines.length >= 1) {
+                        timelineLines[0].className = "timeline-line";
+                    }
+
+                    // Step 2: Processing (no longer active)
+                    timelineSteps[1].className = "timeline-step";
+                    const stepTime2 = timelineSteps[1].querySelector(".step-time");
+                    if (stepTime2) stepTime2.textContent = "Cancelled";
+
+                    // Line 2
+                    if (timelineLines.length >= 2) {
+                        timelineLines[1].className = "timeline-line";
+                    }
+
+                    // Step 3: Delivered / Cancelled
+                    timelineSteps[2].className = "timeline-step cancelled";
+                    const stepIcon3 = timelineSteps[2].querySelector(".step-icon");
+                    if (stepIcon3) stepIcon3.textContent = "✕";
+                    const stepLabel3 = timelineSteps[2].querySelector(".step-label");
+                    if (stepLabel3) stepLabel3.textContent = "Order Cancelled";
+                    const stepTime3 = timelineSteps[2].querySelector(".step-time");
+                    if (stepTime3) stepTime3.textContent = "Cancelled";
+                }
+
+                // 5. Remove the Cancel Order button from drawer actions
+                const cancelBtn = card.querySelector(".btn-cancel-order");
+                if (cancelBtn) cancelBtn.remove();
+
+                // 6. Refresh filters according to current tab
+                filterOrders();
             }
-            showToast(`🗑 ${data.message}`);
+            showToast(`✕ ${data.message}`);
         } else {
-            showToast(data.error || "Failed to delete order.", true);
+            showToast(data.error || "Failed to cancel order.", true);
         }
     })
     .catch(err => {
         if (btn) {
             btn.disabled = false;
-            btn.textContent = "Yes, Delete Order";
+            btn.textContent = "Yes, Cancel Order";
         }
-        closeDeleteModal();
-        showToast("Error deleting order. Please try again.", true);
+        closeCancelModal();
+        showToast("Error cancelling order. Please try again.", true);
     });
 }
 
@@ -659,4 +711,101 @@ function submitProductReview(event) {
         }
         showToast("Network error submitting review.", true);
     });
+}
+
+// ── LIVE GPS LOCATION SHARING FOR ORDERS ──
+function shareLiveGpsForOrder(orderId) {
+    const btn = document.getElementById(`btnShareGps-${orderId}`);
+    const msg = document.getElementById(`gpsSyncMsg-${orderId}`);
+    const badge = document.getElementById(`orderGpsBadge-${orderId}`);
+
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+    }
+
+    if (btn) btn.innerHTML = "<span>⏳</span> Pinning GPS...";
+    if (msg) {
+        msg.style.display = "block";
+        msg.style.color = "#166534";
+        msg.style.background = "#dcfce7";
+        msg.innerText = "📡 Connecting to device GPS & network location...";
+    }
+
+    const onLocationFound = (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        fetch(`/orders/update-location/${orderId}/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": typeof csrftoken !== "undefined" ? csrftoken : ""
+            },
+            body: JSON.stringify({ latitude: lat, longitude: lng })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (btn) {
+                    btn.style.background = "#059669";
+                    btn.innerHTML = "<span>✓</span> Location Shared";
+                }
+                if (msg) {
+                    msg.innerText = `✓ Exact GPS coordinates (${lat.toFixed(4)}, ${lng.toFixed(4)}) successfully shared with delivery partner!`;
+                }
+                if (badge) {
+                    badge.innerHTML = `<span style="color:#15803d; font-weight:700; display:inline-flex; align-items:center; gap:4px;"><span>🎯</span> Live GPS Pinned (${lat.toFixed(4)}, ${lng.toFixed(4)})</span>`;
+                }
+                if (typeof showToast === "function") {
+                    showToast("🎯 Live GPS location shared with delivery partner!");
+                }
+            } else {
+                if (btn) btn.innerHTML = "<span>🎯</span> Try Again";
+                if (msg) {
+                    msg.style.color = "#b91c1c";
+                    msg.style.background = "#fee2e2";
+                    msg.innerText = data.error || "Failed to update location.";
+                }
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            if (btn) btn.innerHTML = "<span>🎯</span> Try Again";
+            if (msg) {
+                msg.style.color = "#b91c1c";
+                msg.style.background = "#fee2e2";
+                msg.innerText = "Network error updating location.";
+            }
+        });
+    };
+
+    const tryStandardAccuracy = () => {
+        navigator.geolocation.getCurrentPosition(
+            onLocationFound,
+            (err) => {
+                if (btn) btn.innerHTML = "<span>🎯</span> Try Again";
+                if (msg) {
+                    msg.style.color = "#b91c1c";
+                    msg.style.background = "#fee2e2";
+                    msg.innerText = "⚠️ Location permission was denied or unavailable. Please allow location permissions in your browser.";
+                }
+            },
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+        );
+    };
+
+    navigator.geolocation.getCurrentPosition(
+        onLocationFound,
+        (err) => {
+            console.warn("High accuracy GPS failed, falling back to standard...", err);
+            tryStandardAccuracy();
+        },
+        { enableHighAccuracy: true, timeout: 7000 }
+    );
+}
+
+function shareLocationWhatsApp(orderId, amount) {
+    const msg = `नमस्ते खामकर डेअरी! 🥛\n\nमाझी ऑर्डर #${orderId} (रक्कम: ₹${amount || ''}) डिलिव्हरीसाठी मी माझे लोकेशन पाठवत आहे.\n(खालील 📎 Attach -> Location निवडून पाठवा)`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
 }

@@ -15,7 +15,12 @@ urlpatterns = [
     path("favourite/remove/<int:product_id>/", views.remove_favorite, name="remove_favorite"),
     path("orders/", views.orders, name="orders"),
     path("orders/reorder/<str:order_id>/", views.reorder_order, name="reorder_order"),
+    path("orders/cancel/<str:order_id>/", views.cancel_order, name="cancel_order"),
     path("orders/delete/<str:order_id>/", views.delete_order, name="delete_order"),
+    path("orders/<str:order_id>/invoice/", views.order_invoice, name="order_invoice"),
+    path("orders/update-location/<str:order_id>/", views.update_order_location, name="update_order_location"),
+    path("wallet/", views.wallet_view, name="wallet"),
+    path("wallet/add/", views.wallet_add_funds, name="wallet_add_funds"),
     path("api/review/submit/", views.submit_review, name="submit_review"),
     path("profile/", views.profile, name="profile"),
     path("profile/update/", views.update_profile, name="update_profile"),
@@ -29,6 +34,14 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("admin-panel/", views.admin_panel, name="admin_panel"),
     path("admin/", views.admin_panel, name="admin_alias"),
+
+    # ---- Delivery Partner Portal ----
+    path("delivery/", views.delivery_dashboard, name="delivery_dashboard"),
+    path("delivery/update-status/<str:order_id>/", views.delivery_update_status, name="delivery_update_status"),
+    path("delivery/take-order/<str:order_id>/", views.delivery_take_order, name="delivery_take_order"),
+    path("delivery/complete-order/<str:order_id>/", views.delivery_complete_order, name="delivery_complete_order"),
+    path("delivery/api/priority-orders/", views.delivery_api_priority_orders, name="delivery_api_priority_orders"),
+    path("delivery/run-sheet/", views.delivery_run_sheet, name="delivery_run_sheet"),
 
     # ---- Admin API endpoints ----
     path("admin/api/dashboard/", views.admin_api_dashboard, name="admin_api_dashboard"),
@@ -62,6 +75,14 @@ urlpatterns = [
     path("admin/api/coupons/add/", views.admin_api_coupon_add, name="admin_api_coupon_add"),
     path("admin/api/coupons/<int:coupon_id>/toggle-status/", views.admin_api_coupon_toggle_status, name="admin_api_coupon_toggle_status"),
     path("admin/api/coupons/<int:coupon_id>/delete/", views.admin_api_coupon_delete, name="admin_api_coupon_delete"),
+
+    # Delivery Boys Admin API
+    path("admin/api/delivery-boys/", views.admin_api_delivery_boys, name="admin_api_delivery_boys"),
+    path("admin/api/delivery-boys/add/", views.admin_api_delivery_boy_add, name="admin_api_delivery_boy_add"),
+    path("admin/api/delivery-boys/<int:boy_id>/edit/", views.admin_api_delivery_boy_edit, name="admin_api_delivery_boy_edit"),
+    path("admin/api/delivery-boys/<int:boy_id>/toggle-status/", views.admin_api_delivery_boy_toggle_status, name="admin_api_delivery_boy_toggle_status"),
+    path("admin/api/delivery-boys/<int:boy_id>/delete/", views.admin_api_delivery_boy_delete, name="admin_api_delivery_boy_delete"),
+    path("admin/api/delivery-boys/<int:boy_id>/sales/", views.admin_api_delivery_boy_sales, name="admin_api_delivery_boy_sales"),
 
     # Settings
     path("admin/api/settings/update/", views.admin_api_settings_update, name="admin_api_settings_update"),

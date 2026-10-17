@@ -131,6 +131,15 @@
                         {% else %}
                         <div class="info-label">Estimated Delivery</div>
                         <div class="info-value text-success">Within 24 Hours</div>
+                        {% if order.has_live_location %}
+                        <div style="font-size:11px; font-weight:700; color:#15803d; display:inline-flex; align-items:center; gap:3px; margin-top:3px;">
+                            <span>🎯</span> GPS Shared
+                        </div>
+                        {% else %}
+                        <div style="font-size:11px; font-weight:700; color:#d97706; display:inline-flex; align-items:center; gap:3px; margin-top:3px;">
+                            <span>⚠️</span> No GPS Pinned
+                        </div>
+                        {% endif %}
                         {% endif %}
                     </div>
 
@@ -167,26 +176,53 @@
 
                         <!-- STATUS TRACKER TIMELINE -->
                         <div class="order-timeline-card">
-                            <div class="timeline-title">Order Status Tracker</div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+                                <div class="timeline-title" style="margin:0; font-size:15px; font-weight:800; color:#075334; display:flex; align-items:center; gap:8px;">
+                                    <span>🚚</span> Live Order Tracker
+                                </div>
+                                <div style="font-size:12px; font-weight:700; background:#fef3c7; color:#92400e; padding:5px 12px; border-radius:8px;">
+                                    🛵 Slot: {{ order.get_delivery_slot_display }} {% if order.delivery_date %}({{ order.delivery_date|date:"d M" }}){% endif %}
+                                </div>
+                            </div>
+
+                            {% if order.status == 'cancelled' %}
+                            <div style="background:#fee2e2; color:#b91c1c; border-radius:10px; padding:12px 16px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px;">
+                                <span>✕</span> This order was cancelled.
+                            </div>
+                            {% else %}
                             <div class="timeline-steps">
-                                <div class="timeline-step {% if order.status != 'cancelled' %}completed{% endif %}">
+                                <!-- STEP 1: PLACED -->
+                                <div class="timeline-step completed">
                                     <div class="step-icon">✓</div>
                                     <div class="step-label">Order Placed</div>
                                     <div class="step-time">{{ order.created_at|date:"d M, h:i A" }}</div>
                                 </div>
-                                <div class="timeline-line {% if order.status == 'delivered' or order.status == 'pending' %}active{% endif %}"></div>
-                                <div class="timeline-step {% if order.status == 'pending' or order.status == 'delivered' %}active{% endif %}">
+                                <div class="timeline-line {% if order.status == 'confirmed' or order.status == 'out_for_delivery' or order.status == 'delivered' %}active{% endif %}"></div>
+
+                                <!-- STEP 2: PACKED -->
+                                <div class="timeline-step {% if order.status == 'confirmed' or order.status == 'out_for_delivery' or order.status == 'delivered' %}completed{% else %}active{% endif %}">
                                     <div class="step-icon">📦</div>
-                                    <div class="step-label">Processing</div>
-                                    <div class="step-time">{% if order.status == 'cancelled' %}Cancelled{% else %}Fresh packing{% endif %}</div>
+                                    <div class="step-label">Confirmed & Packing</div>
+                                    <div class="step-time">{% if order.status != 'pending' %}Fresh batch packed{% else %}In progress{% endif %}</div>
+                                </div>
+                                <div class="timeline-line {% if order.status == 'out_for_delivery' or order.status == 'delivered' %}active{% endif %}"></div>
+
+                                <!-- STEP 3: OUT FOR DELIVERY -->
+                                <div class="timeline-step {% if order.status == 'delivered' %}completed{% elif order.status == 'out_for_delivery' %}active{% endif %}">
+                                    <div class="step-icon">🛵</div>
+                                    <div class="step-label">Out for Delivery</div>
+                                    <div class="step-time">{% if order.status == 'out_for_delivery' %}On the way{% elif order.status == 'delivered' %}Dispatched{% else %}Scheduled{% endif %}</div>
                                 </div>
                                 <div class="timeline-line {% if order.status == 'delivered' %}active{% endif %}"></div>
-                                <div class="timeline-step {% if order.status == 'delivered' %}completed{% elif order.status == 'cancelled' %}cancelled{% endif %}">
-                                    <div class="step-icon">{% if order.status == 'cancelled' %}✕{% else %}🚚{% endif %}</div>
-                                    <div class="step-label">{% if order.status == 'cancelled' %}Order Cancelled{% else %}Delivered{% endif %}</div>
-                                    <div class="step-time">{% if order.status == 'delivered' %}{% if order.delivered_at %}{{ order.delivered_at|date:"d M, h:i A" }}{% else %}Delivered{% endif %}{% elif order.status == 'cancelled' %}Cancelled{% else %}Within 24h{% endif %}</div>
+
+                                <!-- STEP 4: DELIVERED -->
+                                <div class="timeline-step {% if order.status == 'delivered' %}completed{% endif %}">
+                                    <div class="step-icon">🏡</div>
+                                    <div class="step-label">Delivered</div>
+                                    <div class="step-time">{% if order.status == 'delivered' %}{% if order.delivered_at %}{{ order.delivered_at|date:"h:i A" }}{% else %}Delivered{% endif %}{% else %}Pending{% endif %}</div>
                                 </div>
                             </div>
+                            {% endif %}
                         </div>
 
                         <!-- ORDERED ITEMS LIST (KAY KAY ORDER KELA) -->
@@ -301,7 +337,42 @@
                                         <strong>{{ order.get_payment_method_display }}</strong>
                                     </span>
                                 </div>
+                                <div class="detail-row" style="align-items:flex-start;">
+                                    <span class="detail-label">Live GPS Navigation:</span>
+                                    <span class="detail-val" id="orderGpsBadge-{{ order.order_id }}">
+                                        {% if order.has_live_location %}
+                                        <span style="color:#15803d; font-weight:700; display:inline-flex; align-items:center; gap:4px;">
+                                            <span>🎯</span> Exact Location Pinned ({{ order.effective_latitude|floatformat:4 }}, {{ order.effective_longitude|floatformat:4 }})
+                                        </span>
+                                        {% else %}
+                                        <span style="color:#b45309; font-weight:700;">⚠️ Not Pinned (Address only)</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
                             </div>
+
+                            {% if order.status != 'delivered' and order.status != 'cancelled' %}
+                            <!-- LIVE GPS LOCATION CARD FOR ACTIVE ORDER -->
+                            <div class="order-gps-sync-card" id="gpsSyncCard-{{ order.order_id }}" style="margin-top:14px; padding:14px 16px; background:#f0fdf4; border:1.5px dashed #22c55e; border-radius:12px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                                <div>
+                                    <h4 style="font-size:13.5px; color:#15803d; font-weight:800; margin:0 0 3px 0; display:flex; align-items:center; gap:6px;">
+                                        <span>📍</span> Share Live Location with Delivery Partner
+                                    </h4>
+                                    <p style="font-size:12px; color:#166534; margin:0;">
+                                        Ensures your delivery partner gets exact turn-by-turn navigation directly to your door without calling for directions.
+                                    </p>
+                                </div>
+                                <div style="display:flex; gap:8px; align-items:center;">
+                                    <button type="button" id="btnShareGps-{{ order.order_id }}" onclick="shareLiveGpsForOrder('{{ order.order_id }}')" style="background:#15803d; color:white; border:none; padding:8px 14px; border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(21,128,61,0.2);">
+                                        <span>🎯</span> {% if order.has_live_location %}Update GPS Location{% else %}Pin My GPS Location{% endif %}
+                                    </button>
+                                    <button type="button" onclick="shareLocationWhatsApp('{{ order.order_id }}', '{{ order.total_amount }}')" style="background:#25d366; color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;" title="Send Live Location on WhatsApp">
+                                        <span>💬</span> WhatsApp
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="gpsSyncMsg-{{ order.order_id }}" style="display:none; margin-top:8px; font-size:12px; font-weight:700; color:#15803d; background:#dcfce7; padding:8px 12px; border-radius:8px;"></div>
+                            {% endif %}
                         </div>
 
                         <!-- ACTIONS FOOTER -->
@@ -309,12 +380,12 @@
                             <button class="btn-reorder-all" onclick="reorderAllItems(event, '{{ order.order_id }}')">
                                 <span>🔁 Reorder All Items</span>
                             </button>
-                            <button class="btn-view-invoice" onclick="openInvoiceModal('{{ order.order_id }}')">
+                            <a href="{% url 'order_invoice' order.order_id %}" target="_blank" class="btn-view-invoice" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
                                 <span>📄 View & Print Bill</span>
-                            </button>
-                            {% if order.status != 'delivered' %}
-                            <button class="btn-delete-order" onclick="openDeleteModal(event, '{{ order.order_id }}')" title="Delete this order">
-                                <span>🗑 Delete Order</span>
+                            </a>
+                            {% if order.status == 'pending' %}
+                            <button class="btn-cancel-order" onclick="openCancelModal(event, '{{ order.order_id }}')" title="Cancel this order">
+                                <span>✕ Cancel Order</span>
                             </button>
                             {% endif %}
                             <button class="btn-collapse" onclick="toggleOrderDetails('{{ order.order_id }}')">
@@ -394,16 +465,16 @@
     </div>
 
     <!-- =================================================
-     DELETE CONFIRMATION MODAL
+     CANCEL CONFIRMATION MODAL
     ================================================= -->
-    <div class="delete-modal-backdrop" id="deleteModalBackdrop" onclick="closeDeleteModalOnBackdrop(event)">
-        <div class="delete-modal">
-            <div class="delete-modal-icon">🗑️</div>
-            <h3>Delete Order?</h3>
-            <p>Are you sure you want to delete <strong id="deleteOrderNumberText">#ORD...</strong> from your order history? This action cannot be undone.</p>
-            <div class="delete-modal-actions">
-                <button class="btn-cancel-delete" onclick="closeDeleteModal()">Cancel</button>
-                <button class="btn-confirm-delete" id="confirmDeleteBtn" onclick="confirmDeleteOrderAction()">Yes, Delete Order</button>
+    <div class="cancel-modal-backdrop" id="cancelModalBackdrop" onclick="closeCancelModalOnBackdrop(event)">
+        <div class="cancel-modal">
+            <div class="cancel-modal-icon">✕</div>
+            <h3>Cancel Order?</h3>
+            <p>Are you sure you want to cancel order <strong id="cancelOrderNumberText">#ORD...</strong>? The order will be marked as cancelled in your order history.</p>
+            <div class="cancel-modal-actions">
+                <button class="btn-keep-order" onclick="closeCancelModal()">Keep Order</button>
+                <button class="btn-confirm-cancel" id="confirmCancelBtn" onclick="confirmCancelOrderAction()">Yes, Cancel Order</button>
             </div>
         </div>
     </div>

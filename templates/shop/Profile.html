@@ -2,6 +2,7 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,500 +13,542 @@
     <link rel="stylesheet" href="{% static 'css/Profile.css' %}">
     <link rel="stylesheet" href="{% static 'css/bottom_nav.css' %}">
 </head>
+
 <body>
 
-<!-- HEADER -->
-<header class="header">
+    <!-- HEADER -->
+    <header class="header">
 
-    <div class="header-left">
+        <div class="header-left">
 
-        <div class="header-title">
-            <h1>My Profile</h1>
-            <p>Manage your account and preferences</p>
-        </div>
-
-    </div>
-
-   <div class="header-icons">
-
-    <!-- ADMIN PANEL BUTTON -->
-    {% if user.is_staff %}
-    <button class="admin-panel-btn" onclick="openAdminPanel()">
-        <span class="admin-icon">🛡️</span>
-        <span>Admin Panel</span>
-    </button>
-    {% endif %}
-
-    <!-- NOTIFICATION -->
-    <div class="icon-box" onclick="openNotifications()">
-        🔔
-        <span class="badge">3</span>
-    </div>
-
-    <!-- CART -->
-    <div class="icon-box" onclick="openCart()">
-        🛒
-        <span class="badge">{{ cart_count }}</span>
-    </div>
-
-</div>
-
-</header>
-
-
-<main class="container">
-
-    <!-- PROFILE CARD -->
-
-    <section class="profile-card">
-
-        <div class="profile-top">
-
-            <div class="profile-photo">
-
-                <img id="userAvatarImg" src="{{ user_profile.avatar_url }}"
-                     alt="Profile Photo" style="object-fit: cover;">
-
-                <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="handleAvatarUpload(this)">
-                <button class="camera" onclick="document.getElementById('avatarFileInput').click()" title="Change Profile Photo">📷</button>
-
+            <div class="header-title">
+                <h1>My Profile</h1>
+                <p>Manage your account and preferences</p>
             </div>
 
-            <div class="profile-info">
+        </div>
 
-                <h2 id="displayFullName">{{ user.get_full_name|default:user.username }}</h2>
+        <div class="header-icons">
 
-                <div class="contact">
-                    ☎️
-                    <span id="displayPhone">{% if user_profile.phone %}+91 {{ user_profile.phone }}{% else %}Not Provided{% endif %}</span>
+            <!-- ADMIN & DELIVERY PANEL BUTTONS -->
+            {% if user.is_staff or user.profile.role == 'admin' %}
+            <button class="admin-panel-btn" onclick="openAdminPanel()">
+                <span class="admin-icon">🛡️</span>
+                <span>Admin Panel</span>
+            </button>
+            {% endif %}
+
+            {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'delivery_boy' %}
+            <a href="{% url 'delivery_dashboard' %}" class="admin-panel-btn" style="text-decoration:none; background:#0284c7; border-color:#0284c7;">
+                <span class="admin-icon">🛵</span>
+                <span>Delivery App</span>
+            </a>
+            {% endif %}
+
+            <!-- NOTIFICATION -->
+            <div class="icon-box" onclick="openNotifications()">
+                🔔
+                <span class="badge">3</span>
+            </div>
+
+            <!-- CART -->
+            <div class="icon-box" onclick="openCart()">
+                🛒
+                <span class="badge">{{ cart_count }}</span>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <main class="container">
+
+        <!-- PROFILE CARD -->
+
+        <section class="profile-card">
+
+            <div class="profile-top">
+
+                <div class="profile-photo">
+
+                    <img id="userAvatarImg" src="{{ user_profile.avatar_url }}" alt="Profile Photo"
+                        style="object-fit: cover;">
+
+                    <input type="file" id="avatarFileInput" accept="image/*" style="display: none;"
+                        onchange="handleAvatarUpload(this)">
+                    <button class="camera" onclick="document.getElementById('avatarFileInput').click()"
+                        title="Change Profile Photo">📷</button>
+
                 </div>
 
-                <div class="contact">
-                    ✉️
-                    <span id="displayEmail">{{ user.email|default:"Not Provided" }}</span>
+                <div class="profile-info">
+
+                    <h2 id="displayFullName">{{ user.get_full_name|default:user.username }}</h2>
+
+                    <div class="contact">
+                        ☎️
+                        <span id="displayPhone">{% if user_profile.phone %}+91 {{ user_profile.phone }}{% else %}Not
+                            Provided{% endif %}</span>
+                    </div>
+
+                    <div class="contact">
+                        ✉️
+                        <span id="displayEmail">{{ user.email|default:"Not Provided" }}</span>
+                    </div>
+
+                    <span class="premium">
+                        ★ &nbsp; {% if user.is_staff %}Store Admin{% else %}Member{% endif %}
+                    </span>
+
                 </div>
 
-                <span class="premium">
-                    ★ &nbsp; {% if user.is_staff %}Store Admin{% else %}Member{% endif %}
-                </span>
+                <div class="profile-arrow" onclick="personalInfo()" title="Edit Personal Information">
+                    ›
+                </div>
 
             </div>
 
-            <div class="profile-arrow" onclick="personalInfo()" title="Edit Personal Information">
-                ›
+
+            <div class="stats">
+
+                <div class="stat">
+                    <div class="stat-number">{{ orders_count }}</div>
+                    <div class="stat-label">Orders</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-number">{{ favorites_count }}</div>
+                    <div class="stat-label">Favorites</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-number">{{ user_profile.reward_points }}</div>
+                    <div class="stat-label">Reward Points</div>
+                </div>
+
             </div>
 
-        </div>
+        </section>
 
 
-        <div class="stats">
+        <!-- ACCOUNT SETTINGS -->
 
-            <div class="stat">
-                <div class="stat-number">{{ orders_count }}</div>
-                <div class="stat-label">Orders</div>
+        <h2 class="section-title">Account Settings</h2>
+
+        <section class="settings-card">
+
+            <div class="setting" onclick="personalInfo()">
+
+                <div class="setting-icon">👤</div>
+
+                <div class="setting-text">
+                    <h3>Personal Information</h3>
+                    <p>Update your name, email, and contact details</p>
+                </div>
+
+                <div class="arrow">›</div>
+
             </div>
 
-            <div class="stat">
-                <div class="stat-number">{{ favorites_count }}</div>
-                <div class="stat-label">Favorites</div>
+
+            <div class="setting" onclick="deliveryAddress()">
+
+                <div class="setting-icon">📍</div>
+
+                <div class="setting-text">
+                    <h3>Delivery Addresses</h3>
+                    <p>Manage your saved addresses</p>
+                </div>
+
+                <div class="arrow">›</div>
+
             </div>
 
-            <div class="stat">
-                <div class="stat-number">{{ user_profile.reward_points }}</div>
-                <div class="stat-label">Reward Points</div>
+
+            <div class="setting" onclick="paymentMethods()">
+
+                <div class="setting-icon">💳</div>
+
+                <div class="setting-text">
+                    <h3>Payment Methods</h3>
+                    <p>Add or manage your payment options</p>
+                </div>
+
+                <div class="arrow">›</div>
+
             </div>
 
-        </div>
 
-    </section>
+            <div class="setting" onclick="notifications()">
 
+                <div class="setting-icon">🔔</div>
 
-    <!-- ACCOUNT SETTINGS -->
+                <div class="setting-text">
+                    <h3>Notifications</h3>
+                    <p>Manage your notification preferences</p>
+                </div>
 
-    <h2 class="section-title">Account Settings</h2>
+                <div class="arrow">›</div>
 
-    <section class="settings-card">
-
-        <div class="setting" onclick="personalInfo()">
-
-            <div class="setting-icon">👤</div>
-
-            <div class="setting-text">
-                <h3>Personal Information</h3>
-                <p>Update your name, email, and contact details</p>
             </div>
 
-            <div class="arrow">›</div>
 
-        </div>
+            <div class="setting" onclick="privacySecurity()">
 
+                <div class="setting-icon">🔒</div>
 
-        <div class="setting" onclick="deliveryAddress()">
+                <div class="setting-text">
+                    <h3>Privacy & Security</h3>
+                    <p>Manage your account security and privacy</p>
+                </div>
 
-            <div class="setting-icon">📍</div>
+                <div class="arrow">›</div>
 
-            <div class="setting-text">
-                <h3>Delivery Addresses</h3>
-                <p>Manage your saved addresses</p>
             </div>
 
-            <div class="arrow">›</div>
 
-        </div>
+            <div class="setting" onclick="helpSupport()">
 
+                <div class="setting-icon">?</div>
 
-        <div class="setting" onclick="paymentMethods()">
+                <div class="setting-text">
+                    <h3>Help & Support</h3>
+                    <p>Get help and contact customer support</p>
+                </div>
 
-            <div class="setting-icon">💳</div>
+                <div class="arrow">›</div>
 
-            <div class="setting-text">
-                <h3>Payment Methods</h3>
-                <p>Add or manage your payment options</p>
             </div>
 
-            <div class="arrow">›</div>
-
-        </div>
+        </section>
 
 
-        <div class="setting" onclick="notifications()">
+        <!-- INVITE -->
 
-            <div class="setting-icon">🔔</div>
+        <section class="invite">
 
-            <div class="setting-text">
-                <h3>Notifications</h3>
-                <p>Manage your notification preferences</p>
+            <div class="gift">🎁</div>
+
+            <div class="invite-content">
+
+                <h2>Invite & Earn Rewards!</h2>
+
+                <p>Invite your friends and earn exciting rewards</p>
+
             </div>
 
-            <div class="arrow">›</div>
+            <button class="invite-btn" onclick="inviteFriends()">
+                Invite Now &nbsp; ›
+            </button>
 
-        </div>
+        </section>
 
 
-        <div class="setting" onclick="privacySecurity()">
+        <!-- LOGOUT -->
 
-            <div class="setting-icon">🔒</div>
+        <a href="{% url 'logout' %}" class="logout-btn">
+            <span>↪</span>
+            Logout
+        </a>
+    </main>
 
-            <div class="setting-text">
-                <h3>Privacy & Security</h3>
-                <p>Manage your account security and privacy</p>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- 1. PERSONAL INFORMATION MODAL -->
+    <div class="profile-modal-overlay" id="personalInfoModal">
+        <div class="profile-modal">
+            <div class="profile-modal-header">
+                <h3>👤 Personal Information</h3>
+                <button class="modal-close-btn" onclick="closeModal('personalInfoModal')">✕</button>
             </div>
-
-            <div class="arrow">›</div>
-
-        </div>
-
-
-        <div class="setting" onclick="helpSupport()">
-
-            <div class="setting-icon">?</div>
-
-            <div class="setting-text">
-                <h3>Help & Support</h3>
-                <p>Get help and contact customer support</p>
-            </div>
-
-            <div class="arrow">›</div>
-
-        </div>
-
-    </section>
-
-
-    <!-- INVITE -->
-
-    <section class="invite">
-
-        <div class="gift">🎁</div>
-
-        <div class="invite-content">
-
-            <h2>Invite & Earn Rewards!</h2>
-
-            <p>Invite your friends and earn exciting rewards</p>
-
-        </div>
-
-        <button class="invite-btn" onclick="inviteFriends()">
-            Invite Now &nbsp; ›
-        </button>
-
-    </section>
-
-
-    <!-- LOGOUT -->
-
-    <a href="{% url 'logout' %}" class="logout-btn">
-    <span>↪</span>
-    Logout
-</a>
-</main>
-
-
-<!-- ================= MODALS ================= -->
-
-<!-- 1. PERSONAL INFORMATION MODAL -->
-<div class="profile-modal-overlay" id="personalInfoModal">
-    <div class="profile-modal">
-        <div class="profile-modal-header">
-            <h3>👤 Personal Information</h3>
-            <button class="modal-close-btn" onclick="closeModal('personalInfoModal')">✕</button>
-        </div>
-        <form id="personalInfoForm" onsubmit="savePersonalInfo(event)">
-            <div class="form-row">
+            <form id="personalInfoForm" onsubmit="savePersonalInfo(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="piFirstName" value="{{ user.first_name }}" placeholder="First name"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="piLastName" value="{{ user.last_name }}" placeholder="Last name">
+                    </div>
+                </div>
                 <div class="form-group">
-                    <label>First Name</label>
-                    <input type="text" id="piFirstName" value="{{ user.first_name }}" placeholder="First name" required>
+                    <label>Email Address</label>
+                    <input type="email" id="piEmail" value="{{ user.email }}" placeholder="name@example.com" required>
                 </div>
                 <div class="form-group">
-                    <label>Last Name</label>
-                    <input type="text" id="piLastName" value="{{ user.last_name }}" placeholder="Last name">
+                    <label>Contact Number (+91)</label>
+                    <input type="tel" id="piPhone" value="{{ user_profile.phone }}" placeholder="10-digit mobile number"
+                        required>
                 </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('personalInfoModal')">Cancel</button>
+                    <button type="submit" class="btn-save">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. DELIVERY ADDRESSES MODAL -->
+    <div class="profile-modal-overlay" id="addressModal">
+        <div class="profile-modal">
+            <div class="profile-modal-header">
+                <h3>📍 Delivery Addresses</h3>
+                <button class="modal-close-btn" onclick="closeModal('addressModal')">✕</button>
             </div>
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" id="piEmail" value="{{ user.email }}" placeholder="name@example.com" required>
+            <form id="addressForm" onsubmit="saveAddress(event)">
+                <div class="form-group">
+                    <label>Saved Delivery Address</label>
+                    <textarea id="deliveryAddressInput" rows="3"
+                        placeholder="Enter your full home / office address (Flat No, Street, Landmark, Pincode)"
+                        required>{{ user_profile.address }}</textarea>
+                </div>
+                <div class="form-group" style="margin-top:10px; background:#f0fdf4; border:1px dashed #22c55e; border-radius:10px; padding:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                        <div>
+                            <strong style="font-size:12.5px; color:#15803d; display:flex; align-items:center; gap:4px;">
+                                <span>🎯</span> Home GPS Location
+                            </strong>
+                            <span style="font-size:11px; color:#166534; display:block;">Pin your exact location for automatic turn-by-turn delivery navigation.</span>
+                        </div>
+                        <button type="button" id="btnProfileGps" onclick="getProfileGpsLocation()" style="background:#15803d; color:white; border:none; padding:7px 12px; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer; flex-shrink:0;">
+                            {% if user_profile.latitude and user_profile.longitude %}✓ Location Saved (Update){% else %}📍 Pin GPS Location{% endif %}
+                        </button>
+                    </div>
+                    <div id="profileGpsStatus" style="font-size:11.5px; font-weight:700; color:#15803d; margin-top:8px; {% if user_profile.latitude and user_profile.longitude %}display:block;{% else %}display:none;{% endif %}">
+                        {% if user_profile.latitude and user_profile.longitude %}
+                        ✓ Active GPS: ({{ user_profile.latitude|floatformat:4 }}, {{ user_profile.longitude|floatformat:4 }}) — Saved for all future deliveries.
+                        {% endif %}
+                    </div>
+                    <input type="hidden" id="profileLatitude" value="{{ user_profile.latitude|default:'' }}">
+                    <input type="hidden" id="profileLongitude" value="{{ user_profile.longitude|default:'' }}">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('addressModal')">Cancel</button>
+                    <button type="submit" class="btn-save">Save Address</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. PAYMENT METHODS MODAL -->
+    <div class="profile-modal-overlay" id="paymentMethodsModal">
+        <div class="profile-modal">
+            <div class="profile-modal-header">
+                <h3>💳 Payment Methods</h3>
+                <button class="modal-close-btn" onclick="closeModal('paymentMethodsModal')">✕</button>
             </div>
-            <div class="form-group">
-                <label>Contact Number (+91)</label>
-                <input type="tel" id="piPhone" value="{{ user_profile.phone }}" placeholder="10-digit mobile number" required>
+            <div class="modal-content-body">
+                <div class="payment-method-item active-method">
+                    <div class="pm-icon">💵</div>
+                    <div class="pm-info">
+                        <h4>Cash on Delivery (COD)</h4>
+                        <p>Default payment method for all daily dairy deliveries.</p>
+                    </div>
+                    <span class="pm-badge">Default</span>
+                </div>
+                <div class="payment-method-item">
+                    <div class="pm-icon">📲</div>
+                    <div class="pm-info">
+                        <h4>UPI / Wallet Payments</h4>
+                        <p>Google Pay, PhonePe, Paytm QR accepted at delivery.</p>
+                    </div>
+                </div>
+                <div class="payment-method-item">
+                    <div class="pm-icon">💳</div>
+                    <div class="pm-info">
+                        <h4>Credit / Debit Cards</h4>
+                        <p>Visa, MasterCard, RuPay accepted online.</p>
+                    </div>
+                </div>
             </div>
             <div class="modal-actions">
-                <button type="button" class="btn-cancel" onclick="closeModal('personalInfoModal')">Cancel</button>
-                <button type="submit" class="btn-save">Save Changes</button>
+                <a href="{% url 'payment' %}" class="btn-save"
+                    style="text-decoration:none; text-align:center; display:block; width:100%;">Go to Payment Page</a>
             </div>
-        </form>
-    </div>
-</div>
-
-<!-- 2. DELIVERY ADDRESSES MODAL -->
-<div class="profile-modal-overlay" id="addressModal">
-    <div class="profile-modal">
-        <div class="profile-modal-header">
-            <h3>📍 Delivery Addresses</h3>
-            <button class="modal-close-btn" onclick="closeModal('addressModal')">✕</button>
         </div>
-        <form id="addressForm" onsubmit="saveAddress(event)">
-            <div class="form-group">
-                <label>Saved Delivery Address</label>
-                <textarea id="deliveryAddressInput" rows="4" placeholder="Enter your full home / office address (Flat No, Street, Landmark, Pincode)" required>{{ user_profile.address }}</textarea>
+    </div>
+
+    <!-- 4. NOTIFICATIONS MODAL -->
+    <div class="profile-modal-overlay" id="notificationsModal">
+        <div class="profile-modal">
+            <div class="profile-modal-header">
+                <h3>🔔 Notifications</h3>
+                <button class="modal-close-btn" onclick="closeModal('notificationsModal')">✕</button>
+            </div>
+            <div class="modal-content-body">
+                <div class="notif-item">
+                    <div class="notif-icon">📦</div>
+                    <div class="notif-text">
+                        <h4>Fresh Milk Delivered</h4>
+                        <p>Your morning milk delivery of 1 Liter Buffalo Milk was completed at 6:30 AM.</p>
+                        <small>Today, 6:30 AM</small>
+                    </div>
+                </div>
+                <div class="notif-item">
+                    <div class="notif-icon">🎁</div>
+                    <div class="notif-text">
+                        <h4>Reward Points Added</h4>
+                        <p>You earned {{ user_profile.reward_points }} reward points on your recent order!</p>
+                        <small>Yesterday, 5:15 PM</small>
+                    </div>
+                </div>
+                <div class="notif-item">
+                    <div class="notif-icon">🧈</div>
+                    <div class="notif-text">
+                        <h4>Fresh Ghee & Paneer Restocked</h4>
+                        <p>Pure Cow Ghee and fresh Cottage Cheese are available now in stock.</p>
+                        <small>2 days ago</small>
+                    </div>
+                </div>
             </div>
             <div class="modal-actions">
-                <button type="button" class="btn-cancel" onclick="closeModal('addressModal')">Cancel</button>
-                <button type="submit" class="btn-save">Save Address</button>
+                <button type="button" class="btn-save" onclick="closeModal('notificationsModal')">Close</button>
             </div>
-        </form>
-    </div>
-</div>
-
-<!-- 3. PAYMENT METHODS MODAL -->
-<div class="profile-modal-overlay" id="paymentMethodsModal">
-    <div class="profile-modal">
-        <div class="profile-modal-header">
-            <h3>💳 Payment Methods</h3>
-            <button class="modal-close-btn" onclick="closeModal('paymentMethodsModal')">✕</button>
-        </div>
-        <div class="modal-content-body">
-            <div class="payment-method-item active-method">
-                <div class="pm-icon">💵</div>
-                <div class="pm-info">
-                    <h4>Cash on Delivery (COD)</h4>
-                    <p>Default payment method for all daily dairy deliveries.</p>
-                </div>
-                <span class="pm-badge">Default</span>
-            </div>
-            <div class="payment-method-item">
-                <div class="pm-icon">📲</div>
-                <div class="pm-info">
-                    <h4>UPI / Wallet Payments</h4>
-                    <p>Google Pay, PhonePe, Paytm QR accepted at delivery.</p>
-                </div>
-            </div>
-            <div class="payment-method-item">
-                <div class="pm-icon">💳</div>
-                <div class="pm-info">
-                    <h4>Credit / Debit Cards</h4>
-                    <p>Visa, MasterCard, RuPay accepted online.</p>
-                </div>
-            </div>
-        </div>
-        <div class="modal-actions">
-            <a href="{% url 'payment' %}" class="btn-save" style="text-decoration:none; text-align:center; display:block; width:100%;">Go to Payment Page</a>
         </div>
     </div>
-</div>
 
-<!-- 4. NOTIFICATIONS MODAL -->
-<div class="profile-modal-overlay" id="notificationsModal">
-    <div class="profile-modal">
-        <div class="profile-modal-header">
-            <h3>🔔 Notifications</h3>
-            <button class="modal-close-btn" onclick="closeModal('notificationsModal')">✕</button>
-        </div>
-        <div class="modal-content-body">
-            <div class="notif-item">
-                <div class="notif-icon">📦</div>
-                <div class="notif-text">
-                    <h4>Fresh Milk Delivered</h4>
-                    <p>Your morning milk delivery of 1 Liter Buffalo Milk was completed at 6:30 AM.</p>
-                    <small>Today, 6:30 AM</small>
-                </div>
+    <!-- 5. PRIVACY & SECURITY MODAL -->
+    <div class="profile-modal-overlay" id="privacyModal">
+        <div class="profile-modal">
+            <div class="profile-modal-header">
+                <h3>🔒 Privacy & Security</h3>
+                <button class="modal-close-btn" onclick="closeModal('privacyModal')">✕</button>
             </div>
-            <div class="notif-item">
-                <div class="notif-icon">🎁</div>
-                <div class="notif-text">
-                    <h4>Reward Points Added</h4>
-                    <p>You earned {{ user_profile.reward_points }} reward points on your recent order!</p>
-                    <small>Yesterday, 5:15 PM</small>
+            <form id="privacyForm" onsubmit="savePassword(event)">
+                <h4 style="color:#075d3e; margin-bottom:12px;">Change Account Password</h4>
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPassword" placeholder="Enter current password" required>
                 </div>
-            </div>
-            <div class="notif-item">
-                <div class="notif-icon">🧈</div>
-                <div class="notif-text">
-                    <h4>Fresh Ghee & Paneer Restocked</h4>
-                    <p>Pure Cow Ghee and fresh Cottage Cheese are available now in stock.</p>
-                    <small>2 days ago</small>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" placeholder="Minimum 8 characters" required>
                 </div>
-            </div>
-        </div>
-        <div class="modal-actions">
-            <button type="button" class="btn-save" onclick="closeModal('notificationsModal')">Close</button>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Re-enter new password" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('privacyModal')">Cancel</button>
+                    <button type="submit" class="btn-save">Update Password</button>
+                </div>
+            </form>
         </div>
     </div>
-</div>
 
-<!-- 5. PRIVACY & SECURITY MODAL -->
-<div class="profile-modal-overlay" id="privacyModal">
-    <div class="profile-modal">
-        <div class="profile-modal-header">
-            <h3>🔒 Privacy & Security</h3>
-            <button class="modal-close-btn" onclick="closeModal('privacyModal')">✕</button>
-        </div>
-        <form id="privacyForm" onsubmit="savePassword(event)">
-            <h4 style="color:#075d3e; margin-bottom:12px;">Change Account Password</h4>
-            <div class="form-group">
-                <label>Current Password</label>
-                <input type="password" id="currentPassword" placeholder="Enter current password" required>
+    <!-- 6. HELP & SUPPORT MODAL -->
+    <div class="profile-modal-overlay" id="helpSupportModal">
+        <div class="profile-modal">
+            <div class="profile-modal-header">
+                <h3>? Help & Support</h3>
+                <button class="modal-close-btn" onclick="closeModal('helpSupportModal')">✕</button>
             </div>
-            <div class="form-group">
-                <label>New Password</label>
-                <input type="password" id="newPassword" placeholder="Minimum 8 characters" required>
-            </div>
-            <div class="form-group">
-                <label>Confirm New Password</label>
-                <input type="password" id="confirmPassword" placeholder="Re-enter new password" required>
+            <div class="modal-content-body">
+                <div class="contact-option-card">
+                    <div class="coc-icon">📞</div>
+                    <div class="coc-info">
+                        <h4>Customer Care Helpline</h4>
+                        <p>+91 72196 21129 (Available 6 AM - 9 PM)</p>
+                    </div>
+                    <a href="tel:+917219621129" class="coc-btn">Call Now</a>
+                </div>
+                <div class="contact-option-card">
+                    <div class="coc-icon">💬</div>
+                    <div class="coc-info">
+                        <h4>WhatsApp Direct Support</h4>
+                        <p>Chat with us for fast delivery updates.</p>
+                    </div>
+                    <a href="https://wa.me/917219621129?text=Hi%20Khamkar%20Dairy" target="_blank"
+                        class="coc-btn whatsapp-btn">WhatsApp</a>
+                </div>
+                <div class="contact-option-card">
+                    <div class="coc-icon">✉️</div>
+                    <div class="coc-info">
+                        <h4>Email Support</h4>
+                        <p>khamkardairy72@gmail.com</p>
+                    </div>
+                    <a href="mailto:khamkardairy72@gmail.com" class="coc-btn">Email Us</a>
+                </div>
             </div>
             <div class="modal-actions">
-                <button type="button" class="btn-cancel" onclick="closeModal('privacyModal')">Cancel</button>
-                <button type="submit" class="btn-save">Update Password</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- 6. HELP & SUPPORT MODAL -->
-<div class="profile-modal-overlay" id="helpSupportModal">
-    <div class="profile-modal">
-        <div class="profile-modal-header">
-            <h3>? Help & Support</h3>
-            <button class="modal-close-btn" onclick="closeModal('helpSupportModal')">✕</button>
-        </div>
-        <div class="modal-content-body">
-            <div class="contact-option-card">
-                <div class="coc-icon">📞</div>
-                <div class="coc-info">
-                    <h4>Customer Care Helpline</h4>
-                    <p>+91 72196 21129 (Available 6 AM - 9 PM)</p>
-                </div>
-                <a href="tel:+917219621129" class="coc-btn">Call Now</a>
-            </div>
-            <div class="contact-option-card">
-                <div class="coc-icon">💬</div>
-                <div class="coc-info">
-                    <h4>WhatsApp Direct Support</h4>
-                    <p>Chat with us for fast delivery updates.</p>
-                </div>
-                <a href="https://wa.me/917219621129?text=Hi%20Khamkar%20Dairy" target="_blank" class="coc-btn whatsapp-btn">WhatsApp</a>
-            </div>
-            <div class="contact-option-card">
-                <div class="coc-icon">✉️</div>
-                <div class="coc-info">
-                    <h4>Email Support</h4>
-                    <p>khamkardairy72@gmail.com</p>
-                </div>
-                <a href="mailto:khamkardairy72@gmail.com" class="coc-btn">Email Us</a>
-            </div>
-        </div>
-        <div class="modal-actions">
-            <a href="{% url 'contact' %}" class="btn-save" style="text-decoration:none; text-align:center; display:block; width:100%;">Visit Contact Page</a>
-        </div>
-    </div>
-</div>
-
-<!-- 7. INVITE FRIENDS MODAL -->
-<div class="profile-modal-overlay" id="inviteModal">
-    <div class="profile-modal">
-        <div class="profile-modal-header">
-            <h3>🎁 Invite & Earn Rewards</h3>
-            <button class="modal-close-btn" onclick="closeModal('inviteModal')">✕</button>
-        </div>
-        <div class="modal-content-body" style="text-align:center;">
-            <p style="color:#4d5868; font-size:15px; margin-bottom:15px;">Share your referral code with your friends and get ₹50 discount on your next milk order!</p>
-            <div style="background:#e0f6e7; padding:15px; border-radius:12px; font-weight:bold; font-size:22px; color:#087344; letter-spacing:2px; display:inline-block; margin-bottom:15px;" id="referralCode">KHAMKAR50</div>
-            <div>
-                <button type="button" class="btn-save" onclick="copyReferralCode()" style="margin-bottom:10px;">📋 Copy Referral Code</button>
+                <a href="{% url 'contact' %}" class="btn-save"
+                    style="text-decoration:none; text-align:center; display:block; width:100%;">Visit Contact Page</a>
             </div>
         </div>
     </div>
-</div>
 
-<!-- TOAST CONTAINER -->
-<div id="profileToast" class="profile-toast"></div>
+    <!-- 7. INVITE FRIENDS MODAL -->
+    <div class="profile-modal-overlay" id="inviteModal">
+        <div class="profile-modal">
+            <div class="profile-modal-header">
+                <h3>🎁 Invite & Earn Rewards</h3>
+                <button class="modal-close-btn" onclick="closeModal('inviteModal')">✕</button>
+            </div>
+            <div class="modal-content-body" style="text-align:center;">
+                <p style="color:#4d5868; font-size:15px; margin-bottom:15px;">Share your referral code with your friends
+                    and get ₹50 discount on your next milk order!</p>
+                <div style="background:#e0f6e7; padding:15px; border-radius:12px; font-weight:bold; font-size:22px; color:#087344; letter-spacing:2px; display:inline-block; margin-bottom:15px;"
+                    id="referralCode">KHAMKAR50</div>
+                <div>
+                    <button type="button" class="btn-save" onclick="copyReferralCode()" style="margin-bottom:10px;">📋
+                        Copy Referral Code</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<!-- BOTTOM NAV -->
-<nav class="bottom-nav">
+    <!-- TOAST CONTAINER -->
+    <div id="profileToast" class="profile-toast"></div>
 
-    <!-- HOME -->
-    <a href="{% url 'home' %}" class="nav-item">
-        <span class="nav-icon">🏠</span>
-        <span>Home</span>
-    </a>
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
 
-    <!-- SHOP -->
-    <a href="{% url 'shop_product' %}" class="nav-item">
-        <span class="nav-icon">🛍️</span>
-        <span>Shop</span>
-    </a>
+        <!-- HOME -->
+        <a href="{% url 'home' %}" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+        </a>
 
-    <!-- ORDERS -->
-    <a href="{% url 'orders' %}" class="nav-item">
-        <span class="nav-icon">📦</span>
-        <span>Orders</span>
-    </a>
+        <!-- SHOP -->
+        <a href="{% url 'shop_product' %}" class="nav-item">
+            <span class="nav-icon">🛍️</span>
+            <span>Shop</span>
+        </a>
 
-    <!-- CART -->
-    <a href="{% url 'cart' %}" class="nav-item cart-nav-item">
-        <span class="nav-icon-box">
-            <span class="nav-icon">🛒</span>
-            <span class="cart-count" id="bottomCartCount" {% if not cart_count or cart_count == 0 %}style="display:none;"{% endif %}>{{ cart_count|default:"" }}</span>
-        </span>
-        <span>Cart</span>
-    </a>
+        <!-- ORDERS -->
+        <a href="{% url 'orders' %}" class="nav-item">
+            <span class="nav-icon">📦</span>
+            <span>Orders</span>
+        </a>
 
-    <!-- FAVORITES -->
-    <a href="{% url 'favourite' %}" class="nav-item">
-        <span class="nav-icon">🩷</span>
-        <span>Favorites</span>
-    </a>
+        <!-- CART -->
+        <a href="{% url 'cart' %}" class="nav-item cart-nav-item">
+            <span class="nav-icon-box">
+                <span class="nav-icon">🛒</span>
+                <span class="cart-count" id="bottomCartCount" {% if not cart_count or cart_count == 0 %}style="display:none;"{% endif %}>{{ cart_count|default:"" }}</span>
+            </span>
+            <span>Cart</span>
+        </a>
 
-    <!-- CONTACT -->
-    <a href="{% url 'contact' %}" class="nav-item">
-        <span class="nav-icon">📞</span>
-        <span>Contact</span>
-    </a>
+        <!-- FAVORITES -->
+        <a href="{% url 'favourite' %}" class="nav-item">
+            <span class="nav-icon">🩷</span>
+            <span>Favorites</span>
+        </a>
 
-</nav>
+        <!-- CONTACT -->
+        <a href="{% url 'contact' %}" class="nav-item">
+            <span class="nav-icon">📞</span>
+            <span>Contact</span>
+        </a>
+
+    </nav>
 
 </body>
 <script src="{% static 'js/Profile.js' %}"></script>
+
 </html>

@@ -22,6 +22,18 @@ function getCSRFToken() {
     return '';
 }
 
+function updateToggleBadge(checkbox, badgeId) {
+    const badge = document.getElementById(badgeId);
+    if (!badge) return;
+    if (checkbox.checked) {
+        badge.innerText = 'ON';
+        badge.className = 'toggle-status-badge on';
+    } else {
+        badge.innerText = 'OFF';
+        badge.className = 'toggle-status-badge off';
+    }
+}
+
 
 /* ================= DATE ================= */
 
@@ -52,7 +64,7 @@ function showPage(pageId, button) {
 
     const pages = document.querySelectorAll(".page");
 
-    pages.forEach(function(page) {
+    pages.forEach(function (page) {
         page.classList.remove("active-page");
     });
 
@@ -66,7 +78,7 @@ function showPage(pageId, button) {
 
     const menuItems = document.querySelectorAll(".menu-item");
 
-    menuItems.forEach(function(item) {
+    menuItems.forEach(function (item) {
         item.classList.remove("active");
     });
 
@@ -90,7 +102,7 @@ function showPage(pageId, button) {
     }
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     const hash = window.location.hash.replace("#", "");
     const urlParams = new URLSearchParams(window.location.search);
 
@@ -156,10 +168,10 @@ function showToast(message, type) {
 
     document.body.appendChild(toast);
 
-    setTimeout(function() {
+    setTimeout(function () {
         toast.style.opacity = '0';
         toast.style.transition = 'opacity 0.3s ease';
-        setTimeout(function() { toast.remove(); }, 300);
+        setTimeout(function () { toast.remove(); }, 300);
     }, 3000);
 }
 
@@ -200,7 +212,7 @@ function closeAddProduct() {
 
 document
     .getElementById("addProductForm")
-    .addEventListener("submit", function(event) {
+    .addEventListener("submit", function (event) {
 
         event.preventDefault();
 
@@ -242,88 +254,88 @@ document
             },
             body: formData
         })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
 
-            if (data.error) {
-                showToast(data.error, "error");
-                return;
-            }
+                if (data.error) {
+                    showToast(data.error, "error");
+                    return;
+                }
 
-            if (isEditMode && productId) {
-                // Update existing row
-                const row = document.querySelector('tr[data-product-id="' + productId + '"]');
-                if (row) {
+                if (isEditMode && productId) {
+                    // Update existing row
+                    const row = document.querySelector('tr[data-product-id="' + productId + '"]');
+                    if (row) {
+                        const p = data.product;
+                        row.setAttribute("data-quantity-label", p.quantity_label || "");
+                        const qtySubtext = p.quantity_label ? '<div style="font-size: 12px; color: #078046; font-weight: 500;">' + p.quantity_label + '</div>' : '';
+                        row.cells[1].innerHTML = "<strong>" + p.name + "</strong>" + qtySubtext;
+                        row.cells[2].textContent = p.category;
+                        row.cells[3].textContent = "₹" + p.price;
+                        row.cells[4].textContent = p.stock;
+
+                        const statusClass = p.is_active ? "btn-available" : "btn-unavailable";
+                        const statusText = p.is_active ? "● Available" : "● Unavailable";
+                        row.cells[5].innerHTML = '<button type="button" class="status-toggle-btn ' + statusClass + '" onclick="toggleProductAvailability(this)" title="Click to change Availability">' + statusText + '</button>';
+
+                        if (p.image) {
+                            row.cells[0].innerHTML = '<div class="product-image"><img src="' + p.image + '" alt="' + p.name + '" style="width:40px;height:40px;object-fit:cover;border-radius:8px;"></div>';
+                        }
+                    }
+                    showToast("Product updated successfully!");
+                } else {
+                    // Add new row to table
+                    const table = document.getElementById("productTable");
                     const p = data.product;
+
+                    const row = document.createElement("tr");
+                    row.setAttribute("data-product-id", p.id);
                     row.setAttribute("data-quantity-label", p.quantity_label || "");
-                    const qtySubtext = p.quantity_label ? '<div style="font-size: 12px; color: #078046; font-weight: 500;">' + p.quantity_label + '</div>' : '';
-                    row.cells[1].innerHTML = "<strong>" + p.name + "</strong>" + qtySubtext;
-                    row.cells[2].textContent = p.category;
-                    row.cells[3].textContent = "₹" + p.price;
-                    row.cells[4].textContent = p.stock;
 
                     const statusClass = p.is_active ? "btn-available" : "btn-unavailable";
                     const statusText = p.is_active ? "● Available" : "● Unavailable";
-                    row.cells[5].innerHTML = '<button type="button" class="status-toggle-btn ' + statusClass + '" onclick="toggleProductAvailability(this)" title="Click to change Availability">' + statusText + '</button>';
+                    const imgHTML = p.image
+                        ? '<img src="' + p.image + '" alt="' + p.name + '" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">'
+                        : '📦';
 
-                    if (p.image) {
-                        row.cells[0].innerHTML = '<div class="product-image"><img src="' + p.image + '" alt="' + p.name + '" style="width:40px;height:40px;object-fit:cover;border-radius:8px;"></div>';
-                    }
-                }
-                showToast("Product updated successfully!");
-            } else {
-                // Add new row to table
-                const table = document.getElementById("productTable");
-                const p = data.product;
+                    const qtySubtext = p.quantity_label ? '<div style="font-size: 12px; color: #078046; font-weight: 500;">' + p.quantity_label + '</div>' : '';
 
-                const row = document.createElement("tr");
-                row.setAttribute("data-product-id", p.id);
-                row.setAttribute("data-quantity-label", p.quantity_label || "");
-
-                const statusClass = p.is_active ? "btn-available" : "btn-unavailable";
-                const statusText = p.is_active ? "● Available" : "● Unavailable";
-                const imgHTML = p.image
-                    ? '<img src="' + p.image + '" alt="' + p.name + '" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">'
-                    : '📦';
-
-                const qtySubtext = p.quantity_label ? '<div style="font-size: 12px; color: #078046; font-weight: 500;">' + p.quantity_label + '</div>' : '';
-
-                row.innerHTML =
-                    '<td><div class="product-image">' + imgHTML + '</div></td>' +
-                    '<td><strong>' + p.name + '</strong>' + qtySubtext + '</td>' +
-                    '<td>' + p.category + '</td>' +
-                    '<td>₹' + p.price + '</td>' +
-                    '<td>' + p.stock + '</td>' +
-                    '<td><button type="button" class="status-toggle-btn ' + statusClass + '" onclick="toggleProductAvailability(this)" title="Click to change Availability">' + statusText + '</button></td>' +
-                    '<td>' +
+                    row.innerHTML =
+                        '<td><div class="product-image">' + imgHTML + '</div></td>' +
+                        '<td><strong>' + p.name + '</strong>' + qtySubtext + '</td>' +
+                        '<td>' + p.category + '</td>' +
+                        '<td>₹' + p.price + '</td>' +
+                        '<td>' + p.stock + '</td>' +
+                        '<td><button type="button" class="status-toggle-btn ' + statusClass + '" onclick="toggleProductAvailability(this)" title="Click to change Availability">' + statusText + '</button></td>' +
+                        '<td>' +
                         '<button class="edit-btn" onclick="editProduct(this)">✎ Edit</button>' +
                         '<button class="delete-btn" onclick="deleteProduct(this)">🗑 Delete</button>' +
-                    '</td>';
+                        '</td>';
 
-                // Remove "No products" row if it exists
-                const emptyRow = table.querySelector('td[colspan="7"]');
-                if (emptyRow) emptyRow.closest('tr').remove();
+                    // Remove "No products" row if it exists
+                    const emptyRow = table.querySelector('td[colspan="7"]');
+                    if (emptyRow) emptyRow.closest('tr').remove();
 
-                table.prepend(row);
+                    table.prepend(row);
 
-                // Update product count
-                const productCount = document.getElementById("totalProducts");
-                if (productCount) {
-                    productCount.textContent = parseInt(productCount.textContent) + 1;
+                    // Update product count
+                    const productCount = document.getElementById("totalProducts");
+                    if (productCount) {
+                        productCount.textContent = parseInt(productCount.textContent) + 1;
+                    }
+
+                    showToast("Product added successfully!");
                 }
 
-                showToast("Product added successfully!");
-            }
+                document.getElementById("addProductForm").reset();
+                closeAddProduct();
+            })
+            .catch(function (err) {
+                console.error("Error:", err);
+                showToast("Something went wrong. Please try again.", "error");
+            });
 
-            document.getElementById("addProductForm").reset();
-            closeAddProduct();
-        })
-        .catch(function(err) {
-            console.error("Error:", err);
-            showToast("Something went wrong. Please try again.", "error");
-        });
-
-});
+    });
 
 
 /* ================= TOGGLE PRODUCT AVAILABILITY ================= */
@@ -343,32 +355,32 @@ function toggleProductAvailability(button) {
             "Content-Type": "application/json"
         }
     })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
-        button.disabled = false;
-        button.style.opacity = "1";
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+            button.disabled = false;
+            button.style.opacity = "1";
 
-        if (data.error) {
-            showToast(data.error, "error");
-            return;
-        }
+            if (data.error) {
+                showToast(data.error, "error");
+                return;
+            }
 
-        if (data.is_active) {
-            button.className = "status-toggle-btn btn-available";
-            button.innerHTML = "● Available";
-        } else {
-            button.className = "status-toggle-btn btn-unavailable";
-            button.innerHTML = "● Unavailable";
-        }
+            if (data.is_active) {
+                button.className = "status-toggle-btn btn-available";
+                button.innerHTML = "● Available";
+            } else {
+                button.className = "status-toggle-btn btn-unavailable";
+                button.innerHTML = "● Unavailable";
+            }
 
-        showToast(data.message || "Product availability updated!");
-    })
-    .catch(function(err) {
-        button.disabled = false;
-        button.style.opacity = "1";
-        console.error("Error toggling availability:", err);
-        showToast("Failed to update availability.", "error");
-    });
+            showToast(data.message || "Product availability updated!");
+        })
+        .catch(function (err) {
+            button.disabled = false;
+            button.style.opacity = "1";
+            console.error("Error toggling availability:", err);
+            showToast("Failed to update availability.", "error");
+        });
 }
 
 
@@ -393,30 +405,30 @@ function deleteProduct(button) {
             "Content-Type": "application/json"
         }
     })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
 
-        if (data.error) {
-            showToast(data.error, "error");
-            return;
-        }
-
-        row.remove();
-
-        const productCount = document.getElementById("totalProducts");
-        if (productCount) {
-            let currentCount = parseInt(productCount.textContent);
-            if (currentCount > 0) {
-                productCount.textContent = currentCount - 1;
+            if (data.error) {
+                showToast(data.error, "error");
+                return;
             }
-        }
 
-        showToast("Product deleted successfully!");
-    })
-    .catch(function(err) {
-        console.error("Error:", err);
-        showToast("Failed to delete product.", "error");
-    });
+            row.remove();
+
+            const productCount = document.getElementById("totalProducts");
+            if (productCount) {
+                let currentCount = parseInt(productCount.textContent);
+                if (currentCount > 0) {
+                    productCount.textContent = currentCount - 1;
+                }
+            }
+
+            showToast("Product deleted successfully!");
+        })
+        .catch(function (err) {
+            console.error("Error:", err);
+            showToast("Failed to delete product.", "error");
+        });
 }
 
 
@@ -478,28 +490,28 @@ function updateOrderStatus(orderId, newStatus) {
         },
         body: JSON.stringify({ status: newStatus })
     })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
 
-        if (data.error) {
-            showToast(data.error, "error");
-            return;
-        }
+            if (data.error) {
+                showToast(data.error, "error");
+                return;
+            }
 
-        // Update the status badge in the same row
-        const row = document.querySelector('tr[data-order-id="' + orderId + '"]');
-        if (row) {
-            const statusCell = row.cells[5];
-            const displayText = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
-            statusCell.innerHTML = '<span class="status ' + newStatus + '">' + displayText + '</span>';
-        }
+            // Update the status badge in the same row
+            const row = document.querySelector('tr[data-order-id="' + orderId + '"]');
+            if (row) {
+                const statusCell = row.cells[5];
+                const displayText = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+                statusCell.innerHTML = '<span class="status ' + newStatus + '">' + displayText + '</span>';
+            }
 
-        showToast("Order status updated to " + newStatus + "!");
-    })
-    .catch(function(err) {
-        console.error("Error:", err);
-        showToast("Failed to update order status.", "error");
-    });
+            showToast("Order status updated to " + newStatus + "!");
+        })
+        .catch(function (err) {
+            console.error("Error:", err);
+            showToast("Failed to update order status.", "error");
+        });
 }
 
 
@@ -524,38 +536,38 @@ function deleteOrder(orderId, button) {
             "Content-Type": "application/json"
         }
     })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
-        if (button) {
-            button.disabled = false;
-            button.style.opacity = "1";
-        }
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+            if (button) {
+                button.disabled = false;
+                button.style.opacity = "1";
+            }
 
-        if (data.error) {
-            showToast(data.error, "error");
-            return;
-        }
+            if (data.error) {
+                showToast(data.error, "error");
+                return;
+            }
 
-        if (row) {
-            row.remove();
-        }
+            if (row) {
+                row.remove();
+            }
 
-        // Check if table is now empty
-        const orderTable = document.getElementById("orderTable");
-        if (orderTable && orderTable.querySelectorAll("tr").length === 0) {
-            orderTable.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#888;">No orders yet.</td></tr>';
-        }
+            // Check if table is now empty
+            const orderTable = document.getElementById("orderTable");
+            if (orderTable && orderTable.querySelectorAll("tr").length === 0) {
+                orderTable.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#888;">No orders yet.</td></tr>';
+            }
 
-        showToast(data.message || "Order deleted successfully!");
-    })
-    .catch(function(err) {
-        if (button) {
-            button.disabled = false;
-            button.style.opacity = "1";
-        }
-        console.error("Error deleting order:", err);
-        showToast("Failed to delete order.", "error");
-    });
+            showToast(data.message || "Order deleted successfully!");
+        })
+        .catch(function (err) {
+            if (button) {
+                button.disabled = false;
+                button.style.opacity = "1";
+            }
+            console.error("Error deleting order:", err);
+            showToast("Failed to delete order.", "error");
+        });
 }
 
 
@@ -609,7 +621,7 @@ function editCategory(button) {
 
 document
     .getElementById("addCategoryForm")
-    .addEventListener("submit", function(event) {
+    .addEventListener("submit", function (event) {
 
         event.preventDefault();
 
@@ -642,71 +654,71 @@ document
             },
             body: formData
         })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
 
-            if (data.error) {
-                showToast(data.error, "error");
-                return;
-            }
-
-            const cat = data.category;
-            const imgHTML = cat.image
-                ? '<img src="' + cat.image + '" alt="' + cat.name + '" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">'
-                : '📁';
-
-            if (isCategoryEditMode && categoryId) {
-                // Update existing row
-                const row = document.querySelector('tr[data-category-id="' + categoryId + '"]');
-                if (row) {
-                    row.cells[0].innerHTML = '<div class="product-image">' + imgHTML + '</div>';
-                    row.cells[1].innerHTML = "<strong>" + cat.name + "</strong>";
-                    row.cells[2].textContent = cat.description || "—";
-                    row.cells[3].textContent = cat.product_count;
+                if (data.error) {
+                    showToast(data.error, "error");
+                    return;
                 }
-                showToast("Category updated successfully!");
-            } else {
-                // Add new row to table
-                const table = document.getElementById("categoryTable");
 
-                const row = document.createElement("tr");
-                row.setAttribute("data-category-id", cat.id);
-                row.innerHTML =
-                    '<td><div class="product-image">' + imgHTML + '</div></td>' +
-                    '<td><strong>' + cat.name + '</strong></td>' +
-                    '<td>' + (cat.description || '—') + '</td>' +
-                    '<td>' + cat.product_count + '</td>' +
-                    '<td>' +
+                const cat = data.category;
+                const imgHTML = cat.image
+                    ? '<img src="' + cat.image + '" alt="' + cat.name + '" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">'
+                    : '📁';
+
+                if (isCategoryEditMode && categoryId) {
+                    // Update existing row
+                    const row = document.querySelector('tr[data-category-id="' + categoryId + '"]');
+                    if (row) {
+                        row.cells[0].innerHTML = '<div class="product-image">' + imgHTML + '</div>';
+                        row.cells[1].innerHTML = "<strong>" + cat.name + "</strong>";
+                        row.cells[2].textContent = cat.description || "—";
+                        row.cells[3].textContent = cat.product_count;
+                    }
+                    showToast("Category updated successfully!");
+                } else {
+                    // Add new row to table
+                    const table = document.getElementById("categoryTable");
+
+                    const row = document.createElement("tr");
+                    row.setAttribute("data-category-id", cat.id);
+                    row.innerHTML =
+                        '<td><div class="product-image">' + imgHTML + '</div></td>' +
+                        '<td><strong>' + cat.name + '</strong></td>' +
+                        '<td>' + (cat.description || '—') + '</td>' +
+                        '<td>' + cat.product_count + '</td>' +
+                        '<td>' +
                         '<button class="edit-btn" onclick="editCategory(this)">✏️ Edit</button>' +
                         '<button class="delete-btn" onclick="deleteCategory(' + cat.id + ', \'' + cat.name + '\')">🗑 Delete</button>' +
-                    '</td>';
+                        '</td>';
 
-                // Remove empty row
-                const emptyRow = table.querySelector('td[colspan="6"]');
-                if (emptyRow) emptyRow.closest('tr').remove();
+                    // Remove empty row
+                    const emptyRow = table.querySelector('td[colspan="6"]');
+                    if (emptyRow) emptyRow.closest('tr').remove();
 
-                table.appendChild(row);
+                    table.appendChild(row);
 
-                // Also add to the product category dropdown
-                const catSelect = document.getElementById("productCategory");
-                if (catSelect) {
-                    const option = document.createElement("option");
-                    option.value = cat.name;
-                    option.textContent = cat.name;
-                    catSelect.appendChild(option);
+                    // Also add to the product category dropdown
+                    const catSelect = document.getElementById("productCategory");
+                    if (catSelect) {
+                        const option = document.createElement("option");
+                        option.value = cat.name;
+                        option.textContent = cat.name;
+                        catSelect.appendChild(option);
+                    }
+
+                    showToast("Category added successfully!");
                 }
 
-                showToast("Category added successfully!");
-            }
-
-            document.getElementById("addCategoryForm").reset();
-            closeAddCategory();
-        })
-        .catch(function(err) {
-            console.error("Error:", err);
-            showToast("Failed to save category.", "error");
-        });
-});
+                document.getElementById("addCategoryForm").reset();
+                closeAddCategory();
+            })
+            .catch(function (err) {
+                console.error("Error:", err);
+                showToast("Failed to save category.", "error");
+            });
+    });
 
 
 /* ================= DELETE CATEGORY (BACKEND) ================= */
@@ -726,23 +738,23 @@ function deleteCategory(categoryId, categoryName) {
             "Content-Type": "application/json"
         }
     })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
 
-        if (data.error) {
-            showToast(data.error, "error");
-            return;
-        }
+            if (data.error) {
+                showToast(data.error, "error");
+                return;
+            }
 
-        const row = document.querySelector('tr[data-category-id="' + categoryId + '"]');
-        if (row) row.remove();
+            const row = document.querySelector('tr[data-category-id="' + categoryId + '"]');
+            if (row) row.remove();
 
-        showToast("Category deleted!");
-    })
-    .catch(function(err) {
-        console.error("Error:", err);
-        showToast("Failed to delete category.", "error");
-    });
+            showToast("Category deleted!");
+        })
+        .catch(function (err) {
+            console.error("Error:", err);
+            showToast("Failed to delete category.", "error");
+        });
 }
 
 
@@ -751,11 +763,11 @@ function deleteCategory(categoryId, categoryName) {
 const productSearch = document.getElementById("productSearch");
 
 if (productSearch) {
-    productSearch.addEventListener("input", function() {
+    productSearch.addEventListener("input", function () {
         const search = this.value.toLowerCase();
         const rows = document.querySelectorAll("#productTable tr");
 
-        rows.forEach(function(row) {
+        rows.forEach(function (row) {
             const text = row.innerText.toLowerCase();
             row.style.display = text.includes(search) ? "" : "none";
         });
@@ -768,11 +780,11 @@ if (productSearch) {
 const orderSearch = document.getElementById("orderSearch");
 
 if (orderSearch) {
-    orderSearch.addEventListener("input", function() {
+    orderSearch.addEventListener("input", function () {
         const search = this.value.toLowerCase();
         const rows = document.querySelectorAll("#orderTable tr");
 
-        rows.forEach(function(row) {
+        rows.forEach(function (row) {
             const text = row.innerText.toLowerCase();
             row.style.display = text.includes(search) ? "" : "none";
         });
@@ -785,11 +797,11 @@ if (orderSearch) {
 const customerSearch = document.getElementById("customerSearch");
 
 if (customerSearch) {
-    customerSearch.addEventListener("input", function() {
+    customerSearch.addEventListener("input", function () {
         const search = this.value.toLowerCase();
         const rows = document.querySelectorAll("#customerTable tr");
 
-        rows.forEach(function(row) {
+        rows.forEach(function (row) {
             const text = row.innerText.toLowerCase();
             row.style.display = text.includes(search) ? "" : "none";
         });
@@ -802,7 +814,7 @@ if (customerSearch) {
 const globalSearch = document.getElementById("globalSearch");
 
 if (globalSearch) {
-    globalSearch.addEventListener("keypress", function(event) {
+    globalSearch.addEventListener("keypress", function (event) {
         if (event.key === "Enter") {
             const value = this.value.trim().toLowerCase();
             if (!value) return;
@@ -813,7 +825,7 @@ if (globalSearch) {
             );
 
             let found = false;
-            allRows.forEach(function(row) {
+            allRows.forEach(function (row) {
                 if (row.innerText.toLowerCase().includes(value)) {
                     found = true;
                 }
@@ -840,8 +852,8 @@ function editCustomer(button) {
     const name = row.cells[0].innerText.trim();
     const email = row.cells[1].innerText.trim();
     const phone = row.cells[2].innerText.trim() === "—" ? "" : row.cells[2].innerText.trim();
-    
-    const roleSelectInTable = row.cells[6].querySelector("select");
+
+    const roleSelectInTable = row.cells[6] ? row.cells[6].querySelector("select") : null;
     const roleText = roleSelectInTable ? roleSelectInTable.value : "Customer";
 
     document.getElementById("editCustomerId").value = customerId;
@@ -851,7 +863,7 @@ function editCustomer(button) {
 
     const roleSelect = document.getElementById("customerEditRole");
     if (roleSelect) {
-        roleSelect.value = roleText === "Admin" ? "Admin" : "Customer";
+        roleSelect.value = roleText;
     }
 
     const modal = document.getElementById("customerModal");
@@ -871,7 +883,7 @@ function closeCustomerModal() {
 
 const editCustomerForm = document.getElementById("editCustomerForm");
 if (editCustomerForm) {
-    editCustomerForm.addEventListener("submit", function(event) {
+    editCustomerForm.addEventListener("submit", function (event) {
         event.preventDefault();
         const customerId = document.getElementById("editCustomerId").value;
         const name = document.getElementById("customerEditName").value.trim();
@@ -887,40 +899,44 @@ if (editCustomerForm) {
             },
             body: JSON.stringify({ name: name, email: email, phone: phone, role: role })
         })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            if (data.error) {
-                showToast(data.error, "error");
-                return;
-            }
-            const row = document.querySelector('tr[data-customer-id="' + customerId + '"]');
-            if (row) {
-                const c = data.customer;
-                row.cells[0].innerHTML = "<strong>" + c.name + "</strong>";
-                row.cells[1].textContent = c.email;
-                row.cells[2].textContent = c.phone || "—";
-                
-                const roleSelect = row.cells[6].querySelector("select");
-                if (roleSelect) {
-                    roleSelect.value = c.role;
-                    if (c.is_staff) {
-                        roleSelect.style.background = "#e0f2fe";
-                        roleSelect.style.color = "#0369a1";
-                        roleSelect.style.borderColor = "#7dd3fc";
-                    } else {
-                        roleSelect.style.background = "#f3f4f6";
-                        roleSelect.style.color = "#374151";
-                        roleSelect.style.borderColor = "#d1d5db";
-                    }
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                if (data.error) {
+                    showToast(data.error, "error");
+                    return;
                 }
-            }
-            closeCustomerModal();
-            showToast("Customer details updated successfully!");
-        })
-        .catch(function(err) {
-            console.error("Error:", err);
-            showToast("Failed to update customer.", "error");
-        });
+                const rows = document.querySelectorAll('tr[data-customer-id="' + customerId + '"]');
+                rows.forEach(function(row) {
+                    const c = data.customer;
+                    if (row.cells[0]) row.cells[0].innerHTML = "<strong>" + c.name + "</strong>";
+                    if (row.cells[1]) row.cells[1].textContent = c.email;
+                    if (row.cells[2]) row.cells[2].textContent = c.phone || "—";
+
+                    const roleSelect = row.cells[6] ? row.cells[6].querySelector("select") : null;
+                    if (roleSelect) {
+                        roleSelect.value = c.role;
+                        if (c.is_staff || c.role === "Admin") {
+                            roleSelect.style.background = "#e0f2fe";
+                            roleSelect.style.color = "#0369a1";
+                            roleSelect.style.borderColor = "#7dd3fc";
+                        } else if (c.role === "Delivery Boy") {
+                            roleSelect.style.background = "#fef3c7";
+                            roleSelect.style.color = "#92400e";
+                            roleSelect.style.borderColor = "#fcd34d";
+                        } else {
+                            roleSelect.style.background = "#f3f4f6";
+                            roleSelect.style.color = "#374151";
+                            roleSelect.style.borderColor = "#d1d5db";
+                        }
+                    }
+                });
+                closeCustomerModal();
+                showToast("Account details updated successfully!");
+            })
+            .catch(function (err) {
+                console.error("Error:", err);
+                showToast("Failed to update account.", "error");
+            });
     });
 }
 
@@ -940,29 +956,39 @@ function changeCustomerRole(selectElement) {
         },
         body: JSON.stringify({ role: newRole })
     })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
-        if (data.error) {
-            showToast(data.error, "error");
-            selectElement.value = newRole === "Admin" ? "Customer" : "Admin";
-            return;
-        }
-        const isStaff = data.customer.is_staff;
-        if (isStaff) {
-            selectElement.style.background = "#e0f2fe";
-            selectElement.style.color = "#0369a1";
-            selectElement.style.borderColor = "#7dd3fc";
-        } else {
-            selectElement.style.background = "#f3f4f6";
-            selectElement.style.color = "#374151";
-            selectElement.style.borderColor = "#d1d5db";
-        }
-        showToast("User role updated to " + data.customer.role + "!");
-    })
-    .catch(function(err) {
-        console.error("Error:", err);
-        showToast("Failed to change user role.", "error");
-    });
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+            if (data.error) {
+                showToast(data.error, "error");
+                return;
+            }
+            const isStaff = data.customer.is_staff;
+            const role = data.customer.role;
+            if (isStaff || role === "Admin") {
+                selectElement.style.background = "#e0f2fe";
+                selectElement.style.color = "#0369a1";
+                selectElement.style.borderColor = "#7dd3fc";
+            } else if (role === "Delivery Boy") {
+                selectElement.style.background = "#fef3c7";
+                selectElement.style.color = "#92400e";
+                selectElement.style.borderColor = "#fcd34d";
+            } else {
+                selectElement.style.background = "#f3f4f6";
+                selectElement.style.color = "#374151";
+                selectElement.style.borderColor = "#d1d5db";
+            }
+            showToast("User role updated to " + role + "!");
+
+            // Reload page so Delivery Boys list updates
+            setTimeout(function () {
+                window.location.href = window.location.pathname + "#customers";
+                window.location.reload();
+            }, 600);
+        })
+        .catch(function (err) {
+            console.error("Error:", err);
+            showToast("Failed to change user role.", "error");
+        });
 }
 
 
@@ -979,24 +1005,24 @@ function toggleCustomerStatus(button) {
             "Content-Type": "application/json"
         }
     })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
-        if (data.error) {
-            showToast(data.error, "error");
-            return;
-        }
-        const statusCell = row.cells[7];
-        const statusClass = data.is_active ? "active-status" : "inactive-status";
-        const statusText = data.is_active ? "Active" : "Inactive";
-        statusCell.innerHTML = '<span class="' + statusClass + '">' + statusText + '</span>';
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+            if (data.error) {
+                showToast(data.error, "error");
+                return;
+            }
+            const statusCell = row.cells[7];
+            const statusClass = data.is_active ? "active-status" : "inactive-status";
+            const statusText = data.is_active ? "Active" : "Inactive";
+            statusCell.innerHTML = '<span class="' + statusClass + '">' + statusText + '</span>';
 
-        button.innerHTML = data.is_active ? "⛔ Deactivate" : "✅ Activate";
-        showToast(data.message);
-    })
-    .catch(function(err) {
-        console.error("Error:", err);
-        showToast("Failed to change customer status.", "error");
-    });
+            button.innerHTML = data.is_active ? "⛔ Deactivate" : "✅ Activate";
+            showToast(data.message);
+        })
+        .catch(function (err) {
+            console.error("Error:", err);
+            showToast("Failed to change customer status.", "error");
+        });
 }
 
 
@@ -1017,19 +1043,19 @@ function deleteCustomer(button) {
             "Content-Type": "application/json"
         }
     })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
-        if (data.error) {
-            showToast(data.error, "error");
-            return;
-        }
-        row.remove();
-        showToast(data.message || "Customer deleted!");
-    })
-    .catch(function(err) {
-        console.error("Error:", err);
-        showToast("Failed to delete customer.", "error");
-    });
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+            if (data.error) {
+                showToast(data.error, "error");
+                return;
+            }
+            row.remove();
+            showToast(data.message || "Customer deleted!");
+        })
+        .catch(function (err) {
+            console.error("Error:", err);
+            showToast("Failed to delete customer.", "error");
+        });
 }
 
 
@@ -1037,20 +1063,20 @@ function deleteCustomer(button) {
 
 const customerModal = document.getElementById("customerModal");
 if (customerModal) {
-    customerModal.addEventListener("click", function(event) {
+    customerModal.addEventListener("click", function (event) {
         if (event.target === this) {
             closeCustomerModal();
         }
     });
 }
 
-document.getElementById("productModal").addEventListener("click", function(event) {
+document.getElementById("productModal").addEventListener("click", function (event) {
     if (event.target === this) {
         closeAddProduct();
     }
 });
 
-document.getElementById("categoryModal").addEventListener("click", function(event) {
+document.getElementById("categoryModal").addEventListener("click", function (event) {
     if (event.target === this) {
         closeAddCategory();
     }
@@ -1059,7 +1085,7 @@ document.getElementById("categoryModal").addEventListener("click", function(even
 
 /* ================= ESC KEY ================= */
 
-document.addEventListener("keydown", function(event) {
+document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
         closeAddProduct();
         closeAddCategory();
@@ -1083,7 +1109,7 @@ function toggleAdminProfileMenu(event) {
 }
 
 // Close dropdown on outside click
-document.addEventListener("click", function(e) {
+document.addEventListener("click", function (e) {
     const dropdown = document.getElementById("adminProfileDropdown");
     const profileBtn = document.getElementById("adminProfileBtn");
     if (dropdown && !dropdown.contains(e.target) && (!profileBtn || !profileBtn.contains(e.target))) {
@@ -1110,30 +1136,30 @@ function uploadAdminAvatar(input) {
         },
         body: formData
     })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success && data.avatar_url) {
-            const avatarCardImg = document.getElementById("adminProfileAvatarImg");
-            if (avatarCardImg) avatarCardImg.src = data.avatar_url;
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.avatar_url) {
+                const avatarCardImg = document.getElementById("adminProfileAvatarImg");
+                if (avatarCardImg) avatarCardImg.src = data.avatar_url;
 
-            const headerAvatar = document.getElementById("headerAdminAvatarImg");
-            if (headerAvatar) {
-                headerAvatar.src = data.avatar_url;
-            } else {
-                const avatarContainer = document.querySelector(".admin-profile .admin-avatar");
-                if (avatarContainer) {
-                    avatarContainer.innerHTML = '<img src="' + data.avatar_url + '" alt="Admin Avatar" id="headerAdminAvatarImg" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
+                const headerAvatar = document.getElementById("headerAdminAvatarImg");
+                if (headerAvatar) {
+                    headerAvatar.src = data.avatar_url;
+                } else {
+                    const avatarContainer = document.querySelector(".admin-profile .admin-avatar");
+                    if (avatarContainer) {
+                        avatarContainer.innerHTML = '<img src="' + data.avatar_url + '" alt="Admin Avatar" id="headerAdminAvatarImg" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
+                    }
                 }
+                showToast("Profile avatar updated successfully!");
+            } else {
+                showToast(data.error || "Failed to update avatar.", "error");
             }
-            showToast("Profile avatar updated successfully!");
-        } else {
-            showToast(data.error || "Failed to update avatar.", "error");
-        }
-    })
-    .catch(err => {
-        console.error("Avatar upload error:", err);
-        showToast("Error uploading avatar.", "error");
-    });
+        })
+        .catch(err => {
+            console.error("Avatar upload error:", err);
+            showToast("Error uploading avatar.", "error");
+        });
 }
 
 function saveAdminProfile(event) {
@@ -1165,38 +1191,38 @@ function saveAdminProfile(event) {
         },
         body: formData
     })
-    .then(res => res.json())
-    .then(data => {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = "✓ Save Profile Changes";
-        }
+        .then(res => res.json())
+        .then(data => {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = "✓ Save Profile Changes";
+            }
 
-        if (data.success) {
-            const fullName = (firstName + " " + lastName).trim() || "Administrator";
-            
-            const cardName = document.getElementById("adminCardFullName");
-            if (cardName) cardName.textContent = fullName;
+            if (data.success) {
+                const fullName = (firstName + " " + lastName).trim() || "Administrator";
 
-            const headerName = document.getElementById("headerAdminName");
-            if (headerName) headerName.textContent = fullName;
+                const cardName = document.getElementById("adminCardFullName");
+                if (cardName) cardName.textContent = fullName;
 
-            const dropdownName = document.getElementById("dropdownAdminName");
-            if (dropdownName) dropdownName.textContent = fullName;
+                const headerName = document.getElementById("headerAdminName");
+                if (headerName) headerName.textContent = fullName;
 
-            showToast("Admin profile updated successfully!");
-        } else {
-            showToast(data.error || "Failed to update profile.", "error");
-        }
-    })
-    .catch(err => {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = "✓ Save Profile Changes";
-        }
-        console.error("Profile update error:", err);
-        showToast("Something went wrong.", "error");
-    });
+                const dropdownName = document.getElementById("dropdownAdminName");
+                if (dropdownName) dropdownName.textContent = fullName;
+
+                showToast("Admin profile updated successfully!");
+            } else {
+                showToast(data.error || "Failed to update profile.", "error");
+            }
+        })
+        .catch(err => {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = "✓ Save Profile Changes";
+            }
+            console.error("Profile update error:", err);
+            showToast("Something went wrong.", "error");
+        });
 }
 
 function changeAdminPassword(event) {
@@ -1234,28 +1260,28 @@ function changeAdminPassword(event) {
         },
         body: formData
     })
-    .then(res => res.json())
-    .then(data => {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = "🔑 Update Password";
-        }
+        .then(res => res.json())
+        .then(data => {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = "🔑 Update Password";
+            }
 
-        if (data.success) {
-            document.getElementById("adminPasswordForm").reset();
-            showToast("Password changed successfully!");
-        } else {
-            showToast(data.error || "Failed to change password.", "error");
-        }
-    })
-    .catch(err => {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = "🔑 Update Password";
-        }
-        console.error("Password change error:", err);
-        showToast("Something went wrong.", "error");
-    });
+            if (data.success) {
+                document.getElementById("adminPasswordForm").reset();
+                showToast("Password changed successfully!");
+            } else {
+                showToast(data.error || "Failed to change password.", "error");
+            }
+        })
+        .catch(err => {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = "🔑 Update Password";
+            }
+            console.error("Password change error:", err);
+            showToast("Something went wrong.", "error");
+        });
 }
 
 /* =====================================================
@@ -1305,31 +1331,31 @@ function submitAddCoupon(event) {
         },
         body: formData
     })
-    .then(res => res.json())
-    .then(data => {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = "+ Create Coupon";
-        }
+        .then(res => res.json())
+        .then(data => {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = "+ Create Coupon";
+            }
 
-        if (data.error) {
-            showToast(data.error, "error");
-            return;
-        }
+            if (data.error) {
+                showToast(data.error, "error");
+                return;
+            }
 
-        if (data.success) {
-            closeAddCouponModal();
-            showToast(`🎟️ Coupon '${data.coupon.code}' created successfully!`);
+            if (data.success) {
+                closeAddCouponModal();
+                showToast(`🎟️ Coupon '${data.coupon.code}' created successfully!`);
 
-            const table = document.getElementById("couponTable");
-            const c = data.coupon;
-            const discountLabel = c.discount_type === "Percentage (%)" 
-                ? `${parseFloat(c.discount_value).toFixed(0)}% OFF` 
-                : `₹${c.discount_value} OFF`;
+                const table = document.getElementById("couponTable");
+                const c = data.coupon;
+                const discountLabel = c.discount_type === "Percentage (%)"
+                    ? `${parseFloat(c.discount_value).toFixed(0)}% OFF`
+                    : `₹${c.discount_value} OFF`;
 
-            const row = document.createElement("tr");
-            row.setAttribute("data-coupon-id", c.id);
-            row.innerHTML = `
+                const row = document.createElement("tr");
+                row.setAttribute("data-coupon-id", c.id);
+                row.innerHTML = `
                 <td>
                     <span class="badge-pill" style="background:#e8f5e9; color:#078046; font-size:14px; font-weight:700; padding:6px 12px; font-family:monospace; border:1px dashed #078046;">
                         🎟️ ${c.code}
@@ -1349,19 +1375,19 @@ function submitAddCoupon(event) {
                 </td>
             `;
 
-            const emptyRow = table.querySelector('td[colspan="7"]');
-            if (emptyRow) emptyRow.closest('tr').remove();
+                const emptyRow = table.querySelector('td[colspan="7"]');
+                if (emptyRow) emptyRow.closest('tr').remove();
 
-            table.prepend(row);
-        }
-    })
-    .catch(err => {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = "+ Create Coupon";
-        }
-        showToast("Error creating coupon.", "error");
-    });
+                table.prepend(row);
+            }
+        })
+        .catch(err => {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = "+ Create Coupon";
+            }
+            showToast("Error creating coupon.", "error");
+        });
 }
 
 function toggleCouponStatus(btn, couponId) {
@@ -1371,24 +1397,24 @@ function toggleCouponStatus(btn, couponId) {
             "X-CSRFToken": getCSRFToken()
         }
     })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            if (data.is_active) {
-                btn.className = "status-toggle-btn btn-available";
-                btn.textContent = "● Active";
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (data.is_active) {
+                    btn.className = "status-toggle-btn btn-available";
+                    btn.textContent = "● Active";
+                } else {
+                    btn.className = "status-toggle-btn btn-unavailable";
+                    btn.textContent = "● Inactive";
+                }
+                showToast("Coupon status updated!");
             } else {
-                btn.className = "status-toggle-btn btn-unavailable";
-                btn.textContent = "● Inactive";
+                showToast(data.error || "Failed to update coupon status.", "error");
             }
-            showToast("Coupon status updated!");
-        } else {
-            showToast(data.error || "Failed to update coupon status.", "error");
-        }
-    })
-    .catch(err => {
-        showToast("Error toggling coupon status.", "error");
-    });
+        })
+        .catch(err => {
+            showToast("Error toggling coupon status.", "error");
+        });
 }
 
 function deleteCoupon(btn, couponId) {
@@ -1400,19 +1426,19 @@ function deleteCoupon(btn, couponId) {
             "X-CSRFToken": getCSRFToken()
         }
     })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            const row = btn.closest("tr");
-            if (row) row.remove();
-            showToast("Coupon deleted successfully!");
-        } else {
-            showToast(data.error || "Failed to delete coupon.", "error");
-        }
-    })
-    .catch(err => {
-        showToast("Error deleting coupon.", "error");
-    });
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const row = btn.closest("tr");
+                if (row) row.remove();
+                showToast("Coupon deleted successfully!");
+            } else {
+                showToast(data.error || "Failed to delete coupon.", "error");
+            }
+        })
+        .catch(err => {
+            showToast("Error deleting coupon.", "error");
+        });
 }
 
 /* =====================================================
@@ -1452,24 +1478,305 @@ function saveStoreSettings(event) {
         },
         body: formData
     })
-    .then(res => res.json())
-    .then(data => {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = "<span>💾 Save Store Settings</span>";
-        }
+        .then(res => res.json())
+        .then(data => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = "<span>💾 Save Store Settings</span>";
+            }
 
-        if (data.success) {
-            showToast("✅ " + (data.message || "Settings saved successfully!"));
-        } else {
-            showToast(data.error || "Failed to update settings.", "error");
+            if (data.success) {
+                showToast("✅ " + (data.message || "Settings saved successfully!"));
+            } else {
+                showToast(data.error || "Failed to update settings.", "error");
+            }
+        })
+        .catch(err => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = "<span>💾 Save Store Settings</span>";
+            }
+            showToast("Network error saving settings.", "error");
+        });
+}
+
+
+/* ================= DELIVERY BOYS MANAGEMENT ================= */
+
+function openAddDeliveryBoy() {
+    const modal = document.getElementById("deliveryBoyModal");
+    if (!modal) return;
+
+    document.getElementById("editDeliveryBoyId").value = "";
+    document.getElementById("deliveryBoyModalTitle").textContent = "Add New Delivery Boy";
+    document.getElementById("deliveryBoyModalSubtitle").textContent = "Create a new delivery partner account";
+    document.getElementById("deliveryBoySaveBtn").textContent = "+ Add Delivery Boy";
+    document.getElementById("deliveryBoyPasswordHint").textContent = "(Required)";
+    document.getElementById("deliveryBoyPassword").required = true;
+    document.getElementById("addDeliveryBoyForm").reset();
+
+    modal.classList.add("show");
+    document.body.style.overflow = "hidden";
+}
+
+function closeDeliveryBoyModal() {
+    const modal = document.getElementById("deliveryBoyModal");
+    if (modal) {
+        modal.classList.remove("show");
+        document.body.style.overflow = "auto";
+    }
+}
+
+function editDeliveryBoy(button) {
+    const row = button.closest("tr");
+    const boyId = row.getAttribute("data-boy-id");
+    const username = row.getAttribute("data-username") || "";
+    const name = row.getAttribute("data-name") || "";
+    const email = row.getAttribute("data-email") || "";
+    const phone = row.getAttribute("data-phone") || "";
+    const address = row.getAttribute("data-address") || "";
+    const isActive = row.getAttribute("data-active") === "true";
+
+    document.getElementById("editDeliveryBoyId").value = boyId;
+    document.getElementById("deliveryBoyModalTitle").textContent = "Edit Delivery Boy";
+    document.getElementById("deliveryBoyModalSubtitle").textContent = "Update delivery partner details";
+    document.getElementById("deliveryBoySaveBtn").textContent = "✓ Save Changes";
+    document.getElementById("deliveryBoyPasswordHint").textContent = "(Leave blank to keep current)";
+    document.getElementById("deliveryBoyPassword").required = false;
+
+    document.getElementById("deliveryBoyName").value = name;
+    document.getElementById("deliveryBoyUsername").value = username;
+    document.getElementById("deliveryBoyEmail").value = email;
+    document.getElementById("deliveryBoyPhone").value = phone;
+    document.getElementById("deliveryBoyAddress").value = address;
+    document.getElementById("deliveryBoyPassword").value = "";
+    document.getElementById("deliveryBoyStatus").value = isActive ? "true" : "false";
+
+    const modal = document.getElementById("deliveryBoyModal");
+    if (modal) {
+        modal.classList.add("show");
+        document.body.style.overflow = "hidden";
+    }
+}
+
+const addDeliveryBoyForm = document.getElementById("addDeliveryBoyForm");
+if (addDeliveryBoyForm) {
+    addDeliveryBoyForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        const boyId = document.getElementById("editDeliveryBoyId").value;
+        const name = document.getElementById("deliveryBoyName").value.trim();
+        const username = document.getElementById("deliveryBoyUsername").value.trim();
+        const email = document.getElementById("deliveryBoyEmail").value.trim();
+        const phone = document.getElementById("deliveryBoyPhone").value.trim();
+        const address = document.getElementById("deliveryBoyAddress").value.trim();
+        const password = document.getElementById("deliveryBoyPassword").value.trim();
+        const isActive = document.getElementById("deliveryBoyStatus").value === "true";
+
+        const url = boyId ? "/admin/api/delivery-boys/" + boyId + "/edit/" : "/admin/api/delivery-boys/add/";
+
+        const payload = {
+            name: name,
+            username: username,
+            email: email,
+            phone: phone,
+            address: address,
+            password: password,
+            is_active: isActive
+        };
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCSRFToken(),
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    showToast(data.error, "error");
+                    return;
+                }
+
+                closeDeliveryBoyModal();
+                showToast(data.message || "Delivery boy saved successfully!");
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            })
+            .catch(err => {
+                console.error("Error saving delivery boy:", err);
+                showToast("Failed to save delivery boy.", "error");
+            });
+    });
+}
+
+function toggleDeliveryBoyStatus(button) {
+    const row = button.closest("tr");
+    const boyId = row.getAttribute("data-boy-id");
+
+    fetch("/admin/api/delivery-boys/" + boyId + "/toggle-status/", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCSRFToken(),
+            "Content-Type": "application/json"
         }
     })
-    .catch(err => {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = "<span>💾 Save Store Settings</span>";
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                showToast(data.error, "error");
+                return;
+            }
+
+            row.setAttribute("data-active", data.is_active ? "true" : "false");
+            const statusCell = row.cells[7];
+            if (statusCell) {
+                const statusClass = data.is_active ? "active-status" : "inactive-status";
+                const statusText = data.is_active ? "Active" : "Inactive";
+                statusCell.innerHTML = '<span class="' + statusClass + '">' + statusText + '</span>';
+            }
+
+            button.innerHTML = data.is_active ? "⛔ Deactivate" : "✅ Activate";
+            showToast(data.message);
+        })
+        .catch(err => {
+            console.error("Status toggle error:", err);
+            showToast("Failed to change status.", "error");
+        });
+}
+
+function deleteDeliveryBoy(button) {
+    const row = button.closest("tr");
+    const boyId = row.getAttribute("data-boy-id");
+    const name = row.getAttribute("data-name") || "this delivery boy";
+
+    if (!confirm("Are you sure you want to delete delivery boy '" + name + "'?")) return;
+
+    fetch("/admin/api/delivery-boys/" + boyId + "/delete/", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCSRFToken(),
+            "Content-Type": "application/json"
         }
-        showToast("Network error saving settings.", "error");
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                showToast(data.error, "error");
+                return;
+            }
+            row.remove();
+            showToast(data.message || "Delivery boy deleted!");
+        })
+        .catch(err => {
+            console.error("Delete error:", err);
+            showToast("Failed to delete delivery boy.", "error");
+        });
+}
+
+// Delivery Boy Search Filter Listener
+const deliveryBoySearch = document.getElementById("deliveryBoySearch");
+if (deliveryBoySearch) {
+    deliveryBoySearch.addEventListener("input", function () {
+        const query = this.value.toLowerCase().trim();
+        const rows = document.querySelectorAll("#deliveryBoyTable tr[data-boy-id]");
+
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(query) ? "" : "none";
+        });
+    });
+}
+
+// Close Delivery Boy Modal on Backdrop click & ESC key
+const deliveryBoyModalEl = document.getElementById("deliveryBoyModal");
+if (deliveryBoyModalEl) {
+    deliveryBoyModalEl.addEventListener("click", function (event) {
+        if (event.target === this) {
+            closeDeliveryBoyModal();
+        }
+    });
+}
+/* ================= DELIVERY BOY SALES MODAL ================= */
+
+function viewDeliveryBoySales(button) {
+    const row = button.closest("tr");
+    const boyId = row.getAttribute("data-boy-id");
+    const boyName = row.getAttribute("data-name") || "Delivery Partner";
+
+    document.getElementById("salesModalTitle").textContent = "📊 " + boyName + " — Sales Report";
+    document.getElementById("salesModalSubtitle").textContent = "Loading data...";
+    document.getElementById("salesTotalOrders").textContent = "—";
+    document.getElementById("salesGrandTotal").textContent = "—";
+    document.getElementById("salesTotalProducts").textContent = "—";
+    document.getElementById("salesProductTable").innerHTML =
+        '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:1rem;">Loading...</td></tr>';
+    document.getElementById("salesOrderTable").innerHTML =
+        '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:1rem;">Loading...</td></tr>';
+
+    const modal = document.getElementById("deliveryBoySalesModal");
+    modal.classList.add("show");
+    document.body.style.overflow = "hidden";
+
+    fetch("/admin/api/delivery-boys/" + boyId + "/sales/", {
+        headers: { "X-CSRFToken": getCSRFToken() }
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+        if (data.error) { showToast(data.error, "error"); closeDeliveryBoySalesModal(); return; }
+
+        const s = data.summary;
+        document.getElementById("salesModalSubtitle").textContent =
+            "@" + data.boy.username + (data.boy.phone ? " · " + data.boy.phone : "");
+        document.getElementById("salesTotalOrders").textContent = s.total_orders;
+        document.getElementById("salesGrandTotal").textContent = "₹" + s.grand_total.toLocaleString("en-IN");
+        document.getElementById("salesTotalProducts").textContent = s.products.length;
+
+        if (s.products.length === 0) {
+            document.getElementById("salesProductTable").innerHTML =
+                '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:1rem;">No products sold yet.</td></tr>';
+        } else {
+            document.getElementById("salesProductTable").innerHTML = s.products.map(function (p) {
+                return '<tr><td><strong>' + p.name + '</strong></td><td style="text-align:center;">' + p.qty +
+                    '</td><td style="text-align:right;font-weight:700;color:#078046;">₹' +
+                    p.revenue.toLocaleString("en-IN") + '</td></tr>';
+            }).join("");
+        }
+
+        if (data.orders.length === 0) {
+            document.getElementById("salesOrderTable").innerHTML =
+                '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:1rem;">No orders delivered yet.</td></tr>';
+        } else {
+            document.getElementById("salesOrderTable").innerHTML = data.orders.map(function (o) {
+                const itemsList = o.items.map(function (i) { return i.qty + "x " + i.name; }).join(", ");
+                return '<tr>' +
+                    '<td><code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;">#' + o.order_id + '</code></td>' +
+                    '<td>' + o.customer + '</td>' +
+                    '<td style="font-size:0.82rem;color:#6b7280;">' + itemsList + '</td>' +
+                    '<td style="text-align:right;font-weight:700;color:#078046;">₹' + o.total.toLocaleString("en-IN") + '</td>' +
+                    '<td><span style="font-size:0.8rem;background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:999px;">' + o.payment + '</span></td>' +
+                    '<td style="font-size:0.8rem;color:#6b7280;">' + o.delivered_at + '</td></tr>';
+            }).join("");
+        }
+    })
+    .catch(function (err) {
+        console.error("Sales fetch error:", err);
+        showToast("Failed to load sales data.", "error");
+        closeDeliveryBoySalesModal();
+    });
+}
+
+function closeDeliveryBoySalesModal() {
+    const modal = document.getElementById("deliveryBoySalesModal");
+    if (modal) { modal.classList.remove("show"); document.body.style.overflow = ""; }
+}
+
+const salesModalEl = document.getElementById("deliveryBoySalesModal");
+if (salesModalEl) {
+    salesModalEl.addEventListener("click", function (event) {
+        if (event.target === this) { closeDeliveryBoySalesModal(); }
     });
 }

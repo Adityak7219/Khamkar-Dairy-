@@ -8,11 +8,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
 
-    <title>Khamkar Dairy</title>
+    <title>{{ store_settings.store_name }}</title>
 
-    <link rel="stylesheet" href="{% static 'css/Home.css' %}">
-    <link rel="stylesheet" href="{% static 'css/bottom_nav.css' %}">
-    <link rel="stylesheet" href="{% static 'css/splash.css' %}">
+    <link rel="stylesheet" href="{% static 'css/Home.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'css/bottom_nav.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'css/splash.css' %}?v=4">
 </head>
 
 <body>
@@ -20,7 +20,8 @@
     <!-- ===== APP OPENING SPLASH SCREEN ===== -->
     <div class="splash-wrapper" id="homeSplashWrapper">
         <div class="splash-card">
-            <img src="{% static 'images/splash.jpg' %}" alt="Khamkar Dairy" class="splash-poster-img" id="homeSplashImg">
+            <img src="{% static 'images/splash.jpg' %}" alt="Khamkar Dairy" class="splash-poster-img"
+                id="homeSplashImg">
             <div class="in-image-loader-container">
                 <div class="in-image-track">
                     <div class="in-image-fill" id="homeSplashProgressBar">
@@ -40,22 +41,42 @@
         <!-- Header -->
         <header class="header">
             <div class="brand">
-                <div class="logo">🐄</div>
+                <div class="logo">
+                    <img src="{% static 'images/logo.png' %}" alt="Khamkar Dairy Logo">
+                </div>
                 <div>
-                    <h1>Khamkar Dairy</h1>
+                    <h1>{{ store_settings.store_name }}</h1>
                     <p>Pure. Fresh. Healthy.</p>
                 </div>
             </div>
 
             <div class="header-icons">
-                {% if request.user.is_staff %}
-                <a href="{% url 'admin_panel' %}"
-                    style="text-decoration: none; display: flex; align-items: center; gap: 6px; background: #087443; color: white; padding: 7px 14px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">
-                    <span>🛡️</span>
-                    <span>Admin</span>
-                </a>
+                {% if request.user.is_authenticated %}
+                    {% if request.user.is_staff or request.user.profile.role == 'admin' %}
+                    <a href="{% url 'admin_panel' %}"
+                        style="text-decoration: none; display: flex; align-items: center; gap: 6px; background: #087443; color: white; padding: 7px 14px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">
+                        <span>🛡️</span>
+                        <span>Admin</span>
+                    </a>
+                    {% endif %}
+
+                    {% if request.user.is_staff or request.user.profile.role == 'admin' or request.user.profile.role == 'delivery_boy' %}
+                    <a href="{% url 'delivery_dashboard' %}"
+                        style="text-decoration: none; display: flex; align-items: center; gap: 6px; background: #0284c7; color: white; padding: 7px 14px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">
+                        <span>🛵</span>
+                        <span>Delivery</span>
+                    </a>
+                    {% endif %}
                 {% endif %}
-                <a href="{% url 'profile' %}" class="profile" title="My Profile" style="text-decoration: none; cursor: pointer;">
+
+                <a href="{% url 'wallet' %}" title="Dairy Wallet & Khata"
+                    style="text-decoration: none; display: flex; align-items: center; gap: 6px; background: #e8f5ee; color: #075334; border: 1.5px solid #075334; padding: 6px 13px; border-radius: 20px; font-weight: 800; font-size: 14px; box-shadow: 0 2px 6px rgba(7,83,52,0.1);">
+                    <span>👛</span>
+                    <span>₹{{ user_wallet.balance|default:"0.00" }}</span>
+                </a>
+
+                <a href="{% url 'profile' %}" class="profile" title="My Profile"
+                    style="text-decoration: none; cursor: pointer;">
                     {% if request.user.is_authenticated and user_profile %}
                     <img src="{{ user_profile.avatar_url }}" alt="Profile Photo" class="profile-header-avatar">
                     {% else %}
@@ -65,10 +86,30 @@
             </div>
         </header>
 
+
+        <!-- ===== ANNOUNCEMENT BANNER (Admin Controlled) ===== -->
+        {% if store_settings.show_announcement and store_settings.announcement_text %}
+        <div class="announcement-banner" id="announcementBanner">
+            <span class="announcement-icon">📢</span>
+            <span class="announcement-text">{{ store_settings.announcement_text }}</span>
+            <button class="announcement-close"
+                onclick="document.getElementById('announcementBanner').style.display='none'"
+                aria-label="Close">✕</button>
+        </div>
+        {% endif %}
+
+        <!-- Store Closed Notice -->
+        {% if not store_settings.store_open %}
+        <div class="store-closed-banner">
+            <span>🔒</span>
+            <span>Store is currently closed. We will be back soon!</span>
+        </div>
+        {% endif %}
+
         <!-- Hero Carousel Banner -->
         <section class="hero-carousel-section" id="heroCarousel">
             <div class="hero-slides-wrapper" id="heroSlidesWrapper">
-                
+
                 <!-- Slide 1 -->
                 <div class="hero-slide active" style="--bg-image: url('{% static 'images/banner_1.jpg' %}');">
                     <div class="hero-overlay"></div>
@@ -127,15 +168,18 @@
             </div>
 
             <!-- Prev / Next Arrows -->
-            <button type="button" class="carousel-nav-btn prev-btn" id="carouselPrevBtn" aria-label="Previous Slide">‹</button>
-            <button type="button" class="carousel-nav-btn next-btn" id="carouselNextBtn" aria-label="Next Slide">›</button>
+            <button type="button" class="carousel-nav-btn prev-btn" id="carouselPrevBtn"
+                aria-label="Previous Slide">‹</button>
+            <button type="button" class="carousel-nav-btn next-btn" id="carouselNextBtn"
+                aria-label="Next Slide">›</button>
         </section>
 
         <!-- Categories -->
         <section class="categories">
 
             {% for cat in categories %}
-            <a href="{% url 'shop_product' %}?category={{ cat.name|urlencode }}" class="category" style="text-decoration: none; color: inherit;">
+            <a href="{% url 'shop_product' %}?category={{ cat.name|urlencode }}" class="category"
+                style="text-decoration: none; color: inherit;">
                 <div class="category-img">
                     {% if cat.image %}
                     <img src="{{ cat.image.url }}" alt="{{ cat.name }}">
@@ -183,7 +227,9 @@
                         {% if product.is_fresh %}
                         <span class="badge">Fresh</span>
                         {% endif %}
-                        <button type="button" class="fav-heart-btn {% if product.id in user_favorite_ids %}active{% endif %}" onclick="toggleHomeFavorite({{ product.id }}, this, event)" title="Add to Favorites">
+                        <button type="button"
+                            class="fav-heart-btn {% if product.id in user_favorite_ids %}active{% endif %}"
+                            onclick="toggleHomeFavorite({{ product.id }}, this, event)" title="Add to Favorites">
                             {% if product.id in user_favorite_ids %}❤️{% else %}♡{% endif %}
                         </button>
                     </div>
@@ -206,6 +252,131 @@
 
             </div>
         </section>
+
+
+        <!-- ===== TRUST BADGES STRIP ===== -->
+        <section class="trust-badges">
+            <div class="trust-item">
+                <span class="trust-icon">🚚</span>
+                <div class="trust-text">
+                    <strong>Free Delivery</strong>
+                    <span>on orders above ₹{{ store_settings.free_delivery_threshold|default:"300" }}</span>
+                </div>
+            </div>
+            <div class="trust-item">
+                <span class="trust-icon">🌿</span>
+                <div class="trust-text">
+                    <strong>100% Fresh Products</strong>
+                    <span>Direct from trusted farms</span>
+                </div>
+            </div>
+            <div class="trust-item">
+                <span class="trust-icon">🛡️</span>
+                <div class="trust-text">
+                    <strong>Safe &amp; Hygienic</strong>
+                    <span>Quality assured</span>
+                </div>
+            </div>
+            <div class="trust-item">
+                <span class="trust-icon">🎧</span>
+                <div class="trust-text">
+                    <strong>Customer Support</strong>
+                    <span>We're here to help</span>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ===== PROMO BANNERS ===== -->
+        <section class="promo-banners">
+            <a href="{% url 'shop_product' %}?category=Milk" class="promo-banner promo-green">
+                <div class="promo-banner-bg" style="background-image: url('{% static 'images/banner_1.jpg' %}');"></div>
+                <div class="promo-overlay"></div>
+                <div class="promo-content">
+                    <p class="promo-script">Fresh</p>
+                    <h3><strong>Fresh Milk</strong></h3>
+                    <p>Direct from Our Farm</p>
+                    <span class="promo-btn">Know More →</span>
+                </div>
+            </a>
+            <a href="{% url 'shop_product' %}?category=Shrikhand" class="promo-banner promo-cream">
+                <div class="promo-banner-bg" style="background-image: url('{% static 'images/banner_2.jpg' %}');"></div>
+                <div class="promo-overlay promo-overlay-light"></div>
+                <div class="promo-content promo-content-dark">
+                    <p class="promo-script promo-script-dark">Traditional</p>
+                    <h3><strong>Shrikhand</strong></h3>
+                    <p>Taste the Real Tradition</p>
+                    <span class="promo-btn promo-btn-dark">Shop Now →</span>
+                </div>
+            </a>
+        </section>
+
+
+        <!-- ===== FOOTER ===== -->
+        <footer class="home-footer">
+            <div class="footer-top">
+
+                <!-- Brand -->
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <img src="{% static 'images/logo.png' %}" alt="{{ store_settings.store_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <span class="footer-logo-fallback" style="display:none; align-items:center; justify-content:center; width:52px; height:52px; background:#e8f5ee; border-radius:50%; font-size:26px;">🐄</span>
+                    </div>
+                    <div>
+                        <strong>{{ store_settings.store_name|default:"Khamkar Dairy & Product" }}</strong>
+                        <p>Pure . Fresh . Healthy.</p>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{% url 'home' %}">Home</a></li>
+                        <li><a href="{% url 'shop_product' %}">Shop</a></li>
+                        <li><a href="{% url 'contact' %}">About Us</a></li>
+                        <li><a href="{% url 'contact' %}">Contact</a></li>
+                    </ul>
+                </div>
+
+                <!-- Help -->
+                <div class="footer-col">
+                    <h4>Help</h4>
+                    <ul>
+                        <li><a href="{% url 'contact' %}">FAQs</a></li>
+                        <li><a href="{% url 'contact' %}">Shipping Policy</a></li>
+                        <li><a href="{% url 'contact' %}">Return Policy</a></li>
+                        <li><a href="{% url 'contact' %}">Terms &amp; Conditions</a></li>
+                    </ul>
+                </div>
+
+                <!-- Follow Us -->
+                <div class="footer-col">
+                    <h4>Follow Us</h4>
+                    <div class="footer-socials">
+                        <a href="#" class="social-icon social-fb" aria-label="Facebook">f</a>
+                        <a href="#" class="social-icon social-ig" aria-label="Instagram">📷</a>
+                        <a href="#" class="social-icon social-yt" aria-label="YouTube">▶</a>
+                        <a href="#" class="social-icon social-wa" aria-label="WhatsApp">📱</a>
+                    </div>
+                </div>
+
+                <!-- Newsletter -->
+                <div class="footer-col footer-newsletter">
+                    <h4>Subscribe to our Newsletter</h4>
+                    <form class="newsletter-form" onsubmit="return false;">
+                        <input type="email" placeholder="Enter your email" aria-label="Email for newsletter">
+                        <button type="submit">Subscribe</button>
+                    </form>
+                </div>
+
+            </div>
+
+            <div class="footer-bottom">
+                <span>© 2025 {{ store_settings.store_name|default:"Khamkar Dairy & Product" }}. All Rights Reserved.</span>
+                <span>Made with ❤️ for Healthy India</span>
+            </div>
+        </footer>
 
     </div>
 
@@ -245,17 +416,18 @@
             <span>Favorites</span>
         </a>
 
+
+
         <!-- CONTACT -->
         <a href="{% url 'contact' %}" class="nav-item">
             <span class="nav-icon">📞</span>
             <span>Contact</span>
         </a>
-
     </nav>
 
     <script>
         // Khamkar Dairy App Opening Splash Screen Controller
-        (function() {
+        (function () {
             const splashEl = document.getElementById('homeSplashWrapper');
             if (!splashEl) return;
 

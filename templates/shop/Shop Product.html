@@ -41,6 +41,23 @@
         </header>
 
 
+
+        <!-- Store Closed Notice -->
+        {% if not store_settings.store_open %}
+        <div class="store-closed-banner" style="background:#fff3cd; border-left: 4px solid #f59e0b; color:#92400e; padding: 12px 16px; margin: 8px 12px; border-radius: 10px; display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600;">
+            <span>🔒</span>
+            <span>Store is currently closed. Orders are not being accepted right now.</span>
+        </div>
+        {% endif %}
+
+        <!-- Announcement Banner -->
+        {% if store_settings.show_announcement and store_settings.announcement_text %}
+        <div style="background: linear-gradient(135deg,#075334,#0a6b44); color:white; padding:10px 16px; margin:8px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; font-size:13px;">
+            <span>📢</span>
+            <span>{{ store_settings.announcement_text }}</span>
+        </div>
+        {% endif %}
+
         <!-- ================= SEARCH ================= -->
         <section class="search-section">
 
@@ -278,6 +295,31 @@
                     <button type="button" class="filter-apply-btn" id="filterApplyBtn">
                         Apply Filters <span id="filterCountBadge" class="filter-count-badge"></span>
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PRODUCT INFO MODAL ================= -->
+        <div class="product-info-modal-backdrop" id="productInfoModalBackdrop" style="display: none;" onclick="closeProductModal()">
+            <div class="product-info-modal" id="productInfoModal" onclick="event.stopPropagation()">
+                <button type="button" class="close-modal-btn" onclick="closeProductModal()">✕</button>
+                <div class="product-modal-image-container">
+                    <img src="" id="modalProductImage" style="display: none;" class="modal-product-photo">
+                    <span class="food" id="modalProductEmoji" style="display: none;"></span>
+                </div>
+                <div class="product-modal-details">
+                    <div class="product-modal-category" id="modalProductCategory"></div>
+                    <h2 class="product-modal-title" id="modalProductTitle"></h2>
+                    <div class="product-modal-size" id="modalProductSize"></div>
+                    <div class="product-modal-price" id="modalProductPrice"></div>
+                    
+                    <div class="product-modal-description">
+                        This is a high-quality fresh dairy product delivered straight to you. Enjoy the best taste and health benefits!
+                    </div>
+
+                    <div class="product-modal-actions" id="modalProductActions">
+                        <!-- Add to cart will be injected here -->
+                    </div>
                 </div>
             </div>
         </div>

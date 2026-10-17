@@ -6,10 +6,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Contact Us - Khamkar Dairy</title>
+    <title>Contact Us - {{ store_settings.store_name }}</title>
 
     <link rel="stylesheet" href="{% static 'css/Contact.css' %}">
     <link rel="stylesheet" href="{% static 'css/bottom_nav.css' %}">
+    <style>
+        .social-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffffff !important;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        .social-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.95;
+        }
+        .social-btn.facebook { background-color: #1877f2; }
+        .social-btn.instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .social-btn.whatsapp { background-color: #25d366; }
+        .maps-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: #078046;
+            color: #fff;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+    </style>
 </head>
 
 <body>
@@ -27,7 +67,7 @@
             </div>
 
             <div class="brand-text">
-                <h1>Khamkar Dairy</h1>
+                <h1>{{ store_settings.store_name }}</h1>
                 <p>Fresh, Pure & Healthy</p>
             </div>
 
@@ -36,11 +76,10 @@
 
         <div class="header-actions">
 
-            <div class="header-icon"
-                 onclick="openCart()">
+            <a href="{% url 'cart' %}" class="header-icon" style="text-decoration:none;">
                 🛒
                 <span>{{ cart_count }}</span>
-            </div>
+            </a>
 
         </div>
 
@@ -106,8 +145,7 @@
             <p class="intro">
                 Have questions or feedback?
                 We'd love to hear from you.
-                Reach out to us through any
-                of the following.
+                Reach out to us through any of the following.
             </p>
 
 
@@ -116,12 +154,12 @@
             <div class="contact-detail">
 
                 <div class="detail-icon">
-                    ☎
+                    📞
                 </div>
 
                 <div>
                     <h3>Phone</h3>
-                    <p><a href="tel:+917219621129" style="text-decoration:none; color:inherit;">+91 72196 21129</a></p>
+                    <p><a href="tel:{{ store_settings.contact_phone }}" style="text-decoration:none; color:inherit;">{{ store_settings.contact_phone }}</a></p>
                 </div>
 
             </div>
@@ -132,12 +170,12 @@
             <div class="contact-detail">
 
                 <div class="detail-icon">
-                    ✉
+                    ✉️
                 </div>
 
                 <div>
                     <h3>Email</h3>
-                    <p><a href="mailto:khamkardairy72@gmail.com" style="text-decoration:none; color:inherit;">khamkardairy72@gmail.com</a></p>
+                    <p><a href="mailto:{{ store_settings.contact_email }}" style="text-decoration:none; color:inherit;">{{ store_settings.contact_email }}</a></p>
                 </div>
 
             </div>
@@ -153,14 +191,7 @@
 
                 <div>
                     <h3>Address</h3>
-
-                    <p>
-                        Khamkar Dairy,<br>
-                        At/Post. Takali Dhokeshwar,<br>
-                        Tal. Parner, Dist. Ahilyanager,<br>
-                        Maharashtra - 415110
-                    </p>
-
+                    <p>{{ store_settings.store_address }}</p>
                 </div>
 
             </div>
@@ -171,44 +202,75 @@
             <div class="contact-detail">
 
                 <div class="detail-icon">
-                    🕐
+                    ⏰
                 </div>
 
                 <div>
 
                     <h3>Working Hours</h3>
 
-                    <p>
-                        Mon - Sun:<br>
-                        7:00 AM - 10:00 PM
-                    </p>
+                    <p>{{ store_settings.operating_hours }}</p>
 
                 </div>
 
             </div>
 
+            {% if store_settings.whatsapp_number %}
+            <!-- WHATSAPP -->
+            <div class="contact-detail">
+                <div class="detail-icon" style="background:#25d366; color:#fff;">
+                    💬
+                </div>
+                <div>
+                    <h3>WhatsApp Support</h3>
+                    <p><a href="https://wa.me/{{ store_settings.whatsapp_number|cut:' '|cut:'+' }}?text=Hi%20{{ store_settings.store_name|urlencode }}" target="_blank" style="color:#078046; font-weight:600; text-decoration:none;">Chat on WhatsApp →</a></p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if store_settings.facebook_url or store_settings.instagram_url %}
+            <div class="social-buttons">
+                {% if store_settings.facebook_url %}
+                <a href="{{ store_settings.facebook_url }}" target="_blank" class="social-btn facebook">
+                    <span>📘</span> Facebook Page
+                </a>
+                {% endif %}
+                {% if store_settings.instagram_url %}
+                <a href="{{ store_settings.instagram_url }}" target="_blank" class="social-btn instagram">
+                    <span>📷</span> Instagram
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
 
             <!-- FIND US -->
 
-            <div class="find-us">
+            <div class="find-us" style="margin-top: 30px;">
 
                 <h2>Find Us</h2>
 
                 <div class="heading-line"></div>
 
-                <div class="map-box">
+                {% if store_settings.google_maps_link %}
+                <div style="text-align:center; margin-bottom:15px;">
+                    <a href="{{ store_settings.google_maps_link }}" target="_blank" class="maps-btn">
+                        <span>🗺️</span> Open Directions on Google Maps
+                    </a>
+                </div>
+                {% endif %}
 
-    <iframe
-        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3767.9995138877966!2d74.40785567572546!3d19.19522358203408!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bdcc3006b868543%3A0x25d28c357214df4e!2sKhamkar%20dairy%20farm!5e0!3m2!1sen!2sin!4v1787841070786!5m2!1sen!2sin" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
-        width="100%"
-        height="100%"
-        style="border:0;"
-        allowfullscreen=""
-        loading="lazy"
-        referrerpolicy="no-referrer-when-downgrade">
-    </iframe>
-
-</div>
+                <div class="map-box" style="height:320px; border-radius:12px; overflow:hidden;">
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3767.9995138877966!2d74.40785567572546!3d19.19522358203408!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bdcc3006b868543%3A0x25d28c357214df4e!2sKhamkar%20dairy%20farm!5e0!3m2!1sen!2sin!4v1787841070786!5m2!1sen!2sin"
+                        width="100%"
+                        height="100%"
+                        style="border:0;"
+                        allowfullscreen=""
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
 
             </div>
 
@@ -231,10 +293,18 @@
                     to you as soon as possible.
                 </p>
 
+                {% if messages %}
+                <div style="margin-bottom:16px;">
+                    {% for message in messages %}
+                    <div style="padding:10px 14px; border-radius:8px; font-size:14px; margin-bottom:8px; {% if message.tags == 'error' %}background:#fef2f2; color:#dc2626; border:1px solid #fecaca;{% else %}background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0;{% endif %}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
 
-                <form id="contactForm" method="POST">
+                <form id="contactForm" method="POST" action="{% url 'contact' %}" data-whatsapp="{{ store_settings.whatsapp_number|cut:' '|cut:'+' }}" data-storename="{{ store_settings.store_name }}">
                     {% csrf_token %}
-
 
                     <!-- NAME + EMAIL -->
 
@@ -248,7 +318,7 @@
 
                             <div class="input-box">
 
-                                <span>♙</span>
+                                <span>👤</span>
 
                                 <input
                                     type="text"
@@ -272,7 +342,7 @@
 
                             <div class="input-box">
 
-                                <span>✉</span>
+                                <span>✉️</span>
 
                                 <input
                                     type="email"
@@ -327,7 +397,7 @@
 
                         <div class="textarea-box">
 
-                            <span>✎</span>
+                            <span>✍️</span>
 
                             <textarea
                                 id="message"
@@ -349,7 +419,7 @@
                         class="send-btn"
                     >
 
-                        <span>➤</span>
+                        <span>➔</span>
 
                         Send Message
 
@@ -369,7 +439,7 @@
                 <div class="trust-card">
 
                     <div class="trust-icon">
-                        🛡
+                        🛡️
                     </div>
 
                     <h3>100% Secure</h3>

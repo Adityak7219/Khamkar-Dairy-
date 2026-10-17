@@ -69,6 +69,12 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+    // Auto-select initial active payment option on page load
+    const activeSelected = document.querySelector(".payment-option.selected") || document.querySelector(".payment-option");
+    if (activeSelected) {
+        activeSelected.click();
+    }
+
     // --- Card Input Formatting & Badges ---
     const cardNumberInput = document.getElementById("cardNumber");
     const cardTypeBadge = document.getElementById("cardTypeBadge");
@@ -221,6 +227,62 @@ function copyUPI() {
         });
 }
 
+function selectDeliveryDay(day) {
+    const hidden = document.getElementById('selectedDeliveryDay');
+    if (hidden) hidden.value = day;
+
+    const todayBtn = document.getElementById('dayBtnToday');
+    const tomorrowBtn = document.getElementById('dayBtnTomorrow');
+    if (day === 'today') {
+        if (todayBtn) {
+            todayBtn.style.background = '#e8f5ee';
+            todayBtn.style.color = '#075334';
+            todayBtn.style.borderColor = '#075334';
+        }
+        if (tomorrowBtn) {
+            tomorrowBtn.style.background = '#f8fafc';
+            tomorrowBtn.style.color = '#475569';
+            tomorrowBtn.style.borderColor = '#cbd5e1';
+        }
+    } else {
+        if (tomorrowBtn) {
+            tomorrowBtn.style.background = '#e8f5ee';
+            tomorrowBtn.style.color = '#075334';
+            tomorrowBtn.style.borderColor = '#075334';
+        }
+        if (todayBtn) {
+            todayBtn.style.background = '#f8fafc';
+            todayBtn.style.color = '#475569';
+            todayBtn.style.borderColor = '#cbd5e1';
+        }
+    }
+}
+
+function selectDeliverySlot(slot) {
+    const hidden = document.getElementById('selectedDeliverySlot');
+    if (hidden) hidden.value = slot;
+
+    const slots = ['morning', 'evening', 'anytime'];
+    slots.forEach(s => {
+        const id = s === 'morning' ? 'slotMorning' : (s === 'evening' ? 'slotEvening' : 'slotAnytime');
+        const el = document.getElementById(id);
+        const radio = el ? el.querySelector('input[type="radio"]') : null;
+        if (s === slot) {
+            if (el) {
+                el.style.background = '#f0fdf4';
+                el.style.borderColor = '#075334';
+            }
+            if (radio) radio.checked = true;
+        } else {
+            if (el) {
+                el.style.background = '#ffffff';
+                el.style.borderColor = '#cbd5e1';
+            }
+            if (radio) radio.checked = false;
+        }
+    });
+}
+
 function makePayment() {
     clearPaymentError();
 
@@ -231,7 +293,32 @@ function makePayment() {
     }
 
     const method = selected.value;
-    const payload = { method: method };
+
+    const dayVal = document.getElementById('selectedDeliveryDay') ? document.getElementById('selectedDeliveryDay').value : 'today';
+    const slotVal = document.getElementById('selectedDeliverySlot') ? document.getElementById('selectedDeliverySlot').value : 'morning';
+
+    const targetDate = new Date();
+    if (dayVal === 'tomorrow') {
+        targetDate.setDate(targetDate.getDate() + 1);
+    }
+    const yyyy = targetDate.getFullYear();
+    const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(targetDate.getDate()).padStart(2, '0');
+    const deliveryDateStr = `${yyyy}-${mm}-${dd}`;
+
+    const latVal = document.getElementById('userLatitude') ? document.getElementById('userLatitude').value : '';
+    const lngVal = document.getElementById('userLongitude') ? document.getElementById('userLongitude').value : '';
+    const addressInput = document.getElementById('deliveryAddressInput');
+    const addressVal = addressInput ? addressInput.value.trim() : '';
+
+    const payload = {
+        method: method,
+        delivery_date: deliveryDateStr,
+        delivery_slot: slotVal,
+        latitude: latVal,
+        longitude: lngVal,
+        address: addressVal
+    };
 
     // --- Method-specific Strict Validations ---
     if (method === "card") {
@@ -311,24 +398,8 @@ function makePayment() {
         payload.bank_user_id = userId;
 
     } else if (method === "wallet") {
-        const walletSelect = document.getElementById("walletSelect");
-        const walletMobileInput = document.getElementById("walletMobile");
-
-        const wallet = walletSelect ? walletSelect.value.trim() : "";
-        const mobile = walletMobileInput ? walletMobileInput.value.trim() : "";
-
-        if (!wallet) {
-            showPaymentError("Please select a digital wallet.", walletSelect);
-            return;
-        }
-
-        if (!mobile || mobile.length !== 10 || !/^\d{10}$/.test(mobile)) {
-            showPaymentError("Please enter a valid 10-digit mobile number registered with the wallet.", walletMobileInput);
-            return;
-        }
-
-        payload.wallet_name = wallet;
-        payload.wallet_mobile = mobile;
+        // Khamkar Dairy Wallet 1-click checkout
+        payload.wallet_name = "Khamkar Dairy Wallet";
 
     } else if (method === "upi") {
         const userUpiInput = document.getElementById("userUpiId");
@@ -380,4 +451,82 @@ function makePayment() {
             orderButton.innerHTML = originalText;
         }
     });
+}
+
+function getLiveGpsLocation() {
+    const statusText = document.getElementById('gpsStatusText');
+    const btn = document.getElementById('btnDetectGps');
+    if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+    }
+    if (btn) btn.innerHTML = '<span>⏳</span> Pinning Location...';
+    if (statusText) {
+        statusText.style.display = 'block';
+        statusText.style.color = '#166534';
+        statusText.style.background = '#dcfce7';
+        statusText.innerText = '📡 Connecting to GPS satellites & network location...';
+    }
+
+    const onLocationSuccess = (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const latInput = document.getElementById('userLatitude');
+        const lngInput = document.getElementById('userLongitude');
+        if (latInput) latInput.value = lat;
+        if (lngInput) lngInput.value = lng;
+
+        if (btn) {
+            btn.style.background = '#059669';
+            btn.innerHTML = '<span>✓</span> Location Pinned';
+        }
+        if (statusText) {
+            statusText.innerText = `✓ Exact GPS Location Pinned (${lat.toFixed(5)}, ${lng.toFixed(5)}) - Delivery boy will get turn-by-turn navigation straight to your doorstep!`;
+        }
+
+        // Reverse Geocode via OpenStreetMap to suggest/verify address
+        try {
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.display_name) {
+                        const addrBox = document.getElementById('deliveryAddressInput');
+                        if (addrBox && (!addrBox.value || addrBox.value.trim() === 'Standard Address' || addrBox.value.trim().length < 5)) {
+                            addrBox.value = data.display_name;
+                        }
+                        if (statusText) {
+                            const shortLoc = data.address?.suburb || data.address?.neighbourhood || data.address?.road || data.address?.city || 'Sangli';
+                            statusText.innerText = `✓ GPS Pinned at: ${shortLoc} (${lat.toFixed(4)}, ${lng.toFixed(4)}) - Delivery partner gets exact navigation!`;
+                        }
+                    }
+                })
+                .catch(() => {});
+        } catch (e) {}
+    };
+
+    const tryStandardAccuracy = () => {
+        navigator.geolocation.getCurrentPosition(
+            onLocationSuccess,
+            (error) => {
+                console.warn('Standard geolocation failed:', error);
+                if (btn) btn.innerHTML = '<span>📍</span> Pin My Live Location';
+                if (statusText) {
+                    statusText.style.color = '#b91c1c';
+                    statusText.style.background = '#fee2e2';
+                    statusText.innerText = '⚠️ Could not detect GPS. Please ensure Location Permissions are allowed in browser settings, or enter your complete address above.';
+                }
+            },
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+        );
+    };
+
+    // Try High Accuracy first, fallback to standard accuracy
+    navigator.geolocation.getCurrentPosition(
+        onLocationSuccess,
+        (error) => {
+            console.warn('High accuracy GPS timed out or failed, trying standard accuracy...', error);
+            tryStandardAccuracy();
+        },
+        { enableHighAccuracy: true, timeout: 7000 }
+    );
 }

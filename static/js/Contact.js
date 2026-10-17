@@ -35,13 +35,16 @@ document.addEventListener("DOMContentLoaded", function () {
          * 919876543210
          */
 
-        const whatsappNumber = "917219621129";
+        let whatsappNumber = form.dataset.whatsapp ? form.dataset.whatsapp.replace(/[^0-9]/g, '') : '917219621129';
+        const storeName = form.dataset.storename || 'Khamkar Dairy';
 
+        if (!whatsappNumber.startsWith('91') && whatsappNumber.length === 10) {
+            whatsappNumber = '91' + whatsappNumber;
+        }
 
         // WhatsApp message
-
         const whatsappMessage =
-            "🌿 *Khamkar Dairy - Contact Message*%0A%0A" +
+            "🌿 *" + storeName + " - Contact Message*%0A%0A" +
 
             "👤 *Name:* " + encodeURIComponent(name) + "%0A" +
 

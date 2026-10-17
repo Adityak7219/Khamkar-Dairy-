@@ -203,12 +203,82 @@ function savePersonalInfo(event) {
     });
 }
 
+function getProfileGpsLocation() {
+    const btn = document.getElementById('btnProfileGps');
+    const status = document.getElementById('profileGpsStatus');
+    const latInput = document.getElementById('profileLatitude');
+    const lngInput = document.getElementById('profileLongitude');
+
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+    }
+
+    if (btn) btn.innerText = "⏳ Pinning...";
+    if (status) {
+        status.style.display = "block";
+        status.style.color = "#166534";
+        status.style.background = "#dcfce7";
+        status.innerText = "📡 Getting GPS coordinates...";
+    }
+
+    const onSuccess = (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        if (latInput) latInput.value = lat;
+        if (lngInput) lngInput.value = lng;
+
+        if (btn) btn.innerText = "✓ Location Pinned";
+        if (status) {
+            status.innerText = `✓ GPS Location Set (${lat.toFixed(4)}, ${lng.toFixed(4)}). Click 'Save Address' below to save!`;
+        }
+        
+        // Reverse geocode to suggest street address if empty
+        try {
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                .then(r => r.json())
+                .then(d => {
+                    const addrInput = document.getElementById('deliveryAddressInput');
+                    if (addrInput && (!addrInput.value || addrInput.value.trim().length < 5)) {
+                        addrInput.value = d.display_name;
+                    }
+                })
+                .catch(() => {});
+        } catch(e) {}
+    };
+
+    navigator.geolocation.getCurrentPosition(
+        onSuccess,
+        () => {
+            navigator.geolocation.getCurrentPosition(
+                onSuccess,
+                () => {
+                    if (btn) btn.innerText = "📍 Pin GPS Location";
+                    if (status) {
+                        status.style.color = "#b91c1c";
+                        status.style.background = "#fee2e2";
+                        status.innerText = "⚠️ Could not get GPS location. Please check browser permissions.";
+                    }
+                },
+                { enableHighAccuracy: false, timeout: 15000 }
+            );
+        },
+        { enableHighAccuracy: true, timeout: 7000 }
+    );
+}
+
 function saveAddress(event) {
     event.preventDefault();
     const address = document.getElementById('deliveryAddressInput').value.trim();
+    const lat = document.getElementById('profileLatitude') ? document.getElementById('profileLatitude').value : '';
+    const lng = document.getElementById('profileLongitude') ? document.getElementById('profileLongitude').value : '';
 
     const formData = new FormData();
     formData.append('address', address);
+    if (lat && lng) {
+        formData.append('latitude', lat);
+        formData.append('longitude', lng);
+    }
 
     fetch('/profile/update/', {
         method: 'POST',
@@ -221,7 +291,7 @@ function saveAddress(event) {
     .then(data => {
         if (data.success) {
             closeModal('addressModal');
-            showToast("Delivery address saved successfully!");
+            showToast("Delivery address and GPS location saved successfully!");
         } else {
             showToast(data.error || "Failed to save address.", "error");
         }

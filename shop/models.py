@@ -61,7 +61,9 @@ class CartItem(models.Model):
 
 class Order(models.Model):
     STATUS_CHOICES = [
-        ("pending", "Pending"),
+        ("pending", "Order Placed"),
+        ("confirmed", "Confirmed & Packing"),
+        ("out_for_delivery", "Out for Delivery"),
         ("delivered", "Delivered"),
         ("cancelled", "Cancelled"),
     ]
@@ -69,6 +71,13 @@ class Order(models.Model):
     PAYMENT_CHOICES = [
         ("cod", "Cash on Delivery"),
         ("online", "Paid Online"),
+        ("wallet", "Dairy Wallet"),
+    ]
+
+    SLOT_CHOICES = [
+        ("morning", "🌅 Morning (06:30 AM - 08:30 AM)"),
+        ("evening", "🌆 Evening (05:30 PM - 07:30 PM)"),
+        ("anytime", "⚡ Standard Delivery"),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
@@ -76,8 +85,26 @@ class Order(models.Model):
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default="cod")
+    delivery_date = models.DateField(blank=True, null=True)
+    delivery_slot = models.CharField(max_length=50, choices=SLOT_CHOICES, default="morning")
     created_at = models.DateTimeField(auto_now_add=True)
     delivered_at = models.DateTimeField(blank=True, null=True)
+    delivery_boy = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="delivered_orders",
+        help_text="Delivery partner who delivered this order"
+    )
+
+    @property
+    def tracking_step(self):
+        mapping = {
+            "pending": 1,
+            "confirmed": 2,
+            "out_for_delivery": 3,
+            "delivered": 4,
+            "cancelled": -1,
+        }
+        return mapping.get(self.status, 1)
 
     @property
     def items_subtotal(self):
@@ -96,6 +123,66 @@ class Order(models.Model):
     def items_count(self):
         return sum(item.quantity for item in self.items.all())
 
+    @property
+    def is_prepaid(self):
+        return self.payment_method in ["online", "wallet"]
+
+    @property
+    def customer_name(self):
+        full_name = self.user.get_full_name()
+        return full_name if full_name.strip() else self.user.username
+
+    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+
+    @property
+    def effective_latitude(self):
+        if self.latitude:
+            return self.latitude
+        if hasattr(self.user, 'profile') and self.user.profile.latitude:
+            return self.user.profile.latitude
+        return None
+
+    @property
+    def effective_longitude(self):
+        if self.longitude:
+            return self.longitude
+        if hasattr(self.user, 'profile') and self.user.profile.longitude:
+            return self.user.profile.longitude
+        return None
+
+    @property
+    def has_live_location(self):
+        return bool(self.effective_latitude and self.effective_longitude)
+
+    @property
+    def maps_navigation_url(self):
+        import urllib.parse
+        lat = self.effective_latitude
+        lng = self.effective_longitude
+        if lat and lng:
+            return f"https://www.google.com/maps/dir/?api=1&destination={lat},{lng}"
+        addr = self.customer_address
+        if not addr or addr.strip().lower() in ["standard address", "address not provided", "standard home delivery (khamkar dairy)", ""]:
+            return "https://www.google.com/maps/search/?api=1&query=Sangli,+Maharashtra"
+        clean_addr = addr.strip()
+        if "sangli" not in clean_addr.lower():
+            clean_addr = f"{clean_addr}, Sangli, Maharashtra"
+        encoded_addr = urllib.parse.quote(clean_addr)
+        return f"https://www.google.com/maps/dir/?api=1&destination={encoded_addr}"
+
+    @property
+    def customer_phone(self):
+        if hasattr(self.user, 'profile') and self.user.profile.phone:
+            return self.user.profile.phone
+        return "Not Provided"
+
+    @property
+    def customer_address(self):
+        if hasattr(self.user, 'profile') and self.user.profile.address:
+            return self.user.profile.address
+        return "Standard Address"
+
     def __str__(self):
         return f"Order #{self.order_id} - {self.user.username}"
 
@@ -110,16 +197,46 @@ class OrderItem(models.Model):
     def total_price(self):
         return self.price * self.quantity
 
+    @property
+    def item_name(self):
+        if self.product and self.product.name:
+            return self.product.name
+        return "Dairy Product"
+
+    @property
+    def item_label(self):
+        if self.product:
+            return self.product.quantity_label or self.product.name or "Item"
+        return "Item"
+
     def __str__(self):
         prod_name = self.product.name if self.product else "Deleted Product"
         return f"{self.quantity}x {prod_name} in #{self.order.order_id}"
 
 class Profile(models.Model):
+    ROLE_CHOICES = [
+        ("customer", "👤 Customer"),
+        ("delivery_boy", "🛵 Delivery Boy"),
+        ("admin", "🛡️ Store Admin"),
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
+    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
     reward_points = models.PositiveIntegerField(default=0)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="customer")
+    is_on_duty = models.BooleanField(default=True, help_text="For delivery boys: indicates if they are currently accepting orders")
+
+    @property
+    def role_display(self):
+        if self.user.is_staff:
+            return "Admin"
+        if self.role == "delivery_boy":
+            return "Delivery Boy"
+        return "Customer"
 
     def avatar_url(self):
         if self.avatar and hasattr(self.avatar, "url"):
@@ -196,6 +313,64 @@ class StoreSetting(models.Model):
 
     def __str__(self):
         return f"{self.store_name} Settings"
+
+
+class Wallet(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="wallet")
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def get_wallet(cls, user):
+        wallet, _ = cls.objects.get_or_create(user=user)
+        return wallet
+
+    def deposit(self, amount, description="Money Added to Wallet"):
+        self.balance += amount
+        self.save()
+        WalletTransaction.objects.create(
+            wallet=self,
+            amount=amount,
+            transaction_type="credit",
+            description=description
+        )
+        return self.balance
+
+    def deduct(self, amount, description="Order Payment"):
+        if self.balance < amount:
+            return False
+        self.balance -= amount
+        self.save()
+        WalletTransaction.objects.create(
+            wallet=self,
+            amount=amount,
+            transaction_type="debit",
+            description=description
+        )
+        return True
+
+    def __str__(self):
+        return f"{self.user.username}'s Wallet (₹{self.balance})"
+
+
+class WalletTransaction(models.Model):
+    TYPE_CHOICES = [
+        ("credit", "Credit (+ Added)"),
+        ("debit", "Debit (- Spent)"),
+    ]
+
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name="transactions")
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    transaction_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    description = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.transaction_type.upper()} ₹{self.amount} - {self.description}"
+
 
 
 

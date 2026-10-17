@@ -21,9 +21,11 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
+
         .filter-chip:hover {
             background: #e2e8f0;
         }
+
         .filter-chip.active {
             background: #078046;
             color: #ffffff;
@@ -31,18 +33,20 @@
             font-weight: 600;
         }
 
-        /* Switch Slider */
+        /* Switch Slider - Red for OFF, Green for ON */
         .switch {
             position: relative;
             display: inline-block;
-            width: 48px;
-            height: 26px;
+            width: 52px;
+            height: 28px;
         }
+
         .switch input {
             opacity: 0;
             width: 0;
             height: 0;
         }
+
         .slider {
             position: absolute;
             cursor: pointer;
@@ -50,26 +54,55 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #cbd5e1;
-            transition: .3s;
-            border-radius: 26px;
+            background-color: #ef4444;
+            /* Red when OFF */
+            transition: .3s ease;
+            border-radius: 28px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
         }
+
         .slider:before {
             position: absolute;
             content: "";
-            height: 20px;
-            width: 20px;
+            height: 22px;
+            width: 22px;
             left: 3px;
             bottom: 3px;
             background-color: white;
-            transition: .3s;
+            transition: .3s ease;
             border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
         }
-        input:checked + .slider {
+
+        input:checked+.slider {
             background-color: #078046;
+            /* Vibrant Green when ON */
         }
-        input:checked + .slider:before {
-            transform: translateX(22px);
+
+        input:checked+.slider:before {
+            transform: translateX(24px);
+        }
+
+        .toggle-status-badge {
+            font-weight: 700;
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            min-width: 32px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-status-badge.on {
+            background-color: #e6f4ea;
+            color: #078046;
+            border: 1px solid #a8dab5;
+        }
+
+        .toggle-status-badge.off {
+            background-color: #fce8e6;
+            color: #d93025;
+            border: 1px solid #f5c2c0;
         }
     </style>
 </head>
@@ -107,6 +140,11 @@
                 <button class="menu-item" onclick="showPage('orders', this)">
                     <span class="menu-icon">🛒</span>
                     <span>Orders</span>
+                </button>
+
+                <button class="menu-item" onclick="showPage('delivery_boys', this)">
+                    <span class="menu-icon">🛵</span>
+                    <span>Delivery Boys</span>
                 </button>
 
                 <button class="menu-item" onclick="showPage('customers', this)">
@@ -177,6 +215,16 @@
 
 
                 <div class="header-right">
+
+                    <a href="{% url 'delivery_dashboard' %}" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; background:#0284c7; color:white; padding:7px 14px; border-radius:20px; font-weight:bold; font-size:13px; box-shadow:0 2px 6px rgba(2,132,199,0.25);">
+                        <span>🛵</span>
+                        <span>Delivery App</span>
+                    </a>
+
+                    <a href="{% url 'delivery_run_sheet' %}" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; background:#075334; color:white; padding:7px 14px; border-radius:20px; font-weight:bold; font-size:13px; box-shadow:0 2px 6px rgba(7,83,52,0.25);">
+                        <span>📋</span>
+                        <span>Day Run Sheet</span>
+                    </a>
 
                     <button class="notification-btn" onclick="showNotification()">
                         🔔
@@ -622,15 +670,23 @@
                                             {{ order.get_status_display }}
                                         </span>
                                     </td>
-                                    <td>{{ order.created_at|date:"d M Y" }}</td>
+                                    <td>
+                                        {{ order.created_at|date:"d M Y" }}<br>
+                                        <small style="color:#075334; font-weight:700;">{{ order.get_delivery_slot_display }}</small>
+                                    </td>
                                     <td>
                                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                             <select class="status-select"
                                                 onchange="updateOrderStatus({{ order.id }}, this.value)">
-                                                <option value="pending" {% if order.status == "pending" %}selected{% endif %}>Pending</option>
+                                                <option value="pending" {% if order.status == "pending" %}selected{% endif %}>Order Placed</option>
+                                                <option value="confirmed" {% if order.status == "confirmed" %}selected{% endif %}>Confirmed & Packing</option>
+                                                <option value="out_for_delivery" {% if order.status == "out_for_delivery" %}selected{% endif %}>Out for Delivery</option>
                                                 <option value="delivered" {% if order.status == "delivered" %}selected{% endif %}>Delivered</option>
                                                 <option value="cancelled" {% if order.status == "cancelled" %}selected{% endif %}>Cancelled</option>
                                             </select>
+                                            <a href="{% url 'order_invoice' order.order_id %}" target="_blank" style="padding:5px 8px; border-radius:6px; background:#e8f5ee; color:#075334; font-weight:700; font-size:12px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;" title="Print Bill / Invoice">
+                                                📄 Bill
+                                            </a>
                                             <button type="button" class="delete-btn"
                                                 onclick="deleteOrder({{ order.id }}, this)" title="Delete Order">
                                                 🗑 Delete
@@ -702,9 +758,11 @@
                                     <td>₹{{ customer.total_spent|default:"0" }}</td>
                                     <td>
                                         <select class="role-select" onchange="changeCustomerRole(this)"
-                                            style="padding:5px 10px;border-radius:6px;font-weight:600;font-size:0.85rem;cursor:pointer;outline:none;{% if customer.is_staff %}background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;{% else %}background:#f3f4f6;color:#374151;border:1px solid #d1d5db;{% endif %}">
-                                            <option value="Customer" {% if not customer.is_staff %}selected{% endif %}>
+                                            style="padding:5px 10px;border-radius:6px;font-weight:600;font-size:0.85rem;cursor:pointer;outline:none;{% if customer.is_staff %}background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;{% elif customer.profile.role == 'delivery_boy' %}background:#fef3c7;color:#92400e;border:1px solid #fcd34d;{% else %}background:#f3f4f6;color:#374151;border:1px solid #d1d5db;{% endif %}">
+                                            <option value="Customer" {% if not customer.is_staff and customer.profile.role != "delivery_boy" %}selected{% endif %}>
                                                 👤 Customer</option>
+                                            <option value="Delivery Boy" {% if customer.profile.role == "delivery_boy" %}selected{% endif %}>
+                                                🛵 Delivery Boy</option>
                                             <option value="Admin" {% if customer.is_staff %}selected{% endif %}>🛡️
                                                 Admin</option>
                                         </select>
@@ -729,6 +787,108 @@
                                 <tr>
                                     <td colspan="8" style="text-align:center;padding:2rem;color:#888;">
                                         No customers registered yet.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= DELIVERY BOYS ================= -->
+
+            <section id="delivery_boys" class="page">
+
+                <div class="page-header">
+                    <div>
+                        <h1>Delivery Boys</h1>
+                        <p>Manage delivery partners, view performance, add or edit accounts</p>
+                    </div>
+
+                    <button class="primary-btn" onclick="openAddDeliveryBoy()">
+                        + Add Delivery Boy
+                    </button>
+                </div>
+
+                <div class="product-panel">
+
+                    <div class="product-toolbar">
+                        <h2>All Delivery Partners (<span id="deliveryBoyCountHeader">{{ delivery_boys|length }}</span>)</h2>
+
+                        <div class="product-search">
+                            <span>⌕</span>
+                            <input type="text" id="deliveryBoySearch" placeholder="Search delivery boys by name, phone...">
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Delivery Partner</th>
+                                    <th>Username</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                    <th>Address</th>
+                                    <th>Joined</th>
+                                    <th>Deliveries</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deliveryBoyTable">
+                                {% for boy in delivery_boys %}
+                                <tr data-boy-id="{{ boy.id }}"
+                                    data-username="{{ boy.username }}"
+                                    data-name="{{ boy.get_full_name|default:boy.username }}"
+                                    data-email="{{ boy.email }}"
+                                    data-phone="{{ boy.profile.phone }}"
+                                    data-address="{{ boy.profile.address }}"
+                                    data-active="{% if boy.is_active %}true{% else %}false{% endif %}">
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <img src="{% if boy.profile.avatar_url %}{{ boy.profile.avatar_url }}{% else %}https://ui-avatars.com/api/?name={{ boy.username }}&background=075334&color=fff{% endif %}"
+                                                 alt="Avatar" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid #e2e8f0;">
+                                            <div>
+                                                <strong>{{ boy.get_full_name|default:boy.username }}</strong>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><code>{{ boy.username }}</code></td>
+                                    <td>{{ boy.profile.phone|default:"—" }}</td>
+                                    <td>{{ boy.email|default:"—" }}</td>
+                                    <td>{{ boy.profile.address|default:"—"|truncatewords:4 }}</td>
+                                    <td>{{ boy.date_joined|date:"d M Y" }}</td>
+                                    <td>
+                                        <span style="font-weight:700; color:#078046;">🛵 {{ boy.orders_delivered|default:0 }} delivered</span>
+                                    </td>
+                                    <td>
+                                        {% if boy.is_active %}
+                                        <span class="active-status">Active</span>
+                                        {% else %}
+                                        <span class="inactive-status">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                            <button class="edit-btn" style="background:#0ea5e9;" onclick="viewDeliveryBoySales(this)">📊 Sales</button>
+                                            <button class="edit-btn" onclick="editDeliveryBoy(this)">✏️ Edit</button>
+                                            <button class="edit-btn" style="background:#4b5563;"
+                                                onclick="toggleDeliveryBoyStatus(this)">
+                                                {% if boy.is_active %}⛔ Deactivate{% else %}✅ Activate{% endif %}
+                                            </button>
+                                            <button class="delete-btn" onclick="deleteDeliveryBoy(this)">🗑 Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr id="noDeliveryBoysRow">
+                                    <td colspan="9" style="text-align:center;padding:2rem;color:#888;">
+                                        No delivery boys added yet. Click "+ Add Delivery Boy" above to create one.
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -883,7 +1043,8 @@
                                 {% for c in coupons %}
                                 <tr data-coupon-id="{{ c.id }}">
                                     <td>
-                                        <span class="badge-pill" style="background:#e8f5e9; color:#078046; font-size:14px; font-weight:700; padding:6px 12px; font-family:monospace; border:1px dashed #078046;">
+                                        <span class="badge-pill"
+                                            style="background:#e8f5e9; color:#078046; font-size:14px; font-weight:700; padding:6px 12px; font-family:monospace; border:1px dashed #078046;">
                                             🎟️ {{ c.code }}
                                         </span>
                                     </td>
@@ -943,34 +1104,54 @@
 
                 <!-- DATE FILTER BAR -->
                 <div class="product-panel" style="margin-bottom: 24px; padding: 16px 20px;">
-                    <form method="GET" action="/admin-panel/#reports" id="reportDateFilterForm" style="display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between;">
+                    <form method="GET" action="/admin-panel/#reports" id="reportDateFilterForm"
+                        style="display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between;">
                         <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
-                            <span style="font-weight:600; font-size:14px; color:#1e293b; margin-right:4px;">📅 Filter Period:</span>
-                            
-                            <button type="button" class="filter-chip {% if date_preset == 'all' or not date_preset %}active{% endif %}" onclick="setReportPreset('all')">All Time</button>
-                            <button type="button" class="filter-chip {% if date_preset == 'today' %}active{% endif %}" onclick="setReportPreset('today')">Today</button>
-                            <button type="button" class="filter-chip {% if date_preset == 'yesterday' %}active{% endif %}" onclick="setReportPreset('yesterday')">Yesterday</button>
-                            <button type="button" class="filter-chip {% if date_preset == '7days' %}active{% endif %}" onclick="setReportPreset('7days')">Last 7 Days</button>
-                            <button type="button" class="filter-chip {% if date_preset == '30days' %}active{% endif %}" onclick="setReportPreset('30days')">Last 30 Days</button>
-                            <button type="button" class="filter-chip {% if date_preset == 'this_month' %}active{% endif %}" onclick="setReportPreset('this_month')">This Month</button>
-                            
-                            <input type="hidden" name="date_preset" id="reportDatePresetInput" value="{{ date_preset|default:'all' }}">
+                            <span style="font-weight:600; font-size:14px; color:#1e293b; margin-right:4px;">📅 Filter
+                                Period:</span>
+
+                            <button type="button"
+                                class="filter-chip {% if date_preset == 'all' or not date_preset %}active{% endif %}"
+                                onclick="setReportPreset('all')">All Time</button>
+                            <button type="button" class="filter-chip {% if date_preset == 'today' %}active{% endif %}"
+                                onclick="setReportPreset('today')">Today</button>
+                            <button type="button"
+                                class="filter-chip {% if date_preset == 'yesterday' %}active{% endif %}"
+                                onclick="setReportPreset('yesterday')">Yesterday</button>
+                            <button type="button" class="filter-chip {% if date_preset == '7days' %}active{% endif %}"
+                                onclick="setReportPreset('7days')">Last 7 Days</button>
+                            <button type="button" class="filter-chip {% if date_preset == '30days' %}active{% endif %}"
+                                onclick="setReportPreset('30days')">Last 30 Days</button>
+                            <button type="button"
+                                class="filter-chip {% if date_preset == 'this_month' %}active{% endif %}"
+                                onclick="setReportPreset('this_month')">This Month</button>
+
+                            <input type="hidden" name="date_preset" id="reportDatePresetInput"
+                                value="{{ date_preset|default:'all' }}">
                         </div>
 
                         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                             <div style="display:flex; align-items:center; gap:6px;">
                                 <label style="font-size:13px; font-weight:500; color:#64748b;">From:</label>
-                                <input type="date" name="start_date" id="reportStartDate" value="{{ start_date }}" style="padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;" onchange="document.getElementById('reportDatePresetInput').value='custom'">
+                                <input type="date" name="start_date" id="reportStartDate" value="{{ start_date }}"
+                                    style="padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;"
+                                    onchange="document.getElementById('reportDatePresetInput').value='custom'">
                             </div>
 
                             <div style="display:flex; align-items:center; gap:6px;">
                                 <label style="font-size:13px; font-weight:500; color:#64748b;">To:</label>
-                                <input type="date" name="end_date" id="reportEndDate" value="{{ end_date }}" style="padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;" onchange="document.getElementById('reportDatePresetInput').value='custom'">
+                                <input type="date" name="end_date" id="reportEndDate" value="{{ end_date }}"
+                                    style="padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;"
+                                    onchange="document.getElementById('reportDatePresetInput').value='custom'">
                             </div>
 
-                            <button type="submit" style="padding:7px 16px; background:#078046; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Apply Filter</button>
+                            <button type="submit"
+                                style="padding:7px 16px; background:#078046; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Apply
+                                Filter</button>
                             {% if date_preset != 'all' or start_date or end_date %}
-                            <a href="/admin-panel/#reports" style="padding:7px 14px; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px;">Reset (All)</a>
+                            <a href="/admin-panel/#reports"
+                                style="padding:7px 14px; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px;">Reset
+                                (All)</a>
                             {% endif %}
                         </div>
                     </form>
@@ -1009,7 +1190,8 @@
                         <div class="stat-info">
                             <span class="stat-label">Delivered Orders</span>
                             <h3 class="stat-value">{{ delivered_orders_count }} / {{ rep_total_orders }}</h3>
-                            <span class="stat-subtext" style="color:#078046; font-size:12px; font-weight:600;">Completed in period</span>
+                            <span class="stat-subtext" style="color:#078046; font-size:12px; font-weight:600;">Completed
+                                in period</span>
                         </div>
                     </div>
 
@@ -1027,7 +1209,8 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
                     <!-- TOP PRODUCTS TABLE -->
                     <div class="product-panel" style="margin: 0;">
-                        <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+                        <div
+                            style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
                             <h3 style="margin:0; font-size:16px; color:#1e293b;">🔥 Top Selling Products</h3>
                             <span style="font-size:12px; color:#64748b; font-weight:600;">By Units Sold</span>
                         </div>
@@ -1046,12 +1229,14 @@
                                     <tr>
                                         <td><strong>{{ p.name }}</strong></td>
                                         <td>{{ p.category.name }}</td>
-                                        <td><span class="badge-pill" style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:12px; font-weight:700;">{{ p.units_sold }} units</span></td>
+                                        <td><span class="badge-pill"
+                                                style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:12px; font-weight:700;">{{ p.units_sold|default:"0" }} units</span></td>
                                         <td style="color:#078046; font-weight:700;">₹{{ p.revenue|default:"0.00" }}</td>
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="4" style="text-align:center; padding:1.5rem; color:#888;">No sales data available.</td>
+                                        <td colspan="4" style="text-align:center; padding:1.5rem; color:#888;">No sales
+                                            data available.</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -1061,7 +1246,8 @@
 
                     <!-- CATEGORY SALES BREAKDOWN -->
                     <div class="product-panel" style="margin: 0;">
-                        <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+                        <div
+                            style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
                             <h3 style="margin:0; font-size:16px; color:#1e293b;">🏷️ Category Performance</h3>
                             <span style="font-size:12px; color:#64748b; font-weight:600;">By Revenue</span>
                         </div>
@@ -1079,11 +1265,13 @@
                                     <tr>
                                         <td><strong>{{ cat.name }}</strong></td>
                                         <td>{{ cat.units_sold|default:"0" }} items</td>
-                                        <td style="color:#078046; font-weight:700;">₹{{ cat.revenue|default:"0.00" }}</td>
+                                        <td style="color:#078046; font-weight:700;">₹{{ cat.revenue|default:"0.00" }}
+                                        </td>
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="3" style="text-align:center; padding:1.5rem; color:#888;">No category data available.</td>
+                                        <td colspan="3" style="text-align:center; padding:1.5rem; color:#888;">No
+                                            category data available.</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -1099,32 +1287,41 @@
                     </div>
                     <div style="padding: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
                         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                                 <span style="font-weight:600; color:#078046;">● Delivered</span>
                                 <strong style="font-size:18px; color:#078046;">{{ delivered_orders_count }}</strong>
                             </div>
                             <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden;">
-                                <div style="background:#078046; height:100%; width:{% if total_orders > 0 %}{% widthratio delivered_orders_count total_orders 100 %}{% else %}0{% endif %}%;"></div>
+                                <div
+                                    style="background:#078046; height:100%; width:{% if total_orders > 0 %}{% widthratio delivered_orders_count total_orders 100 %}{% else %}0{% endif %}%;">
+                                </div>
                             </div>
                         </div>
 
                         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                                 <span style="font-weight:600; color:#d97706;">● Pending</span>
                                 <strong style="font-size:18px; color:#d97706;">{{ pending_orders_count }}</strong>
                             </div>
                             <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden;">
-                                <div style="background:#d97706; height:100%; width:{% if total_orders > 0 %}{% widthratio pending_orders_count total_orders 100 %}{% else %}0{% endif %}%;"></div>
+                                <div
+                                    style="background:#d97706; height:100%; width:{% if total_orders > 0 %}{% widthratio pending_orders_count total_orders 100 %}{% else %}0{% endif %}%;">
+                                </div>
                             </div>
                         </div>
 
                         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                                 <span style="font-weight:600; color:#dc2626;">● Cancelled</span>
                                 <strong style="font-size:18px; color:#dc2626;">{{ cancelled_orders_count }}</strong>
                             </div>
                             <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden;">
-                                <div style="background:#dc2626; height:100%; width:{% if total_orders > 0 %}{% widthratio cancelled_orders_count total_orders 100 %}{% else %}0{% endif %}%;"></div>
+                                <div
+                                    style="background:#dc2626; height:100%; width:{% if total_orders > 0 %}{% widthratio cancelled_orders_count total_orders 100 %}{% else %}0{% endif %}%;">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1144,83 +1341,125 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
 
                         <!-- 1. GENERAL STORE INFO -->
-                        <div class="admin-card-panel" style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                        <div class="admin-card-panel"
+                            style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                             <div style="border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:16px;">
-                                <h3 style="margin:0 0 4px 0; font-size:16px; color:#1e293b; display:flex; align-items:center; gap:8px;">
+                                <h3
+                                    style="margin:0 0 4px 0; font-size:16px; color:#1e293b; display:flex; align-items:center; gap:8px;">
                                     <span>🏪</span> Store General Information
                                 </h3>
-                                <p style="margin:0; font-size:13px; color:#64748b;">Basic store details displayed to customers</p>
+                                <p style="margin:0; font-size:13px; color:#64748b;">Basic store details displayed to
+                                    customers</p>
                             </div>
 
                             <div class="form-group" style="margin-bottom:14px;">
-                                <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Store Name</label>
-                                <input type="text" id="settingStoreName" value="{{ store_settings.store_name }}" required
+                                <label
+                                    style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Store
+                                    Name</label>
+                                <input type="text" id="settingStoreName" value="{{ store_settings.store_name }}"
+                                    required
                                     style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
                             </div>
 
-                            <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+                            <div class="form-row"
+                                style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
                                 <div class="form-group">
-                                    <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Contact Phone</label>
-                                    <input type="text" id="settingContactPhone" value="{{ store_settings.contact_phone }}" required
+                                    <label
+                                        style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Contact
+                                        Phone</label>
+                                    <input type="text" id="settingContactPhone"
+                                        value="{{ store_settings.contact_phone }}" required
                                         style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
                                 </div>
                                 <div class="form-group">
-                                    <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Support Email</label>
-                                    <input type="email" id="settingContactEmail" value="{{ store_settings.contact_email }}" required
+                                    <label
+                                        style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Support
+                                        Email</label>
+                                    <input type="email" id="settingContactEmail"
+                                        value="{{ store_settings.contact_email }}" required
                                         style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
                                 </div>
                             </div>
 
                             <div class="form-group" style="margin-bottom:14px;">
-                                <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Operating Hours</label>
-                                <input type="text" id="settingOperatingHours" value="{{ store_settings.operating_hours }}" placeholder="e.g. 06:00 AM - 10:00 PM"
+                                <label
+                                    style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Operating
+                                    Hours</label>
+                                <input type="text" id="settingOperatingHours"
+                                    value="{{ store_settings.operating_hours }}" placeholder="e.g. 06:00 AM - 10:00 PM"
                                     style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
                             </div>
 
                             <div class="form-group">
-                                <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Store Physical Address</label>
-                                <textarea id="settingStoreAddress" rows="2" style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box; resize:vertical;">{{ store_settings.store_address }}</textarea>
+                                <label
+                                    style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Store
+                                    Physical Address</label>
+                                <textarea id="settingStoreAddress" rows="2"
+                                    style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box; resize:vertical;">{{ store_settings.store_address }}</textarea>
                             </div>
                         </div>
 
                         <!-- 2. DELIVERY & ORDER RULES -->
-                        <div class="admin-card-panel" style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                        <div class="admin-card-panel"
+                            style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                             <div style="border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:16px;">
-                                <h3 style="margin:0 0 4px 0; font-size:16px; color:#1e293b; display:flex; align-items:center; gap:8px;">
+                                <h3
+                                    style="margin:0 0 4px 0; font-size:16px; color:#1e293b; display:flex; align-items:center; gap:8px;">
                                     <span>🚚</span> Delivery & Packaging Charges
                                 </h3>
-                                <p style="margin:0; font-size:13px; color:#64748b;">Pricing and delivery fee rules applied at checkout</p>
+                                <p style="margin:0; font-size:13px; color:#64748b;">Pricing and delivery fee rules
+                                    applied at checkout</p>
                             </div>
 
-                            <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+                            <div class="form-row"
+                                style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
                                 <div class="form-group">
-                                    <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Free Delivery Above (₹)</label>
-                                    <input type="number" id="settingFreeDeliveryThreshold" value="{{ store_settings.free_delivery_threshold }}" step="0.01" min="0" required
+                                    <label
+                                        style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Free
+                                        Delivery Above (₹)</label>
+                                    <input type="number" id="settingFreeDeliveryThreshold"
+                                        value="{{ store_settings.free_delivery_threshold }}" step="0.01" min="0"
+                                        required
                                         style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
                                 </div>
                                 <div class="form-group">
-                                    <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Standard Delivery Fee (₹)</label>
-                                    <input type="number" id="settingStandardDelivery" value="{{ store_settings.standard_delivery_charge }}" step="0.01" min="0" required
+                                    <label
+                                        style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Standard
+                                        Delivery Fee (₹)</label>
+                                    <input type="number" id="settingStandardDelivery"
+                                        value="{{ store_settings.standard_delivery_charge }}" step="0.01" min="0"
+                                        required
                                         style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
                                 </div>
                             </div>
 
                             <div class="form-group" style="margin-bottom:20px;">
-                                <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Packaging Charge (₹)</label>
-                                <input type="number" id="settingPackagingCharge" value="{{ store_settings.packaging_charge }}" step="0.01" min="0" required
+                                <label
+                                    style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Packaging
+                                    Charge (₹)</label>
+                                <input type="number" id="settingPackagingCharge"
+                                    value="{{ store_settings.packaging_charge }}" step="0.01" min="0" required
                                     style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
                             </div>
 
                             <!-- STORE OPERATING STATUS -->
-                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
+                            <div
+                                style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
                                 <div>
-                                    <strong style="display:block; font-size:14px; color:#1e293b;">Accepting Orders Now</strong>
-                                    <span style="font-size:12px; color:#64748b;">Toggle off during maintenance or holidays</span>
+                                    <strong style="display:block; font-size:14px; color:#1e293b;">Accepting Orders
+                                        Now</strong>
+                                    <span style="font-size:12px; color:#64748b;">Toggle off during maintenance or
+                                        holidays</span>
                                 </div>
-                                <label class="switch" style="position:relative; display:inline-block; width:48px; height:26px;">
-                                    <input type="checkbox" id="settingStoreOpen" {% if store_settings.store_open %}checked{% endif %} style="opacity:0; width:0; height:0;">
-                                    <span class="slider round" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#cbd5e1; transition:.3s; border-radius:26px;"></span>
-                                </label>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <span
+                                        class="toggle-status-badge {% if store_settings.store_open %}on{% else %}off{% endif %}"
+                                        id="badgeStoreOpen">{% if store_settings.store_open %}ON{% else %}OFF{% endif %}</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="settingStoreOpen" {% if store_settings.store_open %}checked{% endif %} onchange="updateToggleBadge(this, 'badgeStoreOpen')">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
@@ -1230,62 +1469,97 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
 
                         <!-- 3. PAYMENT METHODS -->
-                        <div class="admin-card-panel" style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                        <div class="admin-card-panel"
+                            style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                             <div style="border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:16px;">
-                                <h3 style="margin:0 0 4px 0; font-size:16px; color:#1e293b; display:flex; align-items:center; gap:8px;">
+                                <h3
+                                    style="margin:0 0 4px 0; font-size:16px; color:#1e293b; display:flex; align-items:center; gap:8px;">
                                     <span>💳</span> Payment Methods
                                 </h3>
-                                <p style="margin:0; font-size:13px; color:#64748b;">Choose payment options available at checkout</p>
+                                <p style="margin:0; font-size:13px; color:#64748b;">Choose payment options available at
+                                    checkout</p>
                             </div>
 
                             <div style="display:flex; flex-direction:column; gap:12px;">
-                                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
+                                <div
+                                    style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
                                     <div>
-                                        <strong style="display:block; font-size:14px; color:#1e293b;">Cash on Delivery (COD)</strong>
-                                        <span style="font-size:12px; color:#64748b;">Allow customers to pay cash upon arrival</span>
+                                        <strong style="display:block; font-size:14px; color:#1e293b;">Cash on Delivery
+                                            (COD)</strong>
+                                        <span style="font-size:12px; color:#64748b;">Allow customers to pay cash upon
+                                            arrival</span>
                                     </div>
-                                    <label class="switch" style="position:relative; display:inline-block; width:48px; height:26px;">
-                                        <input type="checkbox" id="settingEnableCOD" {% if store_settings.enable_cod %}checked{% endif %} style="opacity:0; width:0; height:0;">
-                                        <span class="slider round" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#cbd5e1; transition:.3s; border-radius:26px;"></span>
-                                    </label>
+                                    <div style="display:flex; align-items:center; gap:10px;">
+                                        <span
+                                            class="toggle-status-badge {% if store_settings.enable_cod %}on{% else %}off{% endif %}"
+                                            id="badgeEnableCOD">{% if store_settings.enable_cod %}ON{% else %}OFF{% endif %}</span>
+                                        <label class="switch">
+                                            <input type="checkbox" id="settingEnableCOD" {% if store_settings.enable_cod %}checked{% endif %}
+                                                onchange="updateToggleBadge(this, 'badgeEnableCOD')">
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
                                 </div>
 
-                                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
+                                <div
+                                    style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
                                     <div>
-                                        <strong style="display:block; font-size:14px; color:#1e293b;">Online Payments (UPI / Card / NetBanking)</strong>
-                                        <span style="font-size:12px; color:#64748b;">Instant online checkout payment</span>
+                                        <strong style="display:block; font-size:14px; color:#1e293b;">Online Payments
+                                            (UPI / Card / NetBanking)</strong>
+                                        <span style="font-size:12px; color:#64748b;">Instant online checkout
+                                            payment</span>
                                     </div>
-                                    <label class="switch" style="position:relative; display:inline-block; width:48px; height:26px;">
-                                        <input type="checkbox" id="settingEnableOnline" {% if store_settings.enable_online %}checked{% endif %} style="opacity:0; width:0; height:0;">
-                                        <span class="slider round" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#cbd5e1; transition:.3s; border-radius:26px;"></span>
-                                    </label>
+                                    <div style="display:flex; align-items:center; gap:10px;">
+                                        <span
+                                            class="toggle-status-badge {% if store_settings.enable_online %}on{% else %}off{% endif %}"
+                                            id="badgeEnableOnline">{% if store_settings.enable_online %}ON{% else %}OFF{% endif %}</span>
+                                        <label class="switch">
+                                            <input type="checkbox" id="settingEnableOnline" {% if store_settings.enable_online %}checked{% endif %}
+                                                onchange="updateToggleBadge(this, 'badgeEnableOnline')">
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- 4. ANNOUNCEMENT BANNER -->
-                        <div class="admin-card-panel" style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                        <div class="admin-card-panel"
+                            style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                             <div style="border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:16px;">
-                                <h3 style="margin:0 0 4px 0; font-size:16px; color:#1e293b; display:flex; align-items:center; gap:8px;">
+                                <h3
+                                    style="margin:0 0 4px 0; font-size:16px; color:#1e293b; display:flex; align-items:center; gap:8px;">
                                     <span>📢</span> Customer Announcement Banner
                                 </h3>
-                                <p style="margin:0; font-size:13px; color:#64748b;">Display notification or flash offer to all shop visitors</p>
+                                <p style="margin:0; font-size:13px; color:#64748b;">Display notification or flash offer
+                                    to all shop visitors</p>
                             </div>
 
-                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                            <div
+                                style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
                                 <div>
-                                    <strong style="display:block; font-size:14px; color:#1e293b;">Show Announcement Banner</strong>
+                                    <strong style="display:block; font-size:14px; color:#1e293b;">Show Announcement
+                                        Banner</strong>
                                     <span style="font-size:12px; color:#64748b;">Enable banner on store frontend</span>
                                 </div>
-                                <label class="switch" style="position:relative; display:inline-block; width:48px; height:26px;">
-                                    <input type="checkbox" id="settingShowAnnouncement" {% if store_settings.show_announcement %}checked{% endif %} style="opacity:0; width:0; height:0;">
-                                    <span class="slider round" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#cbd5e1; transition:.3s; border-radius:26px;"></span>
-                                </label>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <span
+                                        class="toggle-status-badge {% if store_settings.show_announcement %}on{% else %}off{% endif %}"
+                                        id="badgeShowAnnouncement">{% if store_settings.show_announcement %}ON{% else %}OFF{% endif %}</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="settingShowAnnouncement" {% if store_settings.show_announcement %}checked{% endif %}
+                                            onchange="updateToggleBadge(this, 'badgeShowAnnouncement')">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
                             </div>
 
                             <div class="form-group">
-                                <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Announcement Message</label>
-                                <textarea id="settingAnnouncementText" rows="2" placeholder="e.g. Special Offer: Free butter with all milk orders over ₹500 today!"
+                                <label
+                                    style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:6px;">Announcement
+                                    Message</label>
+                                <textarea id="settingAnnouncementText" rows="2"
+                                    placeholder="e.g. Special Offer: Free butter with all milk orders over ₹500 today!"
                                     style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box; resize:vertical;">{{ store_settings.announcement_text }}</textarea>
                             </div>
                         </div>
@@ -1294,7 +1568,8 @@
 
                     <!-- SAVE BUTTON BAR -->
                     <div style="display:flex; justify-content:flex-end; gap:12px;">
-                        <button type="submit" id="btnSaveStoreSettings" class="save-btn" style="padding:12px 28px; font-size:15px; background:#078046; color:#fff; border:none; border-radius:8px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                        <button type="submit" id="btnSaveStoreSettings" class="save-btn"
+                            style="padding:12px 28px; font-size:15px; background:#078046; color:#fff; border:none; border-radius:8px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px;">
                             <span>💾 Save Store Settings</span>
                         </button>
                     </div>
@@ -1330,7 +1605,8 @@
                         </div>
 
                         <div class="admin-profile-card-details">
-                            <h2 id="adminCardFullName">{{ request.user.get_full_name|default:request.user.username }}</h2>
+                            <h2 id="adminCardFullName">{{ request.user.get_full_name|default:request.user.username }}
+                            </h2>
                             <div class="admin-role-badge">🛡️ Super Administrator</div>
                             <p class="admin-card-email">✉️ {{ request.user.email|default:"No email provided" }}</p>
                             <p class="admin-card-phone">📞 {% if admin_profile.phone %}+91 {{ admin_profile.phone }}{% else %}Phone not set{% endif %}</p>
@@ -1670,6 +1946,7 @@
                     <label>Account Role / Privilege</label>
                     <select id="customerEditRole">
                         <option value="Customer">Customer</option>
+                        <option value="Delivery Boy">Delivery Boy</option>
                         <option value="Admin">Admin</option>
                     </select>
                 </div>
@@ -1704,7 +1981,8 @@
 
                 <div class="form-group">
                     <label>Coupon Code</label>
-                    <input type="text" id="couponCode" placeholder="e.g. FESTIVE25" style="text-transform: uppercase;" required>
+                    <input type="text" id="couponCode" placeholder="e.g. FESTIVE25" style="text-transform: uppercase;"
+                        required>
                 </div>
 
                 <div class="form-row">
@@ -1718,7 +1996,8 @@
 
                     <div class="form-group">
                         <label>Discount Value</label>
-                        <input type="number" id="couponDiscountValue" placeholder="e.g. 15 or 50" step="0.01" min="1" required>
+                        <input type="number" id="couponDiscountValue" placeholder="e.g. 15 or 50" step="0.01" min="1"
+                            required>
                     </div>
                 </div>
 
@@ -1746,20 +2025,164 @@
     </div>
 
 
+    <!-- ================= ADD / EDIT DELIVERY BOY MODAL ================= -->
+
+    <div class="modal-overlay" id="deliveryBoyModal">
+
+        <div class="modal">
+
+            <div class="modal-header">
+                <div>
+                    <h2 id="deliveryBoyModalTitle">Add New Delivery Boy</h2>
+                    <p id="deliveryBoyModalSubtitle">Create or update a delivery partner account</p>
+                </div>
+                <button onclick="closeDeliveryBoyModal()" class="close-btn">×</button>
+            </div>
+
+            <form id="addDeliveryBoyForm">
+
+                <input type="hidden" id="editDeliveryBoyId">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="deliveryBoyName" placeholder="e.g. Rahul Sharma" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="deliveryBoyUsername" placeholder="e.g. rahul_delivery" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Mobile / Phone Number</label>
+                        <input type="text" id="deliveryBoyPhone" placeholder="e.g. +91 9876543210" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="deliveryBoyEmail" placeholder="e.g. rahul@gmail.com">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Address / Depot Station</label>
+                    <input type="text" id="deliveryBoyAddress" placeholder="e.g. Market Yard Branch, Sangli">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Password <span id="deliveryBoyPasswordHint" style="font-weight:normal; color:#666; font-size:12px;">(Required)</span></label>
+                        <input type="password" id="deliveryBoyPassword" placeholder="Enter password">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="deliveryBoyStatus">
+                            <option value="true">Active (Can deliver)</option>
+                            <option value="false">Inactive (Disabled)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" onclick="closeDeliveryBoyModal()">Cancel</button>
+                    <button type="submit" class="save-btn" id="deliveryBoySaveBtn">+ Save Delivery Boy</button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===== DELIVERY BOY SALES MODAL ===== -->
+    <div class="modal-overlay" id="deliveryBoySalesModal">
+        <div class="modal" style="max-width:820px; width:95%; max-height:88vh; overflow-y:auto; border-radius:16px; padding:24px;">
+
+            <div class="modal-header" style="position:sticky; top:0; background:#fff; z-index:2; border-bottom:1px solid #e2e8f0; padding-bottom:12px;">
+                <div>
+                    <h2 id="salesModalTitle" style="font-size:1.25rem; font-weight:700; color:#075334;">📊 Sales Report</h2>
+                    <p id="salesModalSubtitle" style="font-size:0.85rem; color:#6b7280; margin-top:2px;">All deliveries made by this partner</p>
+                </div>
+                <button onclick="closeDeliveryBoySalesModal()" class="close-btn">✕</button>
+            </div>
+
+            <!-- Summary Cards -->
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin:18px 0 10px;">
+                <div style="flex:1; min-width:140px; background:linear-gradient(135deg,#075334,#0d9e5a); border-radius:12px; padding:16px; color:#fff; text-align:center;">
+                    <div style="font-size:1.6rem; font-weight:800;" id="salesTotalOrders">0</div>
+                    <div style="font-size:0.78rem; opacity:.85; margin-top:2px;">Orders Delivered</div>
+                </div>
+                <div style="flex:1; min-width:140px; background:linear-gradient(135deg,#0ea5e9,#0284c7); border-radius:12px; padding:16px; color:#fff; text-align:center;">
+                    <div style="font-size:1.6rem; font-weight:800;" id="salesGrandTotal">₹0</div>
+                    <div style="font-size:0.78rem; opacity:.85; margin-top:2px;">Total Revenue</div>
+                </div>
+                <div style="flex:1; min-width:140px; background:linear-gradient(135deg,#f59e0b,#d97706); border-radius:12px; padding:16px; color:#fff; text-align:center;">
+                    <div style="font-size:1.6rem; font-weight:800;" id="salesTotalProducts">0</div>
+                    <div style="font-size:0.78rem; opacity:.85; margin-top:2px;">Product Types</div>
+                </div>
+            </div>
+
+            <!-- Product-wise Summary -->
+            <div style="margin:18px 0 8px; font-weight:700; color:#374151; font-size:0.95rem;">🛒 Product-wise Summary</div>
+            <div class="table-container" style="margin-bottom:20px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th style="text-align:center;">Qty Sold</th>
+                            <th style="text-align:right;">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesProductTable">
+                        <tr><td colspan="3" style="text-align:center;color:#aaa;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Order-wise Details -->
+            <div style="margin:18px 0 8px; font-weight:700; color:#374151; font-size:0.95rem;">📦 Order-wise Delivery History</div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th style="text-align:right;">Amount</th>
+                            <th>Payment</th>
+                            <th>Delivered At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesOrderTable">
+                        <tr><td colspan="6" style="text-align:center;color:#aaa;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="modal-actions" style="margin-top:16px;">
+                <button class="cancel-btn" onclick="closeDeliveryBoySalesModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script src="{% static 'js/admin.js' %}"></script>
     <script>
-    function setReportPreset(preset) {
-        document.getElementById('reportDatePresetInput').value = preset;
-        if (preset !== 'custom') {
-            const sInput = document.getElementById('reportStartDate');
-            const eInput = document.getElementById('reportEndDate');
-            if (sInput) sInput.value = '';
-            if (eInput) eInput.value = '';
+        function setReportPreset(preset) {
+            document.getElementById('reportDatePresetInput').value = preset;
+            if (preset !== 'custom') {
+                const sInput = document.getElementById('reportStartDate');
+                const eInput = document.getElementById('reportEndDate');
+                if (sInput) sInput.value = '';
+                if (eInput) eInput.value = '';
+            }
+            document.getElementById('reportDateFilterForm').submit();
         }
-        document.getElementById('reportDateFilterForm').submit();
-    }
     </script>
 
 </body>
-
 </html>
