@@ -52,21 +52,6 @@
 
             <div class="header-icons">
                 {% if request.user.is_authenticated %}
-                    {% if request.user.is_staff or request.user.profile.role == 'admin' %}
-                    <a href="{% url 'admin_panel' %}"
-                        style="text-decoration: none; display: flex; align-items: center; gap: 6px; background: #087443; color: white; padding: 7px 14px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">
-                        <span>🛡️</span>
-                        <span>Admin</span>
-                    </a>
-                    {% endif %}
-
-                    {% if request.user.is_staff or request.user.profile.role == 'admin' or request.user.profile.role == 'delivery_boy' %}
-                    <a href="{% url 'delivery_dashboard' %}"
-                        style="text-decoration: none; display: flex; align-items: center; gap: 6px; background: #0284c7; color: white; padding: 7px 14px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">
-                        <span>🛵</span>
-                        <span>Delivery</span>
-                    </a>
-                    {% endif %}
                 {% endif %}
 
                 <a href="{% url 'wallet' %}" title="Dairy Wallet & Khata"

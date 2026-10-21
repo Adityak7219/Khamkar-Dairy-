@@ -60,9 +60,10 @@ body {
 }
 
 .brand h1 {
-    font-size: 38px;
+    font-size: 52px;
     color: #075334;
     margin-bottom: 3px;
+    letter-spacing: -0.5px;
 }
 
 .brand p {
@@ -426,9 +427,9 @@ body {
 }
 
 .section-title h2 {
-    font-size: 24px;
+    font-size: 32px;
     color: #073d2d;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 .section-title a {
