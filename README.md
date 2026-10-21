@@ -1,110 +1,141 @@
-# Django Dairy Shop Backend
+# 🥛 Khamkar Dairy - Online Dairy Shop
 
-This project is structured for your dairy shopping frontend.
+A full-featured online dairy product shopping web application built with Django. Browse products, add to cart, place orders, track deliveries, and manage your profile — all in one place!
 
-## Folder structure
+## ✨ Features
+
+- 🛒 **Product Browsing & Cart** — Browse dairy products and manage your shopping cart
+- 💳 **Secure Payments** — Integrated payment system for seamless checkout
+- 📦 **Order Tracking** — Track your orders and view order history
+- 🚚 **Delivery Management** — Delivery run sheet for efficient delivery tracking
+- ❤️ **Favourites** — Save your favourite products for quick access
+- 👤 **User Profiles** — Manage your profile and account settings
+- 📞 **Contact Us** — Easy communication with the shop
+- 🔐 **Admin Panel** — Django admin for product and order management
+- 📄 **Invoice Generation** — Auto-generated invoices for orders
+
+## 🛠️ Tech Stack
+
+| Technology | Usage |
+|---|---|
+| **Python / Django** | Backend framework |
+| **HTML5** | Page structure & templates |
+| **CSS3** | Styling & responsive design |
+| **JavaScript** | Frontend interactivity |
+| **SQLite** | Database |
+
+## 📁 Folder Structure
 
 ```text
-django_dairy_shop/
+Khamkar-Dairy/
 │
 ├── manage.py
 ├── requirements.txt
-├── README.md
+├── build.sh
 │
-├── dairy_backend/
+├── dairy_backend/          # Django project settings
 │   ├── settings.py
 │   ├── urls.py
 │   ├── asgi.py
 │   └── wsgi.py
 │
-├── shop/
+├── shop/                   # Main app
 │   ├── models.py
 │   ├── views.py
 │   ├── api_views.py
 │   ├── api_serializers.py
 │   ├── urls.py
-│   ├── api_urls.py
 │   ├── admin.py
+│   ├── context_processors.py
 │   └── migrations/
 │
-├── templates/
-│   └── shop/
-│       └── index.html
+├── templates/shop/         # HTML templates
+│   ├── Cart.html
+│   ├── Payment.html
+│   ├── Profile.html
+│   ├── Orders.html
+│   ├── Delivery.html
+│   ├── Invoice.html
+│   ├── Contact.html
+│   └── ...
 │
-├── static/
+├── static/                 # Static assets
 │   ├── css/
-│   │   └── style.css
 │   ├── js/
-│   │   └── app.js
 │   └── images/
 │
-└── media/
+└── media/                  # Uploaded product images
 ```
 
-## Setup
+## 🚀 Setup & Installation
 
+### 1. Clone the repository
+```bash
+git clone https://github.com/Adityak7219/Khamkar-Dairy-.git
+cd Khamkar-Dairy-
+```
+
+### 2. Create virtual environment
 ```bash
 python -m venv venv
 ```
 
-Windows:
+### 3. Activate virtual environment
+
+**Windows:**
 ```bash
 venv\Scripts\activate
 ```
 
-Install:
+**Linux/Mac:**
+```bash
+source venv/bin/activate
+```
+
+### 4. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-Database:
+### 5. Run database migrations
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-Admin:
+### 6. Create admin user
 ```bash
 python manage.py createsuperuser
 ```
 
-Run:
+### 7. Start the server
 ```bash
 python manage.py runserver
 ```
 
-Open:
-http://127.0.0.1:8000/
+### 8. Open in browser
 
-Admin:
-http://127.0.0.1:8000/admin/
+| Page | URL |
+|---|---|
+| 🏠 Home | http://127.0.0.1:8000/ |
+| 🔧 Admin Panel | http://127.0.0.1:8000/admin/ |
+| 📡 API | http://127.0.0.1:8000/api/ |
+| ❤️ Health Check | http://127.0.0.1:8000/api/health/ |
 
-API:
-http://127.0.0.1:8000/api/
+## 📸 Static & Media Files
 
-Health:
-http://127.0.0.1:8000/api/health/
-
-## Images
-
-Put frontend/static images in:
-
-```text
-static/images/
-```
-
-Product images uploaded through Django Admin are stored in:
-
-```text
-media/products/
-```
-
-For HTML/CSS/JS static files use Django's `{% static %}` path.
-
-Example:
+- Frontend static files: `static/images/`
+- Product images (uploaded via admin): `media/products/`
 
 ```html
 {% load static %}
 <img src="{% static 'images/product.jpg' %}" alt="Product">
 ```
-"# Khamkar-Dairy" 
+
+## 👨‍💻 Author
+
+**Aditya Khamkar** — [@Adityak7219](https://github.com/Adityak7219)
+
+---
+
+⭐ Star this repo if you found it useful!
