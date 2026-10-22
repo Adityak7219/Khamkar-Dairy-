@@ -71,7 +71,6 @@
             </div>
         </header>
 
-
         <!-- ===== ANNOUNCEMENT BANNER (Admin Controlled) ===== -->
         {% if store_settings.show_announcement and store_settings.announcement_text %}
         <div class="announcement-banner" id="announcementBanner">
@@ -295,73 +294,6 @@
                 </div>
             </a>
         </section>
-
-
-        <!-- ===== FOOTER ===== -->
-        <footer class="home-footer">
-            <div class="footer-top">
-
-                <!-- Brand -->
-                <div class="footer-brand">
-                    <div class="footer-logo">
-                        <img src="{% static 'images/logo.png' %}" alt="{{ store_settings.store_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <span class="footer-logo-fallback" style="display:none; align-items:center; justify-content:center; width:52px; height:52px; background:#e8f5ee; border-radius:50%; font-size:26px;">🐄</span>
-                    </div>
-                    <div>
-                        <strong>{{ store_settings.store_name|default:"Khamkar Dairy & Product" }}</strong>
-                        <p>Pure . Fresh . Healthy.</p>
-                    </div>
-                </div>
-
-                <!-- Quick Links -->
-                <div class="footer-col">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="{% url 'home' %}">Home</a></li>
-                        <li><a href="{% url 'shop_product' %}">Shop</a></li>
-                        <li><a href="{% url 'contact' %}">About Us</a></li>
-                        <li><a href="{% url 'contact' %}">Contact</a></li>
-                    </ul>
-                </div>
-
-                <!-- Help -->
-                <div class="footer-col">
-                    <h4>Help</h4>
-                    <ul>
-                        <li><a href="{% url 'contact' %}">FAQs</a></li>
-                        <li><a href="{% url 'contact' %}">Shipping Policy</a></li>
-                        <li><a href="{% url 'contact' %}">Return Policy</a></li>
-                        <li><a href="{% url 'contact' %}">Terms &amp; Conditions</a></li>
-                    </ul>
-                </div>
-
-                <!-- Follow Us -->
-                <div class="footer-col">
-                    <h4>Follow Us</h4>
-                    <div class="footer-socials">
-                        <a href="#" class="social-icon social-fb" aria-label="Facebook">f</a>
-                        <a href="#" class="social-icon social-ig" aria-label="Instagram">📷</a>
-                        <a href="#" class="social-icon social-yt" aria-label="YouTube">▶</a>
-                        <a href="#" class="social-icon social-wa" aria-label="WhatsApp">📱</a>
-                    </div>
-                </div>
-
-                <!-- Newsletter -->
-                <div class="footer-col footer-newsletter">
-                    <h4>Subscribe to our Newsletter</h4>
-                    <form class="newsletter-form" onsubmit="return false;">
-                        <input type="email" placeholder="Enter your email" aria-label="Email for newsletter">
-                        <button type="submit">Subscribe</button>
-                    </form>
-                </div>
-
-            </div>
-
-            <div class="footer-bottom">
-                <span>© 2025 {{ store_settings.store_name|default:"Khamkar Dairy & Product" }}. All Rights Reserved.</span>
-                <span>Made with ❤️ for Healthy India</span>
-            </div>
-        </footer>
 
     </div>
 

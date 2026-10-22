@@ -1222,15 +1222,9 @@ searchInput.addEventListener(
 
 
 /* =====================================================
-   FILTER BUTTON
+   FILTER BUTTON (Removed)
 ===================================================== */
 
-document.getElementById("filterBtn")
-    .addEventListener("click", () => {
-
-        showToast("Filter options coming soon");
-
-    });
 
 
 /* =====================================================

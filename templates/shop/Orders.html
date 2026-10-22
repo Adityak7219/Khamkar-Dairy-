@@ -22,7 +22,6 @@
         ================================================= -->
         <header class="top-header">
             <div class="header-left">
-                <button class="back-btn" onclick="location.href='{% url 'home' %}'" aria-label="Go to Home">←</button>
                 <h1 class="page-title">My Orders</h1>
             </div>
 
@@ -44,23 +43,7 @@
                 <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearch()" style="display:none;">✕</button>
             </div>
 
-            <div class="filter-wrapper">
-                <button class="filter-btn" id="filterDropdownBtn" onclick="toggleFilterMenu()">
-                    <span>⚙ Filter</span>
-                    <span class="filter-caret">▾</span>
-                </button>
-                <div class="filter-dropdown-menu" id="filterDropdownMenu">
-                    <div class="filter-menu-header">Sort & Filter</div>
-                    <div class="filter-menu-item active" onclick="applySort('newest', this)">🕒 Newest First</div>
-                    <div class="filter-menu-item" onclick="applySort('oldest', this)">📅 Oldest First</div>
-                    <div class="filter-menu-item" onclick="applySort('amount-high', this)">💰 Amount: High to Low</div>
-                    <div class="filter-menu-item" onclick="applySort('amount-low', this)">💵 Amount: Low to High</div>
-                    <div class="filter-menu-divider"></div>
-                    <div class="filter-menu-item" onclick="applyPaymentFilter('all', this)">💳 All Payments</div>
-                    <div class="filter-menu-item" onclick="applyPaymentFilter('online', this)">🟢 Online Paid</div>
-                    <div class="filter-menu-item" onclick="applyPaymentFilter('cod', this)">📦 Cash on Delivery</div>
-                </div>
-            </div>
+
         </div>
 
         <!-- =================================================
